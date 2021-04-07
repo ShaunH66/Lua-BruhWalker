@@ -108,71 +108,14 @@ local function GetMinionCount(range, unit)
 	return count
 end
 
--- Casting
-
-local function CastQ(unit)
-	Qtarget = selector:find_target(650, distance)
-
-	if Qtarget.object_id ~= 0 then
-		if spellbook:can_cast(SLOT_Q) then
-			if not orbwalker:can_attack() then
-				origin = Qtarget.origin
-				x, y, z = origin.x, origin.y, origin.z
-				spellbook:cast_spell_targetted(SLOT_Q, 0.25, Qtarget)
-			end
-		end
-	end
-end
-
-local function CastW(unit)
-	Wtarget = selector:find_target(650, distance)
-
-	if Wtarget.object_id ~= 0 then
-		if spellbook:can_cast(SLOT_W) then
-			spellbook:cast_spell_targetted(SLOT_W)
-		end
-	end
-end
-
-local function CastE(unit)
-	Etarget = selector:find_target(1000, distance)
-
-	if Etarget.object_id ~= 0 then
-		if spellbook:can_cast(SLOT_E) then
-			origin = Etarget.origin
-			x, y, z = origin.x, origin.y, origin.z
-			spellbook:cast_spell_targetted(SLOT_E, 0.25, Etarget)
-		end
-	end
-end
-
-local function CastR(unit)
-	target = selector:find_target(1400, distance)
-
-	if target.object_id ~= 0 then
-		if spellbook:can_cast(SLOT_R) then
-			origin = target.origin
-			x, y, z = origin.x, origin.y, origin.z
-			my_origin = game.local_player.origin
-			pred_output = pred:predict(2000, 0.25, 1450, 40, target, false, true)
-
-			if pred_output.can_cast then
-        castPos = pred_output.cast_pos
-        spellbook:cast_spell(SLOT_R, 0.25, castPos.x, castPos.y, castPos.z)
-
-			end
-		end
-	end
-end
-
 -- Menu Config
 
 MF_category = menu:add_category("Sexy Miss Fortune")
 MF_enabled = menu:add_checkbox("Enabled", MF_category, 1)
 MF_combokey = menu:add_keybinder("Combo Key", MF_category, 32)
-MF_ks = menu:add_checkbox("Q and E KS Enabled", MF_category, 1)
+MF_ks = menu:add_checkbox("Q and E Kill Steal Enabled", MF_category, 1)
 MF_drawcombo_enable = menu:add_checkbox("Draw AD/AP Combo Text", MF_category, 1)
-MF_manualcast_r = menu:add_keybinder("Semi Manual R Key", MF_category, 65)
+MF_manualcast_r = menu:add_keybinder("Semi Manual R Key (Hold To Block Kill Steal)", MF_category, 65)
 
 MF_combo = menu:add_subcategory("Combo", MF_category)
 MF_combo_use_q = menu:add_checkbox("Use Q", MF_combo, 1)
@@ -185,41 +128,88 @@ MF_harass_use_q = menu:add_checkbox("Use Q", MF_harass, 1)
 MF_harass_use_w = menu:add_checkbox("Use W", MF_harass, 1)
 MF_harass_use_e = menu:add_checkbox("use E", MF_harass, 1)
 MF_harass_Q_Bounce = menu:add_checkbox("Use Q Bounce", MF_harass, 1)
-MF_harass_mana = menu:add_slider("Minimum Mana To Harass", MF_harass, 0, 200, 50)
+MF_harass_mana = menu:add_slider("Minimum Mana To Harass", MF_harass, 1, 200, 50)
 --MF_harass_use_q_bounce = menu:add_checkbox("Use Q Bounce (Not Working)", MF_harass, 1)
 
 MF_laneclear = menu:add_subcategory("Lane Clear", MF_category)
 MF_laneclear_use_q = menu:add_checkbox("Use Q", MF_laneclear, 1)
 MF_laneclear_use_w = menu:add_checkbox("Use W", MF_laneclear, 1)
 MF_laneclear_use_e = menu:add_checkbox("use E", MF_laneclear, 1)
-MF_laneclear_mana = menu:add_slider("Minimum Mana To Harass", MF_laneclear, 0, 200, 50)
+MF_laneclear_mana = menu:add_slider("Minimum Mana To Harass", MF_laneclear, 1, 200, 50)
 
 MF_jungleclear = menu:add_subcategory("Jungle Clear", MF_category)
 MF_jungleclear_use_q = menu:add_checkbox("Use Q", MF_jungleclear, 1)
 MF_jungleclear_use_w = menu:add_checkbox("Use W", MF_jungleclear, 1)
 MF_jungleclear_use_e = menu:add_checkbox("use E", MF_jungleclear, 1)
-MF_jungleclear_mana = menu:add_slider("Minimum Mana To jungle", MF_jungleclear, 0, 200, 50)
+MF_jungleclear_mana = menu:add_slider("Minimum Mana To jungle", MF_jungleclear, 1, 200, 50)
 
--- Harass Q Bounce
+MF_draw = menu:add_subcategory("Draw Spell Ranges", MF_category)
+MF_draw_q = menu:add_checkbox("Draw Q Range", MF_draw, 1)
+MF_draw_e = menu:add_checkbox("Use E Range", MF_draw, 1)
+MF_draw_r = menu:add_checkbox("use R Range", MF_draw, 1)
 
-local function Harras_Bounce_Q()
-if menu:get_value(MF_harass_Q_Bounce) == 1 and Ready(SLOT_Q) then
-	if local_player.mana >= menu:get_value(MF_harass_mana) then
-		if target.object_id ~= 0 and target.is_enemy and myHero:distance_to(target.origin) < 650 and IsValid(target) then
-			if GetMinionCount(500, target) >= 1 then
-				if GetEnemyCount(500, target) >= 1 then
-					if Ready(SLOT_Q) then
-						if not orbwalker:can_attack() then
-							origin = target.origin
-							x, y, z = origin.x, origin.y, origin.z
-							spellbook:cast_spell_targetted(SLOT_Q, 0.25, target)
-						end
-					end
-				end
+-- Casting
+
+local function CastQ(unit)
+	target = selector:find_target(650, distance)
+
+	if target.object_id ~= 0 then
+		if spellbook:can_cast(SLOT_Q) then
+			if not orbwalker:can_attack() then
+				spellbook:cast_spell_targetted(SLOT_Q, target, 0.25)
 			end
 		end
 	end
 end
+
+local function CastW(unit)
+	target = selector:find_target(650, distance)
+
+	if target.object_id ~= 0 then
+		if spellbook:can_cast(SLOT_W) then
+			spellbook:cast_spell_targetted(SLOT_W, target, 0.25)
+		end
+	end
+end
+
+local function CastE(unit)
+	target = selector:find_target(1000, distance)
+
+	if target.object_id ~= 0 then
+		if spellbook:can_cast(SLOT_E) then
+			spellbook:cast_spell_targetted(SLOT_E, target, 0.25)
+		end
+	end
+end
+
+local function CastR(unit)
+	target = selector:find_target(1400, health)
+
+	if target.object_id ~= 0 then
+		if spellbook:can_cast(SLOT_R) then
+			spellbook:cast_spell_targetted(SLOT_R, target, 0.25)
+		end
+	end
+end
+
+--[[local function CastR(unit)
+	target = selector:find_target(1400, health)
+
+	if target.object_id ~= 0 then
+		if spellbook:can_cast(SLOT_R) then
+			origin = target.origin
+			x, y, z = origin.x, origin.y, origin.z
+			my_origin = game.local_player.origin
+			pred_output = pred:predict(2000, 0.25, 1450, 40, target, false, false)
+
+			if pred_output.can_cast then
+        castPos = pred_output.cast_pos
+        spellbook:cast_spell(SLOT_R, 0.25, castPos.x, castPos.y, castPos.z)
+
+			end
+		end
+	end
+end]]
 
 -- Combo AD
 
@@ -274,6 +264,31 @@ local function Harass()
 	end
 end
 
+-- Harass Q Bounce
+
+local function Harras_Bounce_Q()
+	minions = game.minions
+	for i, target in ipairs(minions) do
+
+		if menu:get_value(MF_harass_Q_Bounce) == 1 and Ready(SLOT_Q) then
+			if local_player.mana >= menu:get_value(MF_harass_mana) then
+				if target.object_id ~= 0 and target.is_enemy and myHero:distance_to(target.origin) < 650 and IsValid(target) then
+					if GetMinionCount(500, target) >= 1 then
+						if GetEnemyCount(500, target) >= 1 then
+							if Ready(SLOT_Q) then
+								origin = target.origin
+								x, y, z = origin.x, origin.y, origin.z
+								spellbook:cast_spell_targetted(SLOT_Q, target, 0.25)
+
+							end
+						end
+					end
+				end
+			end
+		end
+	end
+end
+
 -- KillSteal
 
 local function KillSteal()
@@ -284,12 +299,10 @@ local function KillSteal()
 
 			local QDmg = getdmg("Q", target, game.local_player, 1)
 			if QDmg > target.health then
-				console:log("Q CAN KILL")
-				if not orbwalker:can_attack() then
-					origin = target.origin
-					x, y, z = origin.x, origin.y, origin.z
-					spellbook:cast_spell_targetted(SLOT_Q, 0.25, target)
-				end
+			console:log("Q CAN KILL")
+				origin = target.origin
+				x, y, z = origin.x, origin.y, origin.z
+				spellbook:cast_spell_targetted(SLOT_Q, target, 0.25)
 			end
 		end
 		if target.object_id ~= 0 and myHero:distance_to(target.origin) <= 1000 and Ready(SLOT_E) and IsValid(target) then
@@ -299,7 +312,7 @@ local function KillSteal()
 				if Ready(SLOT_E) then
 					origin = target.origin
 					x, y, z = origin.x, origin.y, origin.z
-					spellbook:cast_spell_targetted(SLOT_E, 0.25, target)
+					spellbook:cast_spell_targetted(SLOT_E, target, 0.25)
 
 				end
 			end
@@ -321,7 +334,7 @@ local function Clear()
 							if not orbwalker:can_attack() then
 								origin = target.origin
 								x, y, z = origin.x, origin.y, origin.z
-								spellbook:cast_spell_targetted(SLOT_Q, 0.25, target)
+								spellbook:cast_spell_targetted(SLOT_Q, target, 0.25)
 							end
 						end
 					end
@@ -333,7 +346,7 @@ local function Clear()
 				if GetMinionCount(500, target) >= 1 then
 					if local_player.mana >= menu:get_value(MF_laneclear_mana) then
 						if Ready(SLOT_W) then
-							spellbook:cast_spell_targetted(SLOT_W)
+							spellbook:cast_spell_targetted(SLOT_W, target, 0.25)
 						end
 					end
 				end
@@ -346,7 +359,7 @@ local function Clear()
 						if Ready(SLOT_E) then
 							origin = target.origin
 							x, y, z = origin.x, origin.y, origin.z
-							spellbook:cast_spell_targetted(SLOT_E, 0.25, target)
+							spellbook:cast_spell_targetted(SLOT_E, target, 0.25)
 						end
 					end
 				end
@@ -367,7 +380,7 @@ local function JungleClear()
 					if not orbwalker:can_attack() then
 						origin = target.origin
 						x, y, z = origin.x, origin.y, origin.z
-						spellbook:cast_spell_targetted(SLOT_Q, 0.25, target)
+						spellbook:cast_spell_targetted(SLOT_Q, target, 0.25)
 					end
 				end
 			end
@@ -375,7 +388,7 @@ local function JungleClear()
 		if target.object_id ~= 0 and menu:get_value(MF_jungleclear_use_w) == 1 and Ready(SLOT_W) and myHero:distance_to(target.origin) < 650 and IsValid(target) then
 			if local_player.mana >= menu:get_value(MF_jungleclear_mana) then
 				if Ready(SLOT_W) then
-					spellbook:cast_spell_targetted(SLOT_W)
+					spellbook:cast_spell_targetted(SLOT_W, target, 0.25)
 				end
 			end
 		end
@@ -384,7 +397,7 @@ local function JungleClear()
 				if Ready(SLOT_E) then
 					origin = target.origin
 					x, y, z = origin.x, origin.y, origin.z
-					spellbook:cast_spell_targetted(SLOT_E, 0.25, target)
+					spellbook:cast_spell_targetted(SLOT_E, target, 0.25)
 				end
 			end
 		end
@@ -394,7 +407,7 @@ end
 -- Manual R Cast
 
 local function ManualRCast()
-	if Ready(SLOT_R)
+	if Ready(SLOT_R) then
 		CastR(target)
 	end
 end
@@ -411,11 +424,31 @@ console:log("screen_size.width: " .. tostring(screen_size.width))
 console:log("screen_size.height: " .. tostring(screen_size.height))
 
 local function on_draw()
+	local_player = game.local_player
+
+	if local_player.object_id ~= 0 then
+		origin = local_player.origin
+		x, y, z = origin.x, origin.y, origin.z
+
+		if menu:get_value(MF_draw_q) == 1 then
+			renderer:draw_circle(x, y, z, 650, 255, 255, 255, 255)
+		end
+
+		if menu:get_value(MF_draw_e) == 1 then
+			renderer:draw_circle(x, y, z, 1000, 0, 0, 255, 255)
+		end
+
+		if menu:get_value(MF_draw_r) == 1 then
+			renderer:draw_circle(x, y, z, 1400, 225, 0, 0, 255)
+		end
+	end
+
 	if menu:get_value(MF_drawcombo_enable) == 1 then
 		if local_player.total_attack_damage >= local_player.ability_power then
 			renderer:draw_text(screen_size.width / 2, 0, "AD Combo")
 			else
 			renderer:draw_text(screen_size.width / 2, 0, "AP Combo")
+
 		end
 	end
 end
@@ -443,9 +476,10 @@ local function on_tick()
 		ManualRCast()
 	end
 
-	KillSteal()
+	if not game:is_key_down(menu:get_value(MF_manualcast_r)) then
+		KillSteal()
+	end
 end
-
 
 client:set_event_callback("on_tick", on_tick)
 client:set_event_callback("on_draw", on_draw)
