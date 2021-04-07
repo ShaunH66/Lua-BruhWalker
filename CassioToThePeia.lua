@@ -190,9 +190,17 @@ Cass_combo_use_w = menu:add_checkbox("Use W", Cass_combo, 1)
 Cass_combo_use_e = menu:add_checkbox("Use E", Cass_combo, 1)
 Cass_combo_use_R = menu:add_checkbox("Use R", Cass_combo, 1)
 
-Cass_AA = menu:add_subcategory("AA Usage", Cass_category)
+Cass_AA = menu:add_subcategory("AA Combo Usage", Cass_category)
 Cass_AA_use = menu:add_checkbox("Use AA In Combo Mode", Cass_AA, 1)
-Cass_AA_level = menu:add_slider("Use AA In Combo Up to Level Slider Value", Cass_AA, 1, 18, 6)
+Cass_AA_level = menu:add_slider("Use AA In Combo >= Level Slider Value", Cass_AA, 1, 18, 6)
+
+Cass_lasthit = menu:add_subcategory("Auto Last Hit", Cass_category)
+Cass_lasthit_use = menu:add_checkbox("Use E Auto Last Hit", Cass_lasthit, 1)
+Cass_lasthit_mana = menu:add_slider("Minimum Mana To Auto E Last Hit", CCass_lasthit, 1, 18, 6)
+
+Cass_panic_r_usage = menu:add_subcategory("Panic R", Cass_category)
+Cass_panic_r = menu:add_checkbox("Use Panic R", Cass_panic_r_usage, 1)
+Cass_panic_r_health = menu:add_slider("Use Panic R <= Total Health", Cass_panic_r_usage, 1, 20, 500)
 
 Cass_combo = menu:add_subcategory("Combo", Cass_category)
 Cass_combo_use_q = menu:add_checkbox("Use Q", Cass_combo, 1)
@@ -295,8 +303,8 @@ local function KillSteal()
 			end
 		end
 		if target.object_id ~= 0 and myHero:distance_to(target.origin) <= 700 and Ready(SLOT_W) and IsValid(target) then
-			local EDmg = getdmg("W", target, game.local_player, 1)
-			if EDmg > target.health then
+			local WDmg = getdmg("W", target, game.local_player, 1)
+			if WDmg > target.health then
 				console:log("W CAN KILL")
 				if Ready(SLOT_W) then
 					origin = target.origin
@@ -324,8 +332,8 @@ local function KillSteal()
 			end
 		end
 		if target.object_id ~= 0 and myHero:distance_to(target.origin) <= 825 and Ready(SLOT_R) and IsValid(target) then
-			local EDmg = getdmg("R", target, game.local_player, 1)
-			if EDmg > target.health then
+			local RDmg = getdmg("R", target, game.local_player, 1)
+			if RDmg > target.health then
 				console:log("R CAN KILL")
 				if Ready(SLOT_R) then
 					origin = target.origin
@@ -350,7 +358,7 @@ local function Clear()
 	for i, target in ipairs(minions) do
 
 		if menu:get_value(Cass_laneclear_use_q) == 1 and Ready(SLOT_Q) then
-			if target.object_id ~= 0 and target.is_enemy and myHero:distance_to(target.origin) < 650 and IsValid(target) then
+			if target.object_id ~= 0 and target.is_enemy and myHero:distance_to(target.origin) < 850 and IsValid(target) then
 				if GetMinionCount(500, target) >= 1 then
 					if local_player.mana >= menu:get_value(Cass_laneclear_mana) then
 						if Ready(SLOT_Q) then
@@ -369,7 +377,7 @@ local function Clear()
 			end
 		end
 		if menu:get_value(Cass_laneclear_use_w) == 1 and Ready(SLOT_W) then
-			if target.object_id ~= 0 and target.is_enemy and myHero:distance_to(target.origin) < 650 and IsValid(target) then
+			if target.object_id ~= 0 and target.is_enemy and myHero:distance_to(target.origin) < 700 and IsValid(target) then
 				if GetMinionCount(500, target) >= 1 then
 					if local_player.mana >= menu:get_value(Cass_laneclear_mana) then
 						if Ready(SLOT_W) then
@@ -388,7 +396,7 @@ local function Clear()
 			end
 		end
 		if menu:get_value(Cass_laneclear_use_e) == 1 and Ready(SLOT_E) then
-			if target.object_id ~= 0 and target.is_enemy and myHero:distance_to(target.origin) < 800 and IsValid(target) then
+			if target.object_id ~= 0 and target.is_enemy and myHero:distance_to(target.origin) < 700 and IsValid(target) then
 				if GetMinionCount(500, target) >= 1 then
 					if local_player.mana >= menu:get_value(Cass_laneclear_mana) then
 						if Ready(SLOT_E) then
@@ -409,7 +417,7 @@ local function JungleClear()
 	minions = game.jungle_minions
 	for i, target in ipairs(minions) do
 
-		if target.object_id ~= 0 and menu:get_value(Cass_jungleclear_use_q) == 1 and Ready(SLOT_Q) and myHero:distance_to(target.origin) < 650 and IsValid(target) then
+		if target.object_id ~= 0 and menu:get_value(Cass_jungleclear_use_q) == 1 and Ready(SLOT_Q) and myHero:distance_to(target.origin) < 850 and IsValid(target) then
 			if local_player.mana >= menu:get_value(Cass_jungleclear_mana) then
 				if Ready(SLOT_Q) then
 					origin = target.origin
@@ -425,7 +433,7 @@ local function JungleClear()
 				end
 			end
 		end
-		if target.object_id ~= 0 and menu:get_value(Cass_jungleclear_use_w) == 1 and Ready(SLOT_W) and myHero:distance_to(target.origin) < 650 and IsValid(target) then
+		if target.object_id ~= 0 and menu:get_value(Cass_jungleclear_use_w) == 1 and Ready(SLOT_W) and myHero:distance_to(target.origin) < 700 and IsValid(target) then
 			if local_player.mana >= menu:get_value(Cass_jungleclear_mana) then
 				if Ready(SLOT_W) then
 					origin = target.origin
@@ -440,7 +448,7 @@ local function JungleClear()
 				end
 			end
 		end
-		if target.object_id ~= 0 and menu:get_value(Cass_jungleclear_use_e) == 1 and Ready(SLOT_W) and myHero:distance_to(target.origin) < 800 and IsValid(target) then
+		if target.object_id ~= 0 and menu:get_value(Cass_jungleclear_use_e) == 1 and Ready(SLOT_E) and myHero:distance_to(target.origin) < 700 and IsValid(target) then
 			if local_player.mana >= menu:get_value(Cass_jungleclear_mana) then
 				if Ready(SLOT_E) then
 					origin = target.origin
@@ -460,17 +468,40 @@ local function ManualRCast()
 	end
 end
 
--- object returns, draw and tick usage
+-- Panic R Cast
 
-local function on_tick()
-	if game:is_key_down(menu:get_value(Cass_combokey)) and menu:get_value(Cass_enabled) == 1 then
-		if menu:get_value(Cass_AA_use) == 1 then
-			if local_player.level => menu:get_value(Cass_AA_level)
-				Combo_NOAA()
-				orbwalker:disable_auto_attacks()
+local function PanicRCast()
+	if Ready(SLOT_R)
+		CastR(target)
+	end
+end
+
+-- Auto E last Hit
+
+local function AutoELastHit()
+	minions = game.minions
+	for i, target in ipairs(minions) do
+		if target.object_id ~= 0 and target.is_enemy and myHero:distance_to(target.origin) < 700 and IsValid(target) then
+			if GetMinionCount(500, target) >= 1 then
+				if EDmg > target.health then
+					if Ready(SLOT_E) then
+						origin = target.origin
+						x, y, z = origin.x, origin.y, origin.z
+						spellbook:cast_spell_targetted(SLOT_E, 0.125, target)
+					end
+				end
 			end
 		end
 	end
+end
+
+-- object returns, draw and tick usage
+
+local function on_tick()
+	if menu:get_value(Cass_panic_r) == 1 and local_player.Health <= menu:get_value(Cass_panic_r_health) then
+		PanicRCast()
+	end
+end
 
 	if game:is_key_down(menu:get_value(Cass_combokey)) and menu:get_value(Cass_enabled) == 1 then
 		if menu:get_value(Cass_AA_use) == 1 then
@@ -487,6 +518,13 @@ local function on_tick()
 		end
 	end
 
+	if game:is_key_down(menu:get_value(Cass_combokey)) and menu:get_value(Cass_enabled) == 1 then
+		if menu:get_value(Cass_AA_use) == 1 and local_player.level >= menu:get_value(Cass_AA_level) then
+			Combo_NOAA()
+			orbwalker:disable_auto_attacks()
+		end
+	end
+
 	if combo:get_mode() == MODE_HARASS then
 		Harass()
 	end
@@ -498,6 +536,10 @@ local function on_tick()
 
 	if game:is_key_down(menu:get_value(Cass_manualcast_r)) then
 		ManualRCast()
+	end
+
+	if menu:get_value(Cass_lasthit_use) == 1 and local_player.mana >= menu:get_value(Cass_lasthit_mana) then
+		AutoELastHit()
 	end
 
 	KillSteal()
