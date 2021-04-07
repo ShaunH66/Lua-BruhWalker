@@ -154,7 +154,7 @@ local function CastR(unit)
 			origin = target.origin
 			x, y, z = origin.x, origin.y, origin.z
 			my_origin = game.local_player.origin
-			pred_output = pred:predict(2000, 0.25, 1450, 40, unit, false, true)
+			pred_output = pred:predict(2000, 0.25, 1450, 40, target, false, true)
 
 			if pred_output.can_cast then
         castPos = pred_output.cast_pos
@@ -170,8 +170,8 @@ end
 MF_category = menu:add_category("Sexy Miss Fortune")
 MF_enabled = menu:add_checkbox("Enabled", MF_category, 1)
 MF_combokey = menu:add_keybinder("Combo Key", MF_category, 32)
-MF_s = menu:add_keybinder("Combo Key", MF_category, 32)
 MF_ks = menu:add_checkbox("Q and E KS Enabled", MF_category, 1)
+MF_drawcombo_enable = menu:add_checkbox("Draw AD/AP Combo Text", MF_category, 1)
 MF_manualcast_r = menu:add_keybinder("Semi Manual R Key", MF_category, 65)
 
 MF_combo = menu:add_subcategory("Combo", MF_category)
@@ -449,4 +449,3 @@ end
 
 client:set_event_callback("on_tick", on_tick)
 client:set_event_callback("on_draw", on_draw)
-	
