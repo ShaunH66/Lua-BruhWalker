@@ -5,7 +5,7 @@ end
 -- AutoUpdate
 do
     local function AutoUpdate()
-		local Version = 3
+		local Version = 5
 		local file_name = "MissToTheFortune.lua"
 		local url = "http://raw.githubusercontent.com/TheShaunyboi/BruhWalkerEncrypted/main/MissToTheFortune.lua"
         local web_version = http:get("https://raw.githubusercontent.com/TheShaunyboi/BruhWalkerEncrypted/main/MissToTheFortune.lua.version.txt")
@@ -25,7 +25,6 @@ do
 
 end
 
-require "PKDamageLib"
 pred:use_prediction()
 
 local myHero = game.local_player
@@ -113,7 +112,7 @@ end
 MF_category = menu:add_category("Sexy Miss Fortune")
 MF_enabled = menu:add_checkbox("Enabled", MF_category, 1)
 MF_combokey = menu:add_keybinder("Combo Key", MF_category, 32)
-MF_ks = menu:add_checkbox("Q and E Kill Steal Enabled", MF_category, 1)
+MF_ks = menu:add_checkbox("Q Kill Steal Enabled", MF_category, 1)
 MF_drawcombo_enable = menu:add_checkbox("Draw AD/AP Combo Text", MF_category, 1)
 MF_manualcast_r = menu:add_keybinder("Semi Manual R Key (Hold To Block Kill Steal)", MF_category, 65)
 
@@ -291,30 +290,37 @@ end
 
 -- KillSteal
 
+local function HasHealingBuff(unit)
+    if myHero:distance_to(unit.origin) < 3400 and unit:has_buff("Item2003") or unit:has_buff("ItemCrystalFlask") or unit:has_buff("ItemDarkCrystalFlask") then
+        return true
+    end
+    return false
+end
+
+local function GetQDmgAD(unit)
+    local Damage = 0
+    local level = spellbook:get_spell_slot(SLOT_Q).level
+    local BonusDmg = myHero.total_attack_damage + (.35 * myHero.ability_power)
+    local QADDamage = (({20, 40, 60, 80, 100})[level] + BonusDmg)
+    if HasHealingBuff(unit) then
+      Damage = QADDamage - 10
+    else
+			Damage = QADDamage
+    end
+		return unit:calculate_magic_damage(Damage)
+end
+
 local function KillSteal()
 
 	for i, target in ipairs(GetEnemyHeroes()) do
 
 		if target.object_id ~= 0 and myHero:distance_to(target.origin) <= 650 and Ready(SLOT_Q) and IsValid(target) then
 
-			local QDmg = getdmg("Q", target, game.local_player, 1)
-			if QDmg > target.health then
-			console:log("Q CAN KILL")
+			if GetQDmgAD(target) > target.health then
+				console:log("Q CAN KILL")
 				origin = target.origin
 				x, y, z = origin.x, origin.y, origin.z
 				spellbook:cast_spell_targetted(SLOT_Q, target, 0.25)
-			end
-		end
-		if target.object_id ~= 0 and myHero:distance_to(target.origin) <= 1000 and Ready(SLOT_E) and IsValid(target) then
-			local EDmg = getdmg("E", target, game.local_player, 1)
-			if EDmg > target.health then
-				console:log("E CAN KILL")
-				if Ready(SLOT_E) then
-					origin = target.origin
-					x, y, z = origin.x, origin.y, origin.z
-					spellbook:cast_spell_targetted(SLOT_E, target, 0.25)
-
-				end
 			end
 		end
 	end
