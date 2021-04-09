@@ -134,7 +134,7 @@ Cass_AA_level = menu:add_slider("Don't AA In Combo if Champ Level Is >=", Cass_A
 
 Cass_lasthit = menu:add_subcategory("Last Hit", Cass_category)
 Cass_lasthit_use = menu:add_checkbox("Use E Last Hit", Cass_lasthit, 1)
-Cass_lasthit_posbuff = menu:add_checkbox("only Last Hit When Minion is Posion", Cass_lasthit, 1)
+Cass_lasthit_posbuff = menu:add_checkbox("only Last Hit E When Minion is Posion", Cass_lasthit, 1)
 Cass_lasthit_mana = menu:add_slider("Minimum Mana To E Last Hit", Cass_lasthit, 0, 200, 50)
 
 Cass_combo = menu:add_subcategory("Combo", Cass_category)
