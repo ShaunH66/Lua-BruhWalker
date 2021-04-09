@@ -120,7 +120,7 @@ end
 Cass_category = menu:add_category("Shaun's Sexy Cassiopeia")
 Cass_enabled = menu:add_checkbox("Enabled", Cass_category, 1)
 Cass_combokey = menu:add_keybinder("Combo Mode Key", Cass_category, 32)
-Cass_internal = menu:add_checkbox("Use Internal Spell Casting", Cass_category, 1)
+Cass_internal = menu:add_checkbox("Use Internal Spell Casting)", Cass_category, 0)
 
 Cass_combo = menu:add_subcategory("Kill Steal", Cass_category)
 Cass_combo_use_q = menu:add_checkbox("Use Q", Cass_combo, 1)
@@ -130,7 +130,7 @@ Cass_combo_use_R = menu:add_checkbox("Use R", Cass_combo, 1)
 
 Cass_AA = menu:add_subcategory("AA Combo Usage", Cass_category)
 Cass_AA_use = menu:add_checkbox("Use AA In Combo Mode", Cass_AA, 1)
-Cass_AA_level = menu:add_slider("Don't AA In Combo When Ingame Level Is >=", Cass_AA, 1, 18, 11)
+Cass_AA_level = menu:add_slider("Don't AA In Combo if Champ Level Is >=", Cass_AA, 1, 18, 11)
 
 Cass_lasthit = menu:add_subcategory("Last Hit", Cass_category)
 Cass_lasthit_use = menu:add_checkbox("Use E Last Hit", Cass_lasthit, 1)
@@ -141,15 +141,15 @@ Cass_combo = menu:add_subcategory("Combo", Cass_category)
 Cass_combo_use_q = menu:add_checkbox("Use Q", Cass_combo, 1)
 Cass_combo_use_w = menu:add_checkbox("Use W", Cass_combo, 1)
 Cass_combo_use_e = menu:add_checkbox("Use E", Cass_combo, 1)
-Cass_combo_w_posbuff = menu:add_checkbox("Only W When Q Has Missed and Enemy Is not Posioned", Cass_combo, 1)
-Cass_combo_e_posbuff = menu:add_checkbox("Only E When Posion Is Active", Cass_combo, 1)
+Cass_combo_w_posbuff = menu:add_checkbox("Only W When Q Has Missed and Enemy Is Not Posioned", Cass_combo, 1)
+Cass_combo_e_posbuff = menu:add_checkbox("Only E Combo When Posion Is Active", Cass_combo, 1)
 
 Cass_harass = menu:add_subcategory("Harass", Cass_category)
 Cass_harass_use_q = menu:add_checkbox("Use Q", Cass_harass, 1)
 Cass_harass_use_w = menu:add_checkbox("Use W", Cass_harass, 1)
 Cass_harass_use_e = menu:add_checkbox("use E", Cass_harass, 1)
 Cass_harass_mana = menu:add_slider("Minimum Mana To Harass", Cass_harass, 0, 200, 50)
-Cass_harass_posbuff = menu:add_checkbox("Only E When Posion Is Active", Cass_harass, 1)
+Cass_harass_posbuff = menu:add_checkbox("Only E Harass When Posion Is Active", Cass_harass, 1)
 
 Cass_laneclear = menu:add_subcategory("Lane Clear", Cass_category)
 Cass_laneclear_use_q = menu:add_checkbox("Use Q", Cass_laneclear, 1)
@@ -167,8 +167,8 @@ Cass_jungleclear_mana = menu:add_slider("Minimum Mana To jungle Clear", Cass_jun
 
 Cass_combo_r_options = menu:add_subcategory("R Settings", Cass_category)
 Cass_combo_r_set_key = menu:add_keybinder("Semi Manual R Key", Cass_combo_r_options, 65)
-Cass_combo_r_enemy_hp = menu:add_slider("Use Combo R if Enemy Hp lower than [%]", Cass_combo_r_options, 1, 100, 50)
-Cass_combo_r_my_hp = menu:add_slider("Use Combo R if My Hp Greater than [%]", Cass_combo_r_options, 1, 100, 30)
+Cass_combo_r_enemy_hp = menu:add_slider("Use Combo R if Enemy HP is lower than [%]", Cass_combo_r_options, 1, 100, 50)
+Cass_combo_r_my_hp = menu:add_slider("Only Combo R if My HP is Greater than [%]", Cass_combo_r_options, 1, 100, 30)
 
 Cass_draw = menu:add_subcategory("Draw Spell Ranges", Cass_category)
 Cass_draw_q = menu:add_checkbox("Draw Q", Cass_draw, 1)
