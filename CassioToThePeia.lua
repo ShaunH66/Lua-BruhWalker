@@ -135,13 +135,14 @@ Cass_AA_level = menu:add_slider("Don't AA In Combo When Ingame Level Is >=", Cas
 Cass_lasthit = menu:add_subcategory("Last Hit", Cass_category)
 Cass_lasthit_use = menu:add_checkbox("Use E Last Hit", Cass_lasthit, 1)
 Cass_lasthit_posbuff = menu:add_checkbox("only Last Hit When Minion is Posion", Cass_lasthit, 1)
-Cass_lasthit_mana = menu:add_slider("Minimum Mana To Auto E Last Hit", Cass_lasthit, 0, 200, 50)
+Cass_lasthit_mana = menu:add_slider("Minimum Mana To E Last Hit", Cass_lasthit, 0, 200, 50)
 
 Cass_combo = menu:add_subcategory("Combo", Cass_category)
 Cass_combo_use_q = menu:add_checkbox("Use Q", Cass_combo, 1)
 Cass_combo_use_w = menu:add_checkbox("Use W", Cass_combo, 1)
 Cass_combo_use_e = menu:add_checkbox("Use E", Cass_combo, 1)
-Cass_combo_posbuff = menu:add_checkbox("Only E When Posion Is Active", Cass_combo, 1)
+Cass_combo_w_posbuff = menu:add_checkbox("Only W When Q Has Missed and Enemy Is not Posioned", Cass_combo, 1)
+Cass_combo_e_posbuff = menu:add_checkbox("Only E When Posion Is Active", Cass_combo, 1)
 
 Cass_harass = menu:add_subcategory("Harass", Cass_category)
 Cass_harass_use_q = menu:add_checkbox("Use Q", Cass_harass, 1)
@@ -334,12 +335,15 @@ local function Combo()
 	end
 
 	if menu:get_value(Cass_combo_use_w) == 1 then
-		CastW(target)
+		if menu:get_value(Cass_combo_w_posbuff) == 0 then
+		elseif menu:get_value(Cass_combo_w_posbuff) == 1 and not Ready(SLOT_Q) and HasPoison(target) == false then
+			CastW(target)
+		end
 	end
 
 	if menu:get_value(Cass_combo_use_e) == 1 then
-		if menu:get_value(Cass_combo_posbuff) == 0 then
-		elseif menu:get_value(Cass_combo_posbuff) == 1 and HasPoison(target) then
+		if menu:get_value(Cass_combo_e_posbuff) == 0 then
+		elseif menu:get_value(Cass_combo_e_posbuff) == 1 and HasPoison(target) then
 		CastE(target)
 		end
 	end
