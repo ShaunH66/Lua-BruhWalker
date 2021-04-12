@@ -643,7 +643,7 @@ local function on_draw()
 
 		if menu:get_value(Cass_draw_r) == 1 then
 			if Ready(SLOT_R) then
-				renderer:draw_circle(x, y, z, 825,225, 0, 0, 255)
+				renderer:draw_circle(x, y, z, 825, 225, 0, 0, 255)
 			end
 		end
 	end
