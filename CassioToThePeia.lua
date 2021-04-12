@@ -5,7 +5,7 @@ end
 -- AutoUpdate
 do
     local function AutoUpdate()
-		local Version = 1
+		local Version = 5
 		local file_name = "CassioToThePeia.lua"
 		local url = "http://raw.githubusercontent.com/TheShaunyboi/BruhWalkerEncrypted/main/CassioToThePeia.lua"
         local web_version = http:get("https://raw.githubusercontent.com/TheShaunyboi/BruhWalkerEncrypted/main/CassioToThePeia.lua.version.txt")
@@ -120,28 +120,26 @@ end
 Cass_category = menu:add_category("Shaun's Sexy Cassiopeia")
 Cass_enabled = menu:add_checkbox("Enabled", Cass_category, 1)
 Cass_combokey = menu:add_keybinder("Combo Mode Key", Cass_category, 32)
-Cass_internal = menu:add_checkbox("Use Internal Spell Casting)", Cass_category, 0)
+Cass_internal = menu:add_checkbox("Use Internal Spell Casting", Cass_category, 1)
 
-Cass_combo = menu:add_subcategory("Kill Steal", Cass_category)
-Cass_combo_use_q = menu:add_checkbox("Use Q", Cass_combo, 1)
-Cass_combo_use_w = menu:add_checkbox("Use W", Cass_combo, 1)
-Cass_combo_use_e = menu:add_checkbox("Use E", Cass_combo, 1)
-Cass_combo_use_R = menu:add_checkbox("Use R", Cass_combo, 1)
-
-Cass_AA = menu:add_subcategory("AA Combo Usage", Cass_category)
-Cass_AA_use = menu:add_checkbox("Use AA In Combo Mode", Cass_AA, 1)
-Cass_AA_level = menu:add_slider("Don't AA In Combo if Champ Level Is >=", Cass_AA, 1, 18, 11)
+Cass_ks_function = menu:add_subcategory("Kill Steal", Cass_category)
+Cass_ks_use_q = menu:add_checkbox("Use Q", Cass_ks_function, 1)
+Cass_ks_use_w = menu:add_checkbox("Use W", Cass_ks_function, 1)
+Cass_ks_use_e = menu:add_checkbox("Use E", Cass_ks_function, 1)
+Cass_ks_use_r = menu:add_checkbox("Use R", Cass_ks_function, 1)
 
 Cass_lasthit = menu:add_subcategory("Last Hit", Cass_category)
 Cass_lasthit_use = menu:add_checkbox("Use E Last Hit", Cass_lasthit, 1)
-Cass_lasthit_posbuff = menu:add_checkbox("only Last Hit E When Minion is Posion", Cass_lasthit, 1)
+Cass_lasthit_auto = menu:add_checkbox("Auto E Last Hit", Cass_lasthit, 1)
+Cass_lasthit_draw = menu:add_checkbox("Draw Auto E Last Hit", Cass_lasthit, 1)
 Cass_lasthit_mana = menu:add_slider("Minimum Mana To E Last Hit", Cass_lasthit, 0, 200, 50)
 
 Cass_combo = menu:add_subcategory("Combo", Cass_category)
 Cass_combo_use_q = menu:add_checkbox("Use Q", Cass_combo, 1)
 Cass_combo_use_w = menu:add_checkbox("Use W", Cass_combo, 1)
 Cass_combo_use_e = menu:add_checkbox("Use E", Cass_combo, 1)
-Cass_combo_w_posbuff = menu:add_checkbox("Only W When Q Has Missed and Enemy Is Not Posioned", Cass_combo, 1)
+Cass_combo_use_r = menu:add_checkbox("Use R", Cass_combo, 1)
+Cass_combo_w_posbuff = menu:add_checkbox("Only W When Q Has Missed and Target Is Not Poisoned", Cass_combo, 1)
 Cass_combo_e_posbuff = menu:add_checkbox("Only E Combo When Posion Is Active", Cass_combo, 1)
 
 Cass_harass = menu:add_subcategory("Harass", Cass_category)
@@ -149,7 +147,7 @@ Cass_harass_use_q = menu:add_checkbox("Use Q", Cass_harass, 1)
 Cass_harass_use_w = menu:add_checkbox("Use W", Cass_harass, 1)
 Cass_harass_use_e = menu:add_checkbox("use E", Cass_harass, 1)
 Cass_harass_mana = menu:add_slider("Minimum Mana To Harass", Cass_harass, 0, 200, 50)
-Cass_harass_posbuff = menu:add_checkbox("Only E Harass When Posion Is Active", Cass_harass, 1)
+Cass_harass_posbuff = menu:add_checkbox("Only E Harass When Poison Is Active", Cass_harass, 1)
 
 Cass_laneclear = menu:add_subcategory("Lane Clear", Cass_category)
 Cass_laneclear_use_q = menu:add_checkbox("Use Q", Cass_laneclear, 1)
@@ -168,12 +166,15 @@ Cass_jungleclear_mana = menu:add_slider("Minimum Mana To jungle Clear", Cass_jun
 Cass_combo_r_options = menu:add_subcategory("R Settings", Cass_category)
 Cass_combo_r_set_key = menu:add_keybinder("Semi Manual R Key", Cass_combo_r_options, 65)
 Cass_combo_r_enemy_hp = menu:add_slider("Use Combo R if Enemy HP is lower than [%]", Cass_combo_r_options, 1, 100, 50)
-Cass_combo_r_my_hp = menu:add_slider("Only Combo R if My HP is Greater than [%]", Cass_combo_r_options, 1, 100, 30)
+Cass_combo_r_my_hp = menu:add_slider("Only Combo R if My HP is Greater than [%]", Cass_combo_r_options, 1, 100, 20)
+Cass_combo_r_auto = menu:add_checkbox("Use Auto R", Cass_combo_r_options, 1)
+Cass_combo_r_auto_x = menu:add_slider("Number Of Targets To Perform Auto R", Cass_combo_r_options, 1, 5, 3)
 
-Cass_draw = menu:add_subcategory("Draw Spell Ranges", Cass_category)
+Cass_draw = menu:add_subcategory("Drawing Features", Cass_category)
 Cass_draw_q = menu:add_checkbox("Draw Q", Cass_draw, 1)
 Cass_draw_e = menu:add_checkbox("Draw E", Cass_draw, 1)
 Cass_draw_r = menu:add_checkbox("Draw R", Cass_draw, 1)
+Cass_lasthit_draw = menu:add_checkbox("Draw Auto E Last Hit", Cass_draw, 1)
 
 -- Dmg Calculations
 
@@ -226,15 +227,16 @@ end
 local function GetEDmgLastHit(unit)
 	local Damage = 0
   local level = spellbook:get_spell_slot(SLOT_E).level
-  local BonusDmg = 0.6 * myHero.ability_power
-  local EDamage = (({10, 30, 50, 70, 90})[level] + 3)
+  local BonusDmg = myHero.total_attack_damage + (0.15 * myHero.ability_power)
+  local EDamage = ({20, 25, 30, 35, 40})[level] + BonusDmg
   if HasHealingBuff(unit) then
-      Damage = EDamage -5
+      Damage = EDamage - 10
   else
 			Damage = EDamage
   end
 	return unit:calculate_magic_damage(Damage)
 end
+
 
 local function GetRDmg(unit)
   local Damage = 0
@@ -292,15 +294,18 @@ local function CastE(unit)
 	if target.object_id ~= 0 then
 		if Ready(SLOT_E) then
 			if menu:get_value(Cass_internal) == 0 then
-			spellbook:cast_spell(SLOT_E, 0.125, x, y, z)
-		elseif menu:get_value(Cass_internal) == 1 then
-			spellbook:cast_spell_targetted(SLOT_E, target, 0.125)
+				origin = target.origin
+				x, y, z = origin.x, origin.y, origin.z
+				spellbook:cast_spell(SLOT_E, 0.125, x, y, z)
+			elseif menu:get_value(Cass_internal) == 1 then
+				spellbook:cast_spell_targetted(SLOT_E, target, 0.125)
+			end
 		end
 	end
 end
 
 local function CastR(unit)
-	target = selector:find_target(800, distance)
+	target = selector:find_target(825, distance)
 
 	if target.object_id ~= 0 then
 		if Ready(SLOT_R) then
@@ -311,7 +316,6 @@ local function CastR(unit)
 			if pred_output.can_cast then
         castPos = pred_output.cast_pos
         spellbook:cast_spell(SLOT_R, 0.5, castPos.x, castPos.y, castPos.z)
-
 			end
 		end
 	end
@@ -320,23 +324,13 @@ end
 -- Combo
 
 local function Combo()
-	if menu:get_value(Cass_AA_use) == 1 and local_player.level <= menu:get_value(Cass_AA_level) then
-		orbwalker:enable_auto_attacks()
-	elseif
-	if menu:get_value(Cass_AA_use) == 1 and local_player.level >= menu:get_value(Cass_AA_level) then
-		orbwalker:disable_auto_attacks()
-	elseif
-	if menu:get_value(Cass_AA_use) == 0 then
-		orbwalker:disable_auto_attacks()
-	end
-
 	if menu:get_value(Cass_combo_use_q) == 1 then
 		CastQ(target)
 	end
 
-	if menu:get_value(Cass_combo_use_w) == 1 then
+	if menu:get_value(Cass_combo_use_w) == 1 and not Ready(SLOT_Q) then
 		if menu:get_value(Cass_combo_w_posbuff) == 0 then
-		elseif menu:get_value(Cass_combo_w_posbuff) == 1 and not Ready(SLOT_Q) and HasPoison(target) == false then
+		elseif menu:get_value(Cass_combo_w_posbuff) == 1 and not Ready(SLOT_Q) and not HasPoison(target) then
 			CastW(target)
 		end
 	end
@@ -344,23 +338,22 @@ local function Combo()
 	if menu:get_value(Cass_combo_use_e) == 1 then
 		if menu:get_value(Cass_combo_e_posbuff) == 0 then
 		elseif menu:get_value(Cass_combo_e_posbuff) == 1 and HasPoison(target) then
-		CastE(target)
+			CastE(target)
 		end
 	end
 
 	if menu:get_value(Cass_combo_use_r) == 1 then
-		if target:health_percentage() <= menu:get_value(Cass_combo_r_enemy_hp) and local_player:health_percentage() >= menu:get_value(Cass_combo_r_my_hp)
-			CastR(target)
+		if target:health_percentage() <= menu:get_value(Cass_combo_r_enemy_hp) and local_player:health_percentage() >= menu:get_value(Cass_combo_r_my_hp) then
+			if myHero:is_facing(target) and target:is_facing(myHero) then
+				CastR(target)
+			end
 		end
 	end
-	orbwalker:enable_auto_attacks()
 end
-
 
 --Harass
 
 local function Harass()
-	orbwalker:enable_auto_attacks()
 	if menu:get_value(Cass_harass_use_q) == 1 then
 		if local_player.mana >= menu:get_value(Cass_harass_mana) then
 			CastQ(target)
@@ -391,51 +384,64 @@ local function KillSteal()
 	for i, target in ipairs(GetEnemyHeroes()) do
 
 		if target.object_id ~= 0 and myHero:distance_to(target.origin) <= 850 and Ready(SLOT_Q) and IsValid(target) then
+			if menu:get_value(Cass_ks_use_q) == 1 then
+				if GetQDmg(target) > target.health then
+					if Ready(SLOT_Q) then
+						origin = target.origin
+						x, y, z = origin.x, origin.y, origin.z
+						pred_output = pred:predict(0, 0.25, 850, 75, target, false, false)
 
-			if GetQDmg(target) > target.health then
-				if Ready(SLOT_Q) then
-					origin = target.origin
-					x, y, z = origin.x, origin.y, origin.z
-					pred_output = pred:predict(0, 0.25, 850, 75, target, false, false)
-
-					if pred_output.can_cast then
-	        	castPos = pred_output.cast_pos
-	        	spellbook:cast_spell(SLOT_Q, 0.25, castPos.x, castPos.y, castPos.z)
+						if pred_output.can_cast then
+	        		castPos = pred_output.cast_pos
+	        		spellbook:cast_spell(SLOT_Q, 0.25, castPos.x, castPos.y, castPos.z)
+						end
 					end
 				end
 			end
-		elseif target.object_id ~= 0 and myHero:distance_to(target.origin) <= 700 and Ready(SLOT_W) and IsValid(target) then
-			if GetWDmg(target) > target.health then
-				if Ready(SLOT_W) then
-					origin = target.origin
-					x, y, z = origin.x, origin.y, origin.z
-					pred_output = pred:predict(0, 0.25, 700, 160, target, false, false)
+		end
+		if target.object_id ~= 0 and myHero:distance_to(target.origin) <= 700 and Ready(SLOT_W) and IsValid(target) then
+			if menu:get_value(Cass_ks_use_w) == 1 then
+				if GetWDmg(target) > target.health then
+					if Ready(SLOT_W) then
+						origin = target.origin
+						x, y, z = origin.x, origin.y, origin.z
+						pred_output = pred:predict(0, 0.25, 700, 160, target, false, false)
 
-					if pred_output.can_cast then
-		        castPos = pred_output.cast_pos
-		        spellbook:cast_spell(SLOT_W, 0.25, castPos.x, castPos.y, castPos.z)
+						if pred_output.can_cast then
+		        	castPos = pred_output.cast_pos
+		        	spellbook:cast_spell(SLOT_W, 0.25, castPos.x, castPos.y, castPos.z)
+						end
 					end
 				end
 			end
-		elseif target.object_id ~= 0 and myHero:distance_to(target.origin) <= 700 and Ready(SLOT_E) and IsValid(target) then
-			if GetEDmg(target) > target.health then
-				if Ready(SLOT_E) then
-					if menu:get_value(Cass_internal) == 0 then
-					spellbook:cast_spell(SLOT_E, 0.125, x, y, z)
-				elseif menu:get_value(Cass_internal) == 1 then
-					spellbook:cast_spell_targetted(SLOT_E, target, 0.125)
+		end
+		if target.object_id ~= 0 and myHero:distance_to(target.origin) <= 700 and Ready(SLOT_E) and IsValid(target) then
+			if menu:get_value(Cass_ks_use_e) == 1 then
+				if GetEDmg(target) > target.health then
+					if Ready(SLOT_E) then
+						if menu:get_value(Cass_internal) == 0 then
+							origin = target.origin
+							x, y, z = origin.x, origin.y, origin.z
+							spellbook:cast_spell(SLOT_E, 0.125, x, y, z)
+						elseif menu:get_value(Cass_internal) == 1 then
+							spellbook:cast_spell_targetted(SLOT_E, target, 0.125)
+						end
+					end
 				end
 			end
-		elseif target.object_id ~= 0 and myHero:distance_to(target.origin) <= 800 and Ready(SLOT_R) and IsValid(target) then
-			if GetRDmg(target) > target.health then
-				if Ready(SLOT_R) then
-					origin = target.origin
-					x, y, z = origin.x, origin.y, origin.z
-					pred_output = pred:predict(0, 0.25, 825, 40, target, false, true)
+		end
+		if target.object_id ~= 0 and myHero:distance_to(target.origin) <= 825 and Ready(SLOT_R) and IsValid(target) then
+			if menu:get_value(Cass_ks_use_r) == 1 then
+				if GetRDmg(target) > target.health then
+					if Ready(SLOT_R) then
+						origin = target.origin
+						x, y, z = origin.x, origin.y, origin.z
+						pred_output = pred:predict(0, 0.25, 825, 40, target, false, true)
 
-					if pred_output.can_cast then
-		        castPos = pred_output.cast_pos
-		        spellbook:cast_spell(SLOT_R, 0.5, castPos.x, castPos.y, castPos.z)
+						if pred_output.can_cast then
+		        	castPos = pred_output.cast_pos
+		        	spellbook:cast_spell(SLOT_R, 0.5, castPos.x, castPos.y, castPos.z)
+						end
 					end
 				end
 			end
@@ -446,7 +452,6 @@ end
 -- Lane Clear
 
 local function Clear()
-	orbwalker:enable_auto_attacks()
 	minions = game.minions
 	for i, target in ipairs(minions) do
 
@@ -467,8 +472,7 @@ local function Clear()
 					end
 				end
 			end
-		end
-		if menu:get_value(Cass_laneclear_use_w) == 1 and Ready(SLOT_W) then
+		elseif menu:get_value(Cass_laneclear_use_w) == 1 and Ready(SLOT_W) then
 			if target.object_id ~= 0 and target.is_enemy and myHero:distance_to(target.origin) < 700 and IsValid(target) then
 				if GetMinionCount(500, target) >= menu:get_value(Cass_laneclear_min_w) then
 					if local_player.mana >= menu:get_value(Cass_laneclear_mana) then
@@ -485,16 +489,19 @@ local function Clear()
 					end
 				end
 			end
-		end
-		if menu:get_value(Cass_laneclear_use_e) == 1 and Ready(SLOT_E) then
-			if target.object_id ~= 0 and target.is_enemy and myHero:distance_to(target.origin) < 700 and IsValid(target) then
-				if GetMinionCount(500, target) >= 1 then
-					if local_player.mana >= menu:get_value(Cass_laneclear_mana) then
-						if Ready(SLOT_E) then
-							if menu:get_value(Cass_internal) == 0 then
-								spellbook:cast_spell(SLOT_E, 0.125, x, y, z)
-							elseif menu:get_value(Cass_internal) == 1 then
-								spellbook:cast_spell_targetted(SLOT_E, target, 0.125)
+	 	elseif menu:get_value(Cass_laneclear_use_e) == 1 and Ready(SLOT_E) then
+			if menu:get_value(Cass_lasthit_auto) == 0 then
+				if target.object_id ~= 0 and target.is_enemy and myHero:distance_to(target.origin) < 700 and IsValid(target) then
+					if GetMinionCount(500, target) >= 1 then
+						if local_player.mana >= menu:get_value(Cass_laneclear_mana) then
+							if Ready(SLOT_E) then
+								if menu:get_value(Cass_internal) == 0 then
+									origin = target.origin
+									x, y, z = origin.x, origin.y, origin.z
+									spellbook:cast_spell(SLOT_E, 0.125, x, y, z)
+								elseif menu:get_value(Cass_internal) == 1 then
+									spellbook:cast_spell_targetted(SLOT_E, target, 0.125)
+								end
 							end
 						end
 					end
@@ -507,7 +514,6 @@ end
 -- Jungle Clear
 
 local function JungleClear()
-	orbwalker:enable_auto_attacks()
 	minions = game.jungle_minions
 	for i, target in ipairs(minions) do
 
@@ -520,7 +526,7 @@ local function JungleClear()
 
 					if pred_output.can_cast then
 						castPos = pred_output.cast_pos
-						spellbook:cast_spell(SLOT_Q, 0.25, castPos.x, castPos.y, castPos.z
+						spellbook:cast_spell(SLOT_Q, 0.25, castPos.x, castPos.y, castPos.z)
 					end
 				end
 			end
@@ -543,6 +549,8 @@ local function JungleClear()
 			if local_player.mana >= menu:get_value(Cass_jungleclear_mana) then
 				if Ready(SLOT_E) then
 					if menu:get_value(Cass_internal) == 0 then
+						origin = target.origin
+						x, y, z = origin.x, origin.y, origin.z
 						spellbook:cast_spell(SLOT_E, 0.125, x, y, z)
 					elseif menu:get_value(Cass_internal) == 1 then
 						spellbook:cast_spell_targetted(SLOT_E, target, 0.125)
@@ -556,28 +564,51 @@ end
 -- Manual R Cast
 
 local function ManualRCast()
-	if Ready(SLOT_R) then
+	if myHero:is_facing(target) and target:is_facing(myHero) then
 		CastR(target)
+	end
+end
+
+-- Auto R >= Targets
+
+local function AutoRxTargets()
+	for i, target in ipairs(GetEnemyHeroes()) do
+
+		if target.object_id ~= 0 and myHero:distance_to(target.origin) <= 800 and Ready(SLOT_R) and IsValid(target) then
+			if menu:get_value(Cass_combo_r_auto) == 1 and GetEnemyCount(800, myHero) >= menu:get_value(Cass_combo_r_auto_x) then
+				if Ready(SLOT_R) then
+					if myHero:is_facing(target) and target:is_facing(myHero) then
+						origin = target.origin
+						x, y, z = origin.x, origin.y, origin.z
+						pred_output = pred:predict(0, 0.25, 825, 40, target, false, true)
+
+						if pred_output.can_cast then
+			        castPos = pred_output.cast_pos
+			        spellbook:cast_spell(SLOT_R, 0.5, castPos.x, castPos.y, castPos.z)
+						end
+					end
+				end
+			end
+		end
 	end
 end
 
 -- Auto E last Hit
 
-local function AutoELastHit()
+local function AutoELastHit(target)
 	minions = game.minions
 	for i, target in ipairs(minions) do
 		if target.object_id ~= 0 and target.is_enemy and myHero:distance_to(target.origin) < 700 and IsValid(target) then
-			if GetMinionCount(500, target) >= 1 then
+			if GetMinionCount(700, target) >= 1 then
 				if GetEDmgLastHit(target) > target.health then
-					if combo:get_mode() ~= MODE_COMBO and combo:get_mode() ~= MODE_HARASS then
-						if menu:get_value(Cass_lasthit_posbuff) == 1 and HasPoison(target) then
-						elseif menu:get_value(Cass_lasthit_posbuff) == 0 then
-							if Ready(SLOT_E) then
-								if menu:get_value(Cass_internal) == 0 then
-									spellbook:cast_spell(SLOT_E, 0.125, x, y, z)
-								elseif menu:get_value(Cass_internal) == 1 then
-									spellbook:cast_spell_targetted(SLOT_E, target, 0.125)
-								end
+					if combo:get_mode() ~= MODE_COMBO and combo:get_mode() ~= MODE_HARASS and not game:is_key_down(menu:get_value(Cass_combokey)) then
+						if Ready(SLOT_E) then
+							if menu:get_value(Cass_internal) == 0 then
+								origin = target.origin
+								x, y, z = origin.x, origin.y, origin.z
+								spellbook:cast_spell(SLOT_E, 0.125, x, y, z)
+							elseif menu:get_value(Cass_internal) == 1 then
+								spellbook:cast_spell_targetted(SLOT_E, target, 0.125)
 							end
 						end
 					end
@@ -589,6 +620,8 @@ end
 
 -- object returns, draw and tick usage
 
+screen_size = game.screen_size
+
 local function on_draw()
 	local_player = game.local_player
 
@@ -597,16 +630,26 @@ local function on_draw()
 		x, y, z = origin.x, origin.y, origin.z
 
 		if menu:get_value(Cass_draw_q) == 1 then
-			renderer:draw_circle(x, y, z, 850, 255, 255, 255, 255)
+			if Ready(SLOT_Q) then
+				renderer:draw_circle(x, y, z, 850, 255, 255, 255, 255)
+			end
 		end
 
 		if menu:get_value(Cass_draw_e) == 1 then
-			renderer:draw_circle(x, y, z, 700, 0, 0, 255, 255)
+			if Ready(SLOT_E) then
+				renderer:draw_circle(x, y, z, 700, 0, 0, 255, 255)
+			end
 		end
 
 		if menu:get_value(Cass_draw_r) == 1 then
-			renderer:draw_circle(x, y, z, 825, 225, 0, 0, 255)
+			if Ready(SLOT_R) then
+				renderer:draw_circle(x, y, z, 825,225, 0, 0, 255)
+			end
 		end
+	end
+
+	if menu:get_value(Cass_lasthit_draw) == 1 and menu:get_value(Cass_lasthit_auto) == 1 then
+		renderer:draw_text(screen_size.width / 2, screen_size.height / 20, "Auto E Only Last Hit Enabled")
 	end
 end
 
@@ -624,11 +667,18 @@ local function on_tick()
 		JungleClear()
 	end
 
-	if game:is_key_down(menu:get_value(Cass_manualcast_r)) then
+	if game:is_key_down(menu:get_value(Cass_combo_r_set_key)) then
 		ManualRCast()
 	end
 
-	if combo:get_mode() == MODE_LASTHIT and menu:get_value(Cass_lasthit_use) == 1 and local_player.mana >= menu:get_value(Cass_lasthit_mana) then
+	if menu:get_value(Cass_combo_r_auto) == 1 then
+		AutoRxTargets()
+	end
+
+	if combo:get_mode() == MODE_LASTHIT and menu:get_value(Cass_lasthit_use) == 1 and local_player.mana >= menu:get_value(Cass_lasthit_mana) and menu:get_value(Cass_lasthit_auto) == 0 then
+		AutoELastHit()
+	end
+	if menu:get_value(Cass_lasthit_auto) == 1 and local_player.mana >= menu:get_value(Cass_lasthit_mana) then
 		AutoELastHit()
 	end
 	KillSteal()
