@@ -44,7 +44,76 @@ local W = { range = 600, delay = .35, width = 700 , speed = 0 }
 local R = { range = 1000, delay = .75, width = 225, speed = 0 }
 
 
--- Return game data
+-- Return game data and maths
+
+--Converts from Degrees to Radians
+function vec3m.D2R(degrees)
+  radians = degrees * (math.pi / 180)
+  return radians
+end
+
+--Subtract two vectors
+function vec3m.Sub(vec1, vec2)
+  new_x = vec1.x - vec2.x
+  new_y = vec1.y - vec2.y
+  new_z = vec1.z - vec2.z
+  sub = vec3.new(new_x, new_y, new_z)
+  return sub
+end
+
+--Multiplies vector by magnitude
+function vec3m.VectorMag(vec, mag)
+  x, y, z = vec.x, vec.y, vec.z
+  new_x = mag * x
+  new_y = mag * y
+  new_z = mag * z
+  output = vec3.new(new_x, new_y, new_z)
+  return output
+end
+
+--Dot product of two vectors
+function vec3m.DotProduct(vec1, vec2)
+  dot = (vec1.x * vec2.x) + (vec1.y * vec2.y) + (vec1.z * vec2.z)
+  return dot
+end
+
+--Vector Magnitude
+function vec3m.Magnitude(vec)
+  mag = math.sqrt(vec.x^2 + vec.y^2 + vec.z^2)
+  return mag
+end
+
+--Returns the angle formed from a vector to both input vectors
+function vec3m.AngleBetween(vec1, vec2)
+  dot = vec3m.DotProduct(vec1, vec2)
+  mag1 = vec3m.Magnitude(vec1)
+  mag2 = vec3m.Magnitude(vec2)
+  output = vec3m.R2D(math.acos(dot / (mag1 * mag2)))
+  return output
+end
+
+function RectSkillShotCount(cast_pos, width, range)
+  count = 0
+  enemies = GetEnemyHeroes()
+  for i, enemies in ipairs(enemy) do
+    if enemies and enemies.is_visible and IsValid(enemies) and not enemies:has_buff_type(18) then
+      distance = enemies:distance_to(local_player.origin)
+      if distance < range then
+        origin = local_player.origin
+        direction = vec3m.Sub(cast_pos, origin):normalized()
+        direction_mag = vec3m.VectorMag(direction, range)
+        enemy_direction = vec3m.Sub(enemies.origin, origin)
+        angle = vec3m.AngleBetween(direction_mag, enemy_direction)
+        radians = vec3m.D2R(angle)
+        x_component = distance * math.cos(radians)
+        if math.abs(x_component) < (width / 2) then
+          count = count + 1
+        end
+      end
+		end
+	end
+  return count
+end
 
 local function GetEnemyHeroes()
 	local _EnemyHeroes = {}
@@ -75,19 +144,25 @@ local function IsValid(unit)
     return false
 end
 
-[[local function RxNumber(p2, unit)
-	p2 = pred_output.origin
+local function InsideVar(unit, p2)
+	p2 = p2.origin or
 	p2x, p2y, p2z = p2.x, p2.y, p2.z
-	p1 = myHero.origin
-	RW = 225 / 2
+	p1 = unit.origin
 	p1x, p1y, p1z = p1.x, p1.y, p1.z
 	local dx = p1x - p2x
 	local dz = (p1z or p1y) - (p2z or p2y)
 	return dx*dx + dz*dz
-	if unit.object_id ~= hero.object_id and GetDistanceSqr(unit, hero) < Range and  IsValid(hero) then
-		count = count + 1
-	end
-end]]
+end
+
+local function GetDistanceSqr(unit, p2)
+	p2 = p2.origin or myHero.origin
+	p2x, p2y, p2z = p2.x, p2.y, p2.z
+	p1 = unit.origin
+	p1x, p1y, p1z = p1.x, p1.y, p1.z
+	local dx = p1x - p2x
+	local dz = (p1z or p1y) - (p2z or p2y)
+	return dx*dx + dz*dz
+end
 
 local function GetDistanceSqr2(unit, p2)
 	p2x, p2y, p2z = p2.x, p2.y, p2.z
@@ -474,22 +549,22 @@ end
 
 local function AutoRxTargets()
 	for i, target in ipairs(GetEnemyHeroes()) do
-
 		if target.object_id ~= 0 and myHero:distance_to(target.origin) <= R.range and Ready(SLOT_R) and IsValid(target) then
-			if GetEnemyCount(R.range, myHero) >= menu:get_value(yone_combo_r_auto_x) then
-				if Ready(SLOT_R) then
-					origin = target.origin
-					x, y, z = origin.x, origin.y, origin.z
-					pred_output = pred:predict(R.speed, R.delay, R.range, R.width, target, false, false)
+			if Ready(SLOT_R) then
+				origin = target.origin
+				x, y, z = origin.x, origin.y, origin.z
+				pred_output = pred:predict(R.speed, R.delay, R.range, R.width, target, false, false)
+				if castPos = pred_output.cast_pos then
 					if pred_output.can_cast then
-						castPos = pred_output.cast_pos
-						spellbook:cast_spell(SLOT_R, R.delay, castPos.x, castPos.y, castPos.z)
+						if RectSkillShotCount(cast_pos, R.width, 1000) >= menu:get_value(yone_combo_r_auto_x) then
+							spellbook:cast_spell(SLOT_R, R.delay, castPos.x, castPos.y, castPos.z)
+						end
 					end
 				end
 			end
 		end
 	end
-end
+end	
 
 
 -- Auto Q last Hit
