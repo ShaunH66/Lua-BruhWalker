@@ -47,13 +47,13 @@ local R = { range = 1000, delay = .75, width = 225, speed = 0 }
 -- Return game data and maths
 
 --Converts from Degrees to Radians
-function vec3m.D2R(degrees)
+local function D2R(degrees)
   radians = degrees * (math.pi / 180)
   return radians
 end
 
 --Subtract two vectors
-function vec3m.Sub(vec1, vec2)
+local function Sub(vec1, vec2)
   new_x = vec1.x - vec2.x
   new_y = vec1.y - vec2.y
   new_z = vec1.z - vec2.z
@@ -62,7 +62,7 @@ function vec3m.Sub(vec1, vec2)
 end
 
 --Multiplies vector by magnitude
-function vec3m.VectorMag(vec, mag)
+local function VectorMag(vec, mag)
   x, y, z = vec.x, vec.y, vec.z
   new_x = mag * x
   new_y = mag * y
@@ -72,47 +72,24 @@ function vec3m.VectorMag(vec, mag)
 end
 
 --Dot product of two vectors
-function vec3m.DotProduct(vec1, vec2)
+local function DotProduct(vec1, vec2)
   dot = (vec1.x * vec2.x) + (vec1.y * vec2.y) + (vec1.z * vec2.z)
   return dot
 end
 
 --Vector Magnitude
-function vec3m.Magnitude(vec)
+local function Magnitude(vec)
   mag = math.sqrt(vec.x^2 + vec.y^2 + vec.z^2)
   return mag
 end
 
 --Returns the angle formed from a vector to both input vectors
-function vec3m.AngleBetween(vec1, vec2)
-  dot = vec3m.DotProduct(vec1, vec2)
-  mag1 = vec3m.Magnitude(vec1)
-  mag2 = vec3m.Magnitude(vec2)
-  output = vec3m.R2D(math.acos(dot / (mag1 * mag2)))
+local function AngleBetween(vec1, vec2)
+  dot = DotProduct(vec1, vec2)
+  mag1 = Magnitude(vec1)
+  mag2 = Magnitude(vec2)
+  output = (math.acos(dot / (mag1 * mag2)))
   return output
-end
-
-function RectSkillShotCount(cast_pos, width, range)
-  count = 0
-  enemies = GetEnemyHeroes()
-  for i, enemies in ipairs(enemy) do
-    if enemies and enemies.is_visible and IsValid(enemies) and not enemies:has_buff_type(18) then
-      distance = enemies:distance_to(local_player.origin)
-      if distance < range then
-        origin = local_player.origin
-        direction = vec3m.Sub(cast_pos, origin):normalized()
-        direction_mag = vec3m.VectorMag(direction, range)
-        enemy_direction = vec3m.Sub(enemies.origin, origin)
-        angle = vec3m.AngleBetween(direction_mag, enemy_direction)
-        radians = vec3m.D2R(angle)
-        x_component = distance * math.cos(radians)
-        if math.abs(x_component) < (width / 2) then
-          count = count + 1
-        end
-      end
-		end
-	end
-  return count
 end
 
 local function GetEnemyHeroes()
@@ -210,6 +187,7 @@ local function Is_Me(unit)
 	end
 	return false
 end
+
 
 -- Menu Config
 
@@ -460,7 +438,6 @@ local function Clear()
 							origin = target.origin
 							x, y, z = origin.x, origin.y, origin.z
 							spellbook:cast_spell(SLOT_Q, Q.delay, x, y, z)
-							orbwalker:reset_aa()
 						end
 					end
 				end
@@ -496,7 +473,6 @@ local function JungleClear()
 				origin = target.origin
 				x, y, z = origin.x, origin.y, origin.z
 				spellbook:cast_spell(SLOT_Q, Q.delay, x, y, z)
-				orbwalker:reset_aa()
 			end
 		end
 		if target.object_id ~= 0 and menu:get_value(yone_jungleclear_use_w) == 1 and Ready(SLOT_W) and myHero:distance_to(target.origin) < W.range and IsValid(target) then
@@ -538,24 +514,25 @@ end
 -- Auto R >= Targets
 
 local function AutoRxTargets()
+
+	local function AutoRxTargets()
 	for i, target in ipairs(GetEnemyHeroes()) do
+
 		if target.object_id ~= 0 and myHero:distance_to(target.origin) <= R.range and Ready(SLOT_R) and IsValid(target) then
-			if Ready(SLOT_R) then
-				origin = target.origin
-				x, y, z = origin.x, origin.y, origin.z
-				pred_output = pred:predict(R.speed, R.delay, R.range, R.width, target, false, false)
-				if castPos = pred_output.cast_pos then
+			if GetEnemyCount(R.range, myHero) >= menu:get_value(yone_combo_r_auto_x) then
+				if Ready(SLOT_R) then
+					origin = target.origin
+					x, y, z = origin.x, origin.y, origin.z
+					pred_output = pred:predict(R.speed, R.delay, R.range, R.width, target, false, false)
 					if pred_output.can_cast then
-						if RectSkillShotCount(cast_pos, R.width, 1000) >= menu:get_value(yone_combo_r_auto_x) then
-							spellbook:cast_spell(SLOT_R, R.delay, castPos.x, castPos.y, castPos.z)
-						end
+						castPos = pred_output.cast_pos
+						spellbook:cast_spell(SLOT_R, R.delay, castPos.x, castPos.y, castPos.z)
 					end
 				end
 			end
 		end
 	end
 end
-
 
 -- Auto Q last Hit
 
@@ -596,6 +573,7 @@ local function on_process_spell(obj, args)
 		end
 	end
 end
+
 
 -- object returns, draw and tick usage
 
