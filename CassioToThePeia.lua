@@ -5,14 +5,17 @@ end
 -- AutoUpdate
 do
     local function AutoUpdate()
-		local Version = 5
+		local Version = 6.1
 		local file_name = "CassioToThePeia.lua"
 		local url = "http://raw.githubusercontent.com/TheShaunyboi/BruhWalkerEncrypted/main/CassioToThePeia.lua"
         local web_version = http:get("https://raw.githubusercontent.com/TheShaunyboi/BruhWalkerEncrypted/main/CassioToThePeia.lua.version.txt")
         console:log("Cassiopeia.Lua Vers: "..Version)
 		console:log("Cassiopeia.Web Vers: "..tonumber(web_version))
 		if tonumber(web_version) == Version then
-            console:log("Sexy Cassiopeia successfully loaded.....")
+            console:log("Sexy Cassiopeia v6 successfully loaded.....")
+						console:log("----------------------------------------------------------------------------------------------")
+						console:log("Update v6.1: Added semi key kill function, Fixed E Last Hit, Added AA Comb Stop Level Slider")
+						console:log("----------------------------------------------------------------------------------------------")
         else
 			http:download_file(url, file_name)
             console:log("Sexy Cassiopeia Update available.....")
@@ -122,6 +125,9 @@ Cass_enabled = menu:add_checkbox("Enabled", Cass_category, 1)
 Cass_combokey = menu:add_keybinder("Combo Mode Key", Cass_category, 32)
 Cass_internal = menu:add_checkbox("Use Internal Spell Casting", Cass_category, 1)
 
+Cass_aa_mode = menu:add_subcategory("Auto Attacks Selector", Cass_category)
+Cass_aa = menu:add_slider("Stop AA In Combo Mode >= Slider Level", Cass_aa_mode, 1, 18, 11)
+
 Cass_ks_function = menu:add_subcategory("Kill Steal", Cass_category)
 Cass_ks_use_q = menu:add_checkbox("Use Q", Cass_ks_function, 1)
 Cass_ks_use_w = menu:add_checkbox("Use W", Cass_ks_function, 1)
@@ -131,7 +137,6 @@ Cass_ks_use_r = menu:add_checkbox("Use R", Cass_ks_function, 1)
 Cass_lasthit = menu:add_subcategory("Last Hit", Cass_category)
 Cass_lasthit_use = menu:add_checkbox("Use E Last Hit", Cass_lasthit, 1)
 Cass_lasthit_auto = menu:add_checkbox("Auto E Last Hit", Cass_lasthit, 1)
-Cass_lasthit_draw = menu:add_checkbox("Draw Auto E Last Hit", Cass_lasthit, 1)
 Cass_lasthit_mana = menu:add_slider("Minimum Mana To E Last Hit", Cass_lasthit, 0, 200, 50)
 
 Cass_combo = menu:add_subcategory("Combo", Cass_category)
@@ -170,11 +175,15 @@ Cass_combo_r_my_hp = menu:add_slider("Only Combo R if My HP is Greater than [%]"
 Cass_combo_r_auto = menu:add_checkbox("Use Auto R", Cass_combo_r_options, 1)
 Cass_combo_r_auto_x = menu:add_slider("Number Of Targets To Perform Auto R", Cass_combo_r_options, 1, 5, 3)
 
+Cass_kill = menu:add_subcategory("Semi Key -Can Kill Function-", Cass_category)
+Cass_killkey = menu:add_keybinder("Kill Key", Cass_kill, 17, "IF Draw Shows Full Combo Can Kill Target - Holding Kill key Will Perform R First Then Full Combo")
+
 Cass_draw = menu:add_subcategory("Drawing Features", Cass_category)
 Cass_draw_q = menu:add_checkbox("Draw Q", Cass_draw, 1)
 Cass_draw_e = menu:add_checkbox("Draw E", Cass_draw, 1)
 Cass_draw_r = menu:add_checkbox("Draw R", Cass_draw, 1)
 Cass_lasthit_draw = menu:add_checkbox("Draw Auto E Last Hit", Cass_draw, 1)
+Cass_draw_kill = menu:add_checkbox("Full Combo Can Kill - Hold Kill key", Cass_draw, 1)
 
 -- Dmg Calculations
 
@@ -226,9 +235,8 @@ end
 
 local function GetEDmgLastHit(unit)
 	local Damage = 0
-  local level = spellbook:get_spell_slot(SLOT_E).level
-  local BonusDmg = myHero.total_attack_damage + (0.15 * myHero.ability_power)
-  local EDamage = ({20, 25, 30, 35, 40})[level] + BonusDmg
+  local level = myHero.level
+  local EDamage = (48 + 4 * level) + (0.1 * myHero.ability_power)
   if HasHealingBuff(unit) then
       Damage = EDamage - 10
   else
@@ -305,7 +313,7 @@ local function CastE(unit)
 end
 
 local function CastR(unit)
-	target = selector:find_target(825, distance)
+	target = selector:find_target(800, distance)
 
 	if target.object_id ~= 0 then
 		if Ready(SLOT_R) then
@@ -324,6 +332,15 @@ end
 -- Combo
 
 local function Combo()
+	local ChampLevel = myHero.level
+
+	if menu:get_value(Cass_aa) <= ChampLevel then
+		orbwalker:disable_auto_attacks()
+		if menu:get_value(Cass_aa) > ChampLevel then
+			orbwalker:enable_auto_attacks()
+		end
+	end
+
 	if menu:get_value(Cass_combo_use_q) == 1 then
 		CastQ(target)
 	end
@@ -349,6 +366,7 @@ local function Combo()
 			end
 		end
 	end
+---orbwalker:enable_auto_attacks()
 end
 
 --Harass
@@ -430,7 +448,7 @@ local function KillSteal()
 				end
 			end
 		end
-		if target.object_id ~= 0 and myHero:distance_to(target.origin) <= 825 and Ready(SLOT_R) and IsValid(target) then
+		if target.object_id ~= 0 and myHero:distance_to(target.origin) <= 800 and Ready(SLOT_R) and IsValid(target) then
 			if menu:get_value(Cass_ks_use_r) == 1 then
 				if GetRDmg(target) > target.health then
 					if Ready(SLOT_R) then
@@ -445,6 +463,34 @@ local function KillSteal()
 					end
 				end
 			end
+		end
+	end
+end
+
+-- Can Engage Function
+
+local function Engage()
+
+	for i, target in ipairs(GetEnemyHeroes()) do
+		local fulldmg = GetQDmg(target) + GetWDmg(target) + GetEDmg(target) * 2 + GetRDmg(target)
+
+		if target.object_id ~= 0 and myHero:distance_to(target.origin) <= 1000 and IsValid(target) then
+			if fulldmg > target.health then
+				if Ready(SLOT_R) then
+					if myHero:is_facing(target) and target:is_facing(myHero) then
+						CastR(target)
+					end
+				end
+			end
+		end
+		if not Ready(SLOT_R) then
+			CastQ(target)
+		end
+		if not Ready(SLOT_R) then
+			CastW(target)
+		end
+		if not Ready(SLOT_R) then
+			CastE(target)
 		end
 	end
 end
@@ -564,8 +610,12 @@ end
 -- Manual R Cast
 
 local function ManualRCast()
-	if myHero:is_facing(target) and target:is_facing(myHero) then
-		CastR(target)
+	for i, target in ipairs(GetEnemyHeroes()) do
+		if target.object_id ~= 0 and myHero:distance_to(target.origin) <= 800 and Ready(SLOT_R) and IsValid(target) then
+			if myHero:is_facing(target) and target:is_facing(myHero) then
+				CastR(target)
+			end
+		end
 	end
 end
 
@@ -637,7 +687,7 @@ local function on_draw()
 
 		if menu:get_value(Cass_draw_e) == 1 then
 			if Ready(SLOT_E) then
-				renderer:draw_circle(x, y, z, 700, 0, 0, 255, 255)
+				renderer:draw_circle(x, y, z, 750, 0, 0, 255, 255)
 			end
 		end
 
@@ -648,8 +698,23 @@ local function on_draw()
 		end
 	end
 
-	if menu:get_value(Cass_lasthit_draw) == 1 and menu:get_value(Cass_lasthit_auto) == 1 then
-		renderer:draw_text(screen_size.width / 2, screen_size.height / 20, "Auto E Only Last Hit Enabled")
+	if menu:get_value(Cass_lasthit_draw) == 1 then
+		if menu:get_value(Cass_lasthit_auto) == 1 then
+			if menu:get_value(Cass_lasthit_use) == 1 then
+				renderer:draw_text_centered(screen_size.width / 2, screen_size.height / 20, "Auto E Only Last Hit Enabled")
+			end
+		end
+	end
+
+	for i, target in ipairs(GetEnemyHeroes()) do
+		local fulldmg = GetQDmg(target) + GetWDmg(target) + GetEDmg(target) * 2 + GetRDmg(target)
+		if target.object_id ~= 0 and myHero:distance_to(target.origin) <= 1000 then
+			if menu:get_value(Cass_draw_kill) == 1 then
+				if fulldmg > target.health and IsValid(target) then
+					renderer:draw_text_centered(screen_size.width / 2, screen_size.height / 20 + 30, "Full Combo Can Kill Target < 1000 Range - Hold KILL key")
+				end
+			end
+		end
 	end
 end
 
@@ -681,6 +746,19 @@ local function on_tick()
 	if menu:get_value(Cass_lasthit_auto) == 1 and local_player.mana >= menu:get_value(Cass_lasthit_mana) then
 		AutoELastHit()
 	end
+
+	if game:is_key_down(menu:get_value(Cass_killkey)) then
+		orbwalker:move_to()
+		Engage()
+	end
+
+	if not game:is_key_down(menu:get_value(Cass_combokey)) then
+		orbwalker:enable_auto_attacks()
+	 	if not game:is_key_down(menu:get_value(Cass_killkey)) then
+			orbwalker:enable_auto_attacks()
+		end
+	end
+
 	KillSteal()
 end
 
