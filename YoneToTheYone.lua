@@ -41,7 +41,7 @@ end
 
 local Q = { range = 450, delay = .25 }
 local W = { range = 600, delay = .35, width = 700 , speed = 0 }
-local R = { range = 1000, delay = .75, width = 225, speed = 0 }
+local R = { range = 950, delay = .75, width = 225, speed = 0 }
 
 
 -- Return game data and maths
@@ -208,6 +208,7 @@ yone_combo = menu:add_subcategory("Combo", yone_category)
 yone_combo_use_q = menu:add_checkbox("Use Q", yone_combo, 1)
 yone_combo_use_w = menu:add_checkbox("Use W", yone_combo, 1)
 yone_combo_use_r = menu:add_checkbox("Use R", yone_combo, 1)
+yone_combo_first_aa = menu:add_checkbox("Use AA Before First Q", yone_combo, 1)
 
 yone_harass = menu:add_subcategory("Harass", yone_category)
 yone_harass_use_q = menu:add_checkbox("Use Q", yone_harass, 1)
@@ -226,15 +227,16 @@ yone_jungleclear_use_w = menu:add_checkbox("Use W", yone_jungleclear, 1)
 yone_combo_r_options = menu:add_subcategory("R Settings", yone_category)
 yone_combo_r_enemy_hp = menu:add_slider("Use Combo R if Enemy HP is lower than [%]", yone_combo_r_options, 1, 100, 50)
 yone_combo_r_my_hp = menu:add_slider("Only Combo R if My HP is Greater than [%]", yone_combo_r_options, 1, 100, 20)
-yone_combo_r_auto = menu:add_checkbox("Use Auto R", yone_combo_r_options, 0)
-yone_combo_r_auto_x = menu:add_slider("Number Of Targets To Perform Auto R", yone_combo_r_options, 1, 5, 3)
 yone_combo_r_set_key = menu:add_keybinder("Semi Manual R Key", yone_combo_r_options, 65)
+--[[yone_combo_r_auto = menu:add_checkbox("Use Auto R", yone_combo_r_options, 0)
+yone_combo_r_auto_x = menu:add_slider("Number Of Targets To Perform Auto R", yone_combo_r_options, 1, 5, 3)]]
 
 yone_draw = menu:add_subcategory("Drawing Features", yone_category)
 yone_draw_q = menu:add_checkbox("Draw Q", yone_draw, 1)
 yone_draw_w = menu:add_checkbox("Draw W", yone_draw, 1)
 yone_draw_r = menu:add_checkbox("Draw R", yone_draw, 1)
 yone_lasthit_draw = menu:add_checkbox("Draw Auto Q Last Hit", yone_draw, 1)
+yone_draw_kill = menu:add_checkbox("Draw Full Combo Can Kill", yone_draw, 1)
 
 -- Damage
 
@@ -339,7 +341,13 @@ local function Combo()
 
 
 	if menu:get_value(yone_combo_use_q) == 1 then
-		if not orbwalker:can_attack() then
+		if menu:get_value(yone_combo_first_aa) == 1 and not orbwalker:can_attack() then
+			CastQ(target)
+		end
+	end
+
+	if menu:get_value(yone_combo_use_q) == 1 then
+		if menu:get_value(yone_combo_first_aa) == 0 then
 			CastQ(target)
 		end
 	end
@@ -513,7 +521,7 @@ end
 
 -- Auto R >= Targets
 
-local function AutoRxTargets()
+--[[local function AutoRxTargets()
 
 	local function AutoRxTargets()
 	for i, target in ipairs(GetEnemyHeroes()) do
@@ -532,7 +540,7 @@ local function AutoRxTargets()
 			end
 		end
 	end
-end
+end]]
 
 -- Auto Q last Hit
 
@@ -567,7 +575,7 @@ local function on_process_spell(obj, args)
 				orbwalker:attack_target(Target)
 			end
 		end
-		if args.spell_name == "YoneBasicAttack" or "YoneBasicAttack2" or "YoneBasicAttack3" or "YoneBasicAttack4" then
+		if args.spell_name == "YoneBasicAttack" or "YoneBasicAttack2" or "YoneBasicAttack3" or "YoneBasicAttack4" or "YoneCritAttack" or "YoneCritAttack2" or "YoneCritAttack3" or "YoneCritAttack4" then
 			AutoTime = game.game_time
 			Wcast = true
 		end
@@ -603,10 +611,23 @@ local function on_draw()
 				renderer:draw_circle(x, y, z, R.range, 225, 0, 0, 255)
 			end
 		end
+
+		for i, target in ipairs(GetEnemyHeroes()) do
+			local fulldmg = GetQDmg(target) + GetWDmg(target) + GetRDmg(target) + myHero.total_attack_damage * 3
+			if target.object_id ~= 0 and myHero:distance_to(target.origin) <= 1000 then
+				if menu:get_value(yone_draw_kill) == 1 then
+					if fulldmg > target.health and IsValid(target) and Ready(SLOT_R) then
+						renderer:draw_text_centered(screen_size.width / 2, screen_size.height / 20 + 30, "Full Combo + 3 AA Can Kill Target < 1000 Range")
+					end
+				end
+			end
+		end
 	end
 
-	if menu:get_value(yone_lasthit_draw) == 1 and menu:get_value(yone_lasthit_auto) == 1 then
-		renderer:draw_text(screen_size.width / 2, screen_size.height / 20, "Auto Q Only Last Hit Enabled")
+	if menu:get_value(yone_lasthit_draw) == 1 then
+		if menu:get_value(yone_lasthit_auto) == 1 then
+			renderer:draw_text_centered(screen_size.width / 2, screen_size.height / 20, "Auto Q Only Last Hit Enabled")
+		end
 	end
 end
 
@@ -628,14 +649,14 @@ local function on_tick()
 		ManualRCast()
 	end
 
-	if menu:get_value(yone_combo_r_auto) == 1 then
+	--[[if menu:get_value(yone_combo_r_auto) == 1 then
 		AutoRxTargets()
-	end
+	end]]
 
 	if combo:get_mode() == MODE_LASTHIT and menu:get_value(yone_lasthit_use) == 1 and menu:get_value(yone_lasthit_auto) == 0 then
 		AutoQLastHit()
 	end
-	if menu:get_value(yone_lasthit_auto) == 1 then
+	if menu:get_value(yone_lasthit_auto) == 1 and menu:get_value(yone_lasthit_use) == 1 then
 		AutoQLastHit()
 	end
 
