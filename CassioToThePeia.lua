@@ -5,16 +5,16 @@ end
 -- AutoUpdate
 do
     local function AutoUpdate()
-		local Version = 6.2
+		local Version = 6.3
 		local file_name = "CassioToThePeia.lua"
 		local url = "http://raw.githubusercontent.com/TheShaunyboi/BruhWalkerEncrypted/main/CassioToThePeia.lua"
         local web_version = http:get("https://raw.githubusercontent.com/TheShaunyboi/BruhWalkerEncrypted/main/CassioToThePeia.lua.version.txt")
         console:log("Cassiopeia.Lua Vers: "..Version)
 		console:log("Cassiopeia.Web Vers: "..tonumber(web_version))
 		if tonumber(web_version) == Version then
-            console:log("Sexy Cassiopeia v6.2 successfully loaded.....")
+            console:log("Sexy Cassiopeia v6.3 successfully loaded.....")
 						console:log("----------------------------------------------------------------------------------------------")
-						console:log("Update v6.2: Added Semi Key Kill Function, Added AA Comb Stop Level Slider")
+						console:log("Update v6.3: Added Semi Key Kill Function, Added AA Comb Stop Level Slider")
 						console:log("----------------------------------------------------------------------------------------------")
         else
 			http:download_file(url, file_name)
@@ -123,7 +123,6 @@ end
 Cass_category = menu:add_category("Shaun's Sexy Cassiopeia")
 Cass_enabled = menu:add_checkbox("Enabled", Cass_category, 1)
 Cass_combokey = menu:add_keybinder("Combo Mode Key", Cass_category, 32)
-Cass_internal = menu:add_checkbox("Use Internal Spell Casting", Cass_category, 1)
 
 Cass_aa_mode = menu:add_subcategory("Auto Attacks Selector", Cass_category)
 Cass_aa = menu:add_slider("Stop AA In Combo Mode >= Slider Level", Cass_aa_mode, 1, 18, 11)
@@ -176,7 +175,7 @@ Cass_combo_r_auto = menu:add_checkbox("Use Auto R", Cass_combo_r_options, 1)
 Cass_combo_r_auto_x = menu:add_slider("Number Of Targets To Perform Auto R", Cass_combo_r_options, 1, 5, 3)
 
 Cass_kill = menu:add_subcategory("Semi Key -Can Kill Function-", Cass_category)
-Cass_killkey = menu:add_keybinder("Kill Key", Cass_kill, 17, "IF Draw Shows Full Combo Can Kill Target - Holding Kill key Will Perform R First Then Full Combo")
+Cass_killkey = menu:add_keybinder("Kill Key", Cass_kill, 88, "IF Draw Shows Full Combo Can Kill Target - Holding Kill key Will Perform R First Then Full Combo")
 
 Cass_draw = menu:add_subcategory("Drawing Features", Cass_category)
 Cass_draw_q = menu:add_checkbox("Draw Q", Cass_draw, 1)
@@ -262,7 +261,7 @@ end
 -- Casting
 
 local function CastQ(unit)
-	target = selector:find_target(850, distance)
+	target = selector:find_target(850, mode_health)
 
 	if target.object_id ~= 0 then
 		if Ready(SLOT_Q) then
@@ -280,7 +279,7 @@ end
 
 
 local function CastW(unit)
-	target = selector:find_target(700, distance)
+	target = selector:find_target(700, mode_health)
 
 	if target.object_id ~= 0 then
 		if Ready(SLOT_W) then
@@ -297,23 +296,17 @@ local function CastW(unit)
 end
 
 local function CastE(unit)
-	target = selector:find_target(700, distance)
+	target = selector:find_target(700, mode_health)
 
 	if target.object_id ~= 0 then
 		if Ready(SLOT_E) then
-			if menu:get_value(Cass_internal) == 0 then
-				origin = target.origin
-				x, y, z = origin.x, origin.y, origin.z
-				spellbook:cast_spell(SLOT_E, 0.125, x, y, z)
-			elseif menu:get_value(Cass_internal) == 1 then
-				spellbook:cast_spell_targetted(SLOT_E, target, 0.125)
-			end
+			spellbook:cast_spell_targetted(SLOT_E, target, 0.125)
 		end
 	end
 end
 
 local function CastR(unit)
-	target = selector:find_target(800, distance)
+	target = selector:find_target(800, mode_health)
 
 	if target.object_id ~= 0 then
 		if Ready(SLOT_R) then
@@ -348,9 +341,12 @@ local function Combo()
 	if menu:get_value(Cass_combo_use_w) == 1 and not Ready(SLOT_Q) then
 		if menu:get_value(Cass_combo_w_posbuff) == 0 then
 			CastW(target)
-			if menu:get_value(Cass_combo_w_posbuff) == 1 and not Ready(SLOT_Q) and not HasPoison(target) then
-				CastW(target)
-			end
+		end
+	end
+
+	if menu:get_value(Cass_combo_use_w) == 1 and not Ready(SLOT_Q) then
+		if menu:get_value(Cass_combo_w_posbuff) == 1 and not HasPoison(target) then
+			CastW(target)
 		end
 	end
 
@@ -395,7 +391,13 @@ local function Harass()
 		if local_player.mana >= menu:get_value(Cass_harass_mana) then
 			if menu:get_value(Cass_harass_posbuff) == 0 then
 				CastE(target)
-			elseif menu:get_value(Cass_harass_posbuff) == 1 and HasPoison(target) then
+			end
+		end
+	end
+
+	if menu:get_value(Cass_harass_use_e) == 1 then
+		if local_player.mana >= menu:get_value(Cass_harass_mana) then
+			if menu:get_value(Cass_harass_posbuff) == 1 and HasPoison(target) then
 				CastE(target)
 			end
 		end
@@ -444,13 +446,7 @@ local function KillSteal()
 			if menu:get_value(Cass_ks_use_e) == 1 then
 				if GetEDmg(target) > target.health then
 					if Ready(SLOT_E) then
-						if menu:get_value(Cass_internal) == 0 then
-							origin = target.origin
-							x, y, z = origin.x, origin.y, origin.z
-							spellbook:cast_spell(SLOT_E, 0.125, x, y, z)
-						elseif menu:get_value(Cass_internal) == 1 then
-							spellbook:cast_spell_targetted(SLOT_E, target, 0.125)
-						end
+						spellbook:cast_spell_targetted(SLOT_E, target, 0.125)
 					end
 				end
 			end
@@ -548,13 +544,7 @@ local function Clear()
 					if GetMinionCount(500, target) >= 1 then
 						if local_player.mana >= menu:get_value(Cass_laneclear_mana) then
 							if Ready(SLOT_E) then
-								if menu:get_value(Cass_internal) == 0 then
-									origin = target.origin
-									x, y, z = origin.x, origin.y, origin.z
-									spellbook:cast_spell(SLOT_E, 0.125, x, y, z)
-								elseif menu:get_value(Cass_internal) == 1 then
-									spellbook:cast_spell_targetted(SLOT_E, target, 0.125)
-								end
+								spellbook:cast_spell_targetted(SLOT_E, target, 0.125)
 							end
 						end
 					end
@@ -601,13 +591,7 @@ local function JungleClear()
 		if target.object_id ~= 0 and menu:get_value(Cass_jungleclear_use_e) == 1 and Ready(SLOT_E) and myHero:distance_to(target.origin) < 700 and IsValid(target) then
 			if local_player.mana >= menu:get_value(Cass_jungleclear_mana) then
 				if Ready(SLOT_E) then
-					if menu:get_value(Cass_internal) == 0 then
-						origin = target.origin
-						x, y, z = origin.x, origin.y, origin.z
-						spellbook:cast_spell(SLOT_E, 0.125, x, y, z)
-					elseif menu:get_value(Cass_internal) == 1 then
-						spellbook:cast_spell_targetted(SLOT_E, target, 0.125)
-					end
+					spellbook:cast_spell_targetted(SLOT_E, target, 0.125)
 				end
 			end
 		end
@@ -660,13 +644,7 @@ local function AutoELastHit(target)
 				if GetEDmgLastHit(target) > target.health then
 					if combo:get_mode() ~= MODE_COMBO and combo:get_mode() ~= MODE_HARASS and not game:is_key_down(menu:get_value(Cass_combokey)) then
 						if Ready(SLOT_E) then
-							if menu:get_value(Cass_internal) == 0 then
-								origin = target.origin
-								x, y, z = origin.x, origin.y, origin.z
-								spellbook:cast_spell(SLOT_E, 0.125, x, y, z)
-							elseif menu:get_value(Cass_internal) == 1 then
-								spellbook:cast_spell_targetted(SLOT_E, target, 0.125)
-							end
+							spellbook:cast_spell_targetted(SLOT_E, target, 0.125)
 						end
 					end
 				end
@@ -708,7 +686,7 @@ local function on_draw()
 	if menu:get_value(Cass_lasthit_draw) == 1 then
 		if menu:get_value(Cass_lasthit_auto) == 1 then
 			if menu:get_value(Cass_lasthit_use) == 1 then
-				renderer:draw_text_centered(screen_size.width / 2, screen_size.height / 20, "Auto E Only Last Hit Enabled")
+				renderer:draw_text_big_centered(screen_size.width / 2, 0, "Auto E Only Last Hit Enabled")
 			end
 		end
 	end
@@ -719,7 +697,7 @@ local function on_draw()
 			if target.object_id ~= 0 and myHero:distance_to(target.origin) <= 1000 then
 				if menu:get_value(Cass_draw_kill) == 1 then
 					if fulldmg > target.health and IsValid(target) then
-						renderer:draw_text_centered(screen_size.width / 2, screen_size.height / 20 + 30, "Full Combo Can Kill Target < 1000 Range - Hold KILL key")
+						renderer:draw_text_big_centered(screen_size.width / 2, screen_size.height / 20, "Full Combo Can Kill Target < 1000 Range - Hold KILL key")
 					end
 				end
 			end
