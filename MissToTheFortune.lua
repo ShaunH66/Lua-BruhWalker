@@ -5,14 +5,14 @@ end
 -- AutoUpdate
 do
     local function AutoUpdate()
-		local Version = 6.1
+		local Version = 6.2
 		local file_name = "MissToTheFortune.lua"
 		local url = "http://raw.githubusercontent.com/TheShaunyboi/BruhWalkerEncrypted/main/MissToTheFortune.lua"
         local web_version = http:get("https://raw.githubusercontent.com/TheShaunyboi/BruhWalkerEncrypted/main/MissToTheFortune.lua.version.txt")
         console:log("MissFortune.Lua Vers: "..Version)
 		console:log("MissFortune.Web Vers: "..tonumber(web_version))
 		if tonumber(web_version) == Version then
-            console:log("Sexy Miss Fortune successfully loaded.....")
+            console:log("Sexy Miss Fortune v6.2 successfully loaded.....")
         else
 			http:download_file(url, file_name)
             console:log("Sexy Miss Fortune Update available.....")
@@ -155,9 +155,7 @@ local function CastQ(unit)
 	if target.object_id ~= 0 then
 		if spellbook:can_cast(SLOT_Q) then
 			if not orbwalker:can_attack() then
-				origin = target.origin
-				x, y, z = origin.x, origin.y, origin.z
-				spellbook:cast_spell(SLOT_Q, 0.25, x, y, z)
+				spellbook:cast_spell_targetted(SLOT_Q, target, 0.25)
 				orbwalker:reset_aa()
 			end
 		end
@@ -263,9 +261,7 @@ local function Harras_Bounce_Q()
 					if GetMinionCount(500, target) >= 1 then
 						if GetEnemyCount(500, target) >= 1 then
 							if Ready(SLOT_Q) then
-								origin = target.origin
-								x, y, z = origin.x, origin.y, origin.z
-								spellbook:cast_spell(SLOT_Q, 0.25, x, y, z)
+								spellbook:cast_spell_targetted(SLOT_Q, target, 0.25)
 								orbwalker:reset_aa()
 							end
 						end
@@ -305,9 +301,7 @@ local function KillSteal()
 		if target.object_id ~= 0 and myHero:distance_to(target.origin) <= 650 and Ready(SLOT_Q) and IsValid(target) then
 
 			if GetQDmgAD(target) > target.health then
-				origin = target.origin
-				x, y, z = origin.x, origin.y, origin.z
-				spellbook:cast_spell(SLOT_Q, 0.25, x, y, z)
+				spellbook:cast_spell_targetted(SLOT_Q, target, 0.25)
 				orbwalker:reset_aa()
 			end
 		end
@@ -326,9 +320,7 @@ local function Clear()
 					if local_player.mana >= menu:get_value(MF_laneclear_mana) then
 						if Ready(SLOT_Q) then
 							if not orbwalker:can_attack() then
-								origin = target.origin
-								x, y, z = origin.x, origin.y, origin.z
-								spellbook:cast_spell(SLOT_Q, 0.25, x, y, z)
+								spellbook:cast_spell_targetted(SLOT_Q, target, 0.25)
 								orbwalker:reset_aa()
 							end
 						end
@@ -373,9 +365,7 @@ local function JungleClear()
 			if local_player.mana >= menu:get_value(MF_jungleclear_mana) then
 				if Ready(SLOT_Q) then
 					if not orbwalker:can_attack() then
-						origin = target.origin
-						x, y, z = origin.x, origin.y, origin.z
-						spellbook:cast_spell(SLOT_Q, 0.25, x, y, z)
+						spellbook:cast_spell_targetted(SLOT_Q, target, 0.25)
 						orbwalker:reset_aa()
 					end
 				end
