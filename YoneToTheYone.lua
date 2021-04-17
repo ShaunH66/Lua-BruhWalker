@@ -5,14 +5,14 @@ end
 -- AutoUpdate
 do
     local function AutoUpdate()
-		local Version = 1
+		local Version = 1.1
 		local file_name = "YoneToTheYone.lua"
 		local url = "http://raw.githubusercontent.com/TheShaunyboi/BruhWalkerEncrypted/main/YoneToTheYone.lua"
         local web_version = http:get("https://raw.githubusercontent.com/TheShaunyboi/BruhWalkerEncrypted/main/YoneToTheYone.lua.version.txt")
         console:log("YoneToTheYone.Lua Vers: "..Version)
 		console:log("YoneToTheYone.Web Vers: "..tonumber(web_version))
 		if tonumber(web_version) == Version then
-            console:log("Sexy Yone successfully loaded.....")
+            console:log("Sexy Yone v1.1 successfully loaded.....")
         else
 			http:download_file(url, file_name)
             console:log("Sexy Yone Update available.....")
@@ -40,7 +40,8 @@ end
 -- Ranges
 
 local Q = { range = 450, delay = .25 }
-local W = { range = 600, delay = .35, width = 700 , speed = 0 }
+local Q3 = { range = 850, delay = .25 }
+local W = { range = 600, delay = .35, width = 700, speed = 0 }
 local R = { range = 950, delay = .75, width = 225, speed = 0 }
 
 
@@ -188,6 +189,20 @@ local function Is_Me(unit)
 	return false
 end
 
+local function IsYoneQ3()
+	QSpell = spellbook:get_spell_slot(SLOT_Q)
+	QData = QSpell.spell_data
+	QName = QData.spell_name
+	if QName == "YoneQ3" then
+		return true
+	end
+	return false
+end
+
+local function GetGameTime()
+	return tonumber(game.game_time)
+end
+
 
 -- Menu Config
 
@@ -237,6 +252,7 @@ yone_draw_w = menu:add_checkbox("Draw W", yone_draw, 1)
 yone_draw_r = menu:add_checkbox("Draw R", yone_draw, 1)
 yone_lasthit_draw = menu:add_checkbox("Draw Auto Q Last Hit", yone_draw, 1)
 yone_draw_kill = menu:add_checkbox("Draw Full Combo Can Kill", yone_draw, 1)
+yone_draw_kill_healthbar = menu:add_checkbox("Draw Full Combo On Target Health Bar", yone_draw, 1)
 
 -- Damage
 
@@ -282,20 +298,36 @@ end
 -- Casting
 
 local function CastQ(unit)
-	target = selector:find_target(Q.range, health)
+	target = selector:find_target(Q.range, mode_health)
 
-	if target.object_id ~= 0 then
-		if Ready(SLOT_Q) then
-			origin = target.origin
-			x, y, z = origin.x, origin.y, origin.z
-			spellbook:cast_spell(SLOT_Q, Q.delay, x, y, z)
-			orbwalker:reset_aa()
+	if not YoneQ3 then
+		if target.object_id ~= 0 then
+			if Ready(SLOT_Q) then
+				origin = target.origin
+				x, y, z = origin.x, origin.y, origin.z
+				spellbook:cast_spell(SLOT_Q, Q.delay, x, y, z)
+				orbwalker:reset_aa()
+			end
+		end
+	end
+end
+
+local function CastQ3(unit)
+	target = selector:find_target(Q3.range, mode_health)
+
+	if IsYoneQ3() then
+		if target.object_id ~= 0 then
+			if Ready(SLOT_Q) then
+				origin = target.origin
+				x, y, z = origin.x, origin.y, origin.z
+				spellbook:cast_spell(SLOT_Q, Q3.delay, x, y, z)
+			end
 		end
 	end
 end
 
 local function CastW(unit)
-	target = selector:find_target(W.range, health)
+	target = selector:find_target(W.range, mode_health)
 
 	if target.object_id ~= 0 then
 		if Ready(SLOT_W) then
@@ -312,7 +344,7 @@ local function CastW(unit)
 end
 
 local function CastR(unit)
-	target = selector:find_target(R.range, health)
+	target = selector:find_target(R.range, mode_health)
 
 	if target.object_id ~= 0 then
 		if Ready(SLOT_R) then
@@ -339,16 +371,24 @@ local function Combo()
 	local Auto = myHero:get_basic_attack_data()
 	local CastDelay = Auto.attack_cast_delay
 
+	target = selector:find_target(Q.range, mode_health)
+	if menu:get_value(yone_combo_use_q) == 1 then
+		if myHero:distance_to(target.origin) <= myHero.bounding_radius + 185 then
+			if menu:get_value(yone_combo_first_aa) == 1 and not orbwalker:can_attack() and not IsYoneQ3() then
+				CastQ(target)
+			end
+		end
+	end
 
 	if menu:get_value(yone_combo_use_q) == 1 then
-		if menu:get_value(yone_combo_first_aa) == 1 and not orbwalker:can_attack() then
+		if menu:get_value(yone_combo_first_aa) == 0 or not Ready(SLOT_W) and not IsYoneQ3() and not orbwalker:can_attack() then
 			CastQ(target)
 		end
 	end
 
 	if menu:get_value(yone_combo_use_q) == 1 then
-		if menu:get_value(yone_combo_first_aa) == 0 then
-			CastQ(target)
+		if IsYoneQ3() then
+			CastQ3(target)
 		end
 	end
 
@@ -503,7 +543,7 @@ end
 -- Manual R Cast
 
 local function ManualRCast()
-	target = selector:find_target(R.range, health)
+	target = selector:find_target(R.range, mode_health)
 
 	if target.object_id ~= 0 then
 		if Ready(SLOT_R) then
@@ -566,7 +606,7 @@ local function AutoQLastHit(target)
 	end
 end
 
-local function on_process_spell(obj, args)
+function on_process_spell(obj, args)
 	if Is_Me(obj) then
 		if args.spell_name == "YoneQ" or "YoneQ3" then
 			Wcast = false
@@ -581,7 +621,6 @@ local function on_process_spell(obj, args)
 		end
 	end
 end
-
 
 -- object returns, draw and tick usage
 
@@ -613,11 +652,15 @@ local function on_draw()
 		end
 
 		for i, target in ipairs(GetEnemyHeroes()) do
-			local fulldmg = GetQDmg(target) + GetWDmg(target) + GetRDmg(target) + myHero.total_attack_damage * 3
-			if target.object_id ~= 0 and myHero:distance_to(target.origin) <= 1000 then
-				if menu:get_value(yone_draw_kill) == 1 then
-					if fulldmg > target.health and IsValid(target) and Ready(SLOT_R) then
-						renderer:draw_text_centered(screen_size.width / 2, screen_size.height / 20 + 30, "Full Combo + 3 AA Can Kill Target < 1000 Range")
+			local fulldmg = GetQDmg(target) + GetWDmg(target) + GetRDmg(target) + myHero.total_attack_damage * 2
+			if menu:get_value(yone_draw_kill_healthbar) == 1 then
+				target:draw_damage_health_bar(fulldmg)
+
+				if target.object_id ~= 0 and myHero:distance_to(target.origin) <= 1000 then
+					if menu:get_value(yone_draw_kill) == 1 then
+						if fulldmg > target.health and IsValid(target) and Ready(SLOT_R) then
+							renderer:draw_text_big_centered(screen_size.width / 2, screen_size.height / 20 + 30, "Full Combo + 3 AA Can Kill Target")
+						end
 					end
 				end
 			end
@@ -626,7 +669,7 @@ local function on_draw()
 
 	if menu:get_value(yone_lasthit_draw) == 1 then
 		if menu:get_value(yone_lasthit_auto) == 1 then
-			renderer:draw_text_centered(screen_size.width / 2, screen_size.height / 20, "Auto Q Only Last Hit Enabled")
+			renderer:draw_text_big_centered(screen_size.width / 2, 0, "Auto Q Only Last Hit Enabled")
 		end
 	end
 end
