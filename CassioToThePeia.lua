@@ -5,17 +5,17 @@ end
 -- AutoUpdate
 do
     local function AutoUpdate()
-		local Version = 6.3
+		local Version = 6.4
 		local file_name = "CassioToThePeia.lua"
 		local url = "http://raw.githubusercontent.com/TheShaunyboi/BruhWalkerEncrypted/main/CassioToThePeia.lua"
         local web_version = http:get("https://raw.githubusercontent.com/TheShaunyboi/BruhWalkerEncrypted/main/CassioToThePeia.lua.version.txt")
         console:log("Cassiopeia.Lua Vers: "..Version)
 		console:log("Cassiopeia.Web Vers: "..tonumber(web_version))
 		if tonumber(web_version) == Version then
-            console:log("Sexy Cassiopeia v6.3 successfully loaded.....")
-						console:log("----------------------------------------------------------------------------------------------")
-						console:log("Update v6.3: Added Semi Key Kill Function, Added AA Comb Stop Level Slider")
-						console:log("----------------------------------------------------------------------------------------------")
+            console:log("Sexy Cassiopeia v6.4 successfully loaded.....")
+						console:log("------------------------------------------------------------------------------------------------------------")
+						console:log("Update v6.4: Added Semi Key Kill Function, Added AA Comb Stop Level Slider, Added Heath Bar Damage Draw")
+						console:log("------------------------------------------------------------------------------------------------------------")
         else
 			http:download_file(url, file_name)
             console:log("Sexy Cassiopeia Update available.....")
@@ -175,7 +175,7 @@ Cass_combo_r_auto = menu:add_checkbox("Use Auto R", Cass_combo_r_options, 1)
 Cass_combo_r_auto_x = menu:add_slider("Number Of Targets To Perform Auto R", Cass_combo_r_options, 1, 5, 3)
 
 Cass_kill = menu:add_subcategory("Semi Key -Can Kill Function-", Cass_category)
-Cass_killkey = menu:add_keybinder("Kill Key", Cass_kill, 88, "IF Draw Shows Full Combo Can Kill Target - Holding Kill key Will Perform R First Then Full Combo")
+Cass_killkey = menu:add_keybinder("Kill Key", Cass_kill, 88, "Full Combo Can Kill Target - Holding Kill key Will Perform R First Then Full Combo")
 
 Cass_draw = menu:add_subcategory("Drawing Features", Cass_category)
 Cass_draw_q = menu:add_checkbox("Draw Q", Cass_draw, 1)
@@ -183,6 +183,7 @@ Cass_draw_e = menu:add_checkbox("Draw E", Cass_draw, 1)
 Cass_draw_r = menu:add_checkbox("Draw R", Cass_draw, 1)
 Cass_lasthit_draw = menu:add_checkbox("Draw Auto E Last Hit", Cass_draw, 1)
 Cass_draw_kill = menu:add_checkbox("Draw Full Combo Can Kill", Cass_draw, 1)
+Cass_draw_kill_healthbar = menu:add_checkbox("Draw Full Combo On Target Health Bar", Cass_draw, 1, "Health Bar Damage Is Computed From R, Q, W, E * 2")
 
 -- Dmg Calculations
 
@@ -697,10 +698,13 @@ local function on_draw()
 			if target.object_id ~= 0 and myHero:distance_to(target.origin) <= 1000 then
 				if menu:get_value(Cass_draw_kill) == 1 then
 					if fulldmg > target.health and IsValid(target) then
-						renderer:draw_text_big_centered(screen_size.width / 2, screen_size.height / 20, "Full Combo Can Kill Target < 1000 Range - Hold KILL key")
+						renderer:draw_text_big_centered(screen_size.width / 2, screen_size.height / 20 + 30, "Full Combo Can Kill Target - Hold KILL key")
 					end
 				end
 			end
+		end
+		if menu:get_value(Cass_draw_kill_healthbar) == 1 then
+			target:draw_damage_health_bar(fulldmg)
 		end
 	end
 end
