@@ -5,16 +5,17 @@ end
 -- AutoUpdate
 do
     local function AutoUpdate()
-		local Version = 6.4
+		local Version = 6.5
 		local file_name = "CassioToThePeia.lua"
 		local url = "http://raw.githubusercontent.com/TheShaunyboi/BruhWalkerEncrypted/main/CassioToThePeia.lua"
         local web_version = http:get("https://raw.githubusercontent.com/TheShaunyboi/BruhWalkerEncrypted/main/CassioToThePeia.lua.version.txt")
         console:log("Cassiopeia.Lua Vers: "..Version)
 		console:log("Cassiopeia.Web Vers: "..tonumber(web_version))
 		if tonumber(web_version) == Version then
-            console:log("Sexy Cassiopeia v6.4 successfully loaded.....")
+            console:log("Sexy Cassiopeia v6.5 successfully loaded.....")
 						console:log("------------------------------------------------------------------------------------------------------------")
-						console:log("Update v6.4: Added Semi Key Kill Function, Added AA Comb Stop Level Slider, Added Heath Bar Damage Draw")
+						console:log("Update v6.5: Added Semi Key Kill Function, Added AA Comb Stop Level Slider, Added Heath Bar Damage Draw")
+						console:log("Adjusted R spelldata, Added Stop AA When Holding Last Hit Key")
 						console:log("------------------------------------------------------------------------------------------------------------")
         else
 			http:download_file(url, file_name)
@@ -313,7 +314,7 @@ local function CastR(unit)
 		if Ready(SLOT_R) then
 			origin = target.origin
 			x, y, z = origin.x, origin.y, origin.z
-			pred_output = pred:predict(0, 0.25, 825, 40, target, false, true)
+			pred_output = pred:predict(0, 0.25, 825, 0, target, false, true)
 
 			if pred_output.can_cast then
         castPos = pred_output.cast_pos
@@ -330,67 +331,66 @@ local function Combo()
 
 	if menu:get_value(Cass_aa) <= ChampLevel then
 		orbwalker:disable_auto_attacks()
-		if menu:get_value(Cass_aa) > ChampLevel then
-			orbwalker:enable_auto_attacks()
-		end
+	end
+	if menu:get_value(Cass_aa) > ChampLevel then
+		orbwalker:enable_auto_attacks()
 	end
 
-	if menu:get_value(Cass_combo_use_q) == 1 then
+	if menu:get_value(Cass_combo_use_q) == 1 and Ready(SLOT_Q) then
 		CastQ(target)
 	end
 
 	if menu:get_value(Cass_combo_use_w) == 1 and not Ready(SLOT_Q) then
-		if menu:get_value(Cass_combo_w_posbuff) == 0 then
+		if menu:get_value(Cass_combo_w_posbuff) == 0 and Ready(SLOT_W) then
 			CastW(target)
 		end
 	end
 
 	if menu:get_value(Cass_combo_use_w) == 1 and not Ready(SLOT_Q) then
-		if menu:get_value(Cass_combo_w_posbuff) == 1 and not HasPoison(target) then
+		if menu:get_value(Cass_combo_w_posbuff) == 1 and not HasPoison(target) and Ready(SLOT_W) then
 			CastW(target)
 		end
 	end
 
 	if menu:get_value(Cass_combo_use_e) == 1 then
-		if menu:get_value(Cass_combo_e_posbuff) == 0 then
+		if menu:get_value(Cass_combo_e_posbuff) == 0 and Ready(SLOT_E) then
 			CastE(target)
 		end
 	end
 
 	if menu:get_value(Cass_combo_use_e) == 1 then
-		if menu:get_value(Cass_combo_e_posbuff) == 1 and HasPoison(target) then
+		if menu:get_value(Cass_combo_e_posbuff) == 1 and HasPoison(target) and Ready(SLOT_E) then
 			CastE(target)
 		end
 	end
 
 	if menu:get_value(Cass_combo_use_r) == 1 then
 		if target:health_percentage() <= menu:get_value(Cass_combo_r_enemy_hp) and local_player:health_percentage() >= menu:get_value(Cass_combo_r_my_hp) then
-			if myHero:is_facing(target) and target:is_facing(myHero) then
+			if myHero:is_facing(target) and target:is_facing(myHero) and Ready(SLOT_R) then
 				CastR(target)
 			end
 		end
 	end
----orbwalker:enable_auto_attacks()
 end
 
 --Harass
 
 local function Harass()
 	if menu:get_value(Cass_harass_use_q) == 1 then
-		if local_player.mana >= menu:get_value(Cass_harass_mana) then
+		if local_player.mana >= menu:get_value(Cass_harass_mana) and Ready(SLOT_Q) then
 			CastQ(target)
 		end
 	end
 
 	if menu:get_value(Cass_harass_use_w) == 1 then
-		if local_player.mana >= menu:get_value(Cass_harass_mana) then
+		if local_player.mana >= menu:get_value(Cass_harass_mana) and Ready(SLOT_W) then
 			CastW(target)
 		end
 	end
 
 	if menu:get_value(Cass_harass_use_e) == 1 then
 		if local_player.mana >= menu:get_value(Cass_harass_mana) then
-			if menu:get_value(Cass_harass_posbuff) == 0 then
+			if menu:get_value(Cass_harass_posbuff) == 0 and Ready(SLOT_E) then
 				CastE(target)
 			end
 		end
@@ -398,7 +398,7 @@ local function Harass()
 
 	if menu:get_value(Cass_harass_use_e) == 1 then
 		if local_player.mana >= menu:get_value(Cass_harass_mana) then
-			if menu:get_value(Cass_harass_posbuff) == 1 and HasPoison(target) then
+			if menu:get_value(Cass_harass_posbuff) == 1 and HasPoison(target) and Ready(SLOT_E) then
 				CastE(target)
 			end
 		end
@@ -458,7 +458,7 @@ local function KillSteal()
 					if Ready(SLOT_R) then
 						origin = target.origin
 						x, y, z = origin.x, origin.y, origin.z
-						pred_output = pred:predict(0, 0.25, 825, 40, target, false, true)
+						pred_output = pred:predict(0, 0.25, 825, 0, target, false, true)
 
 						if pred_output.can_cast then
 		        	castPos = pred_output.cast_pos
@@ -487,13 +487,13 @@ local function Engage()
 				end
 			end
 		end
-		if not Ready(SLOT_R) then
+		if not Ready(SLOT_R) and Ready(SLOT_Q) then
 			CastQ(target)
 		end
-		if not Ready(SLOT_R) then
+		if not Ready(SLOT_R) and Ready(SLOT_W) then
 			CastW(target)
 		end
-		if not Ready(SLOT_R) then
+		if not Ready(SLOT_R) and Ready(SLOT_E) then
 			CastE(target)
 		end
 	end
@@ -604,7 +604,7 @@ end
 local function ManualRCast()
 	for i, target in ipairs(GetEnemyHeroes()) do
 		if target.object_id ~= 0 and myHero:distance_to(target.origin) <= 800 and Ready(SLOT_R) and IsValid(target) then
-			if myHero:is_facing(target) and target:is_facing(myHero) then
+			if myHero:is_facing(target) and target:is_facing(myHero) and Ready(SLOT_R) then
 				CastR(target)
 			end
 		end
@@ -622,7 +622,7 @@ local function AutoRxTargets()
 					if myHero:is_facing(target) and target:is_facing(myHero) then
 						origin = target.origin
 						x, y, z = origin.x, origin.y, origin.z
-						pred_output = pred:predict(0, 0.25, 825, 40, target, false, true)
+						pred_output = pred:predict(0, 0.25, 825, 0, target, false, true)
 
 						if pred_output.can_cast then
 			        castPos = pred_output.cast_pos
@@ -638,6 +638,11 @@ end
 -- Auto E last Hit
 
 local function AutoELastHit(target)
+
+	if menu:get_value(Cass_lasthit_auto) == 0 then
+		orbwalker:disable_auto_attacks()
+	end
+
 	minions = game.minions
 	for i, target in ipairs(minions) do
 		if target.object_id ~= 0 and target.is_enemy and myHero:distance_to(target.origin) < 700 and IsValid(target) then
@@ -715,10 +720,12 @@ local function on_tick()
 	end
 
 	if combo:get_mode() == MODE_HARASS then
+		orbwalker:enable_auto_attacks()
 		Harass()
 	end
 
 	if combo:get_mode() == MODE_LANECLEAR then
+		orbwalker:enable_auto_attacks()
 		Clear()
 		JungleClear()
 	end
@@ -743,14 +750,18 @@ local function on_tick()
 		Engage()
 	end
 
-	if not game:is_key_down(menu:get_value(Cass_combokey)) then
-		orbwalker:enable_auto_attacks()
-	 	if not game:is_key_down(menu:get_value(Cass_killkey)) then
-			orbwalker:enable_auto_attacks()
+
+	if not game:is_key_down(menu:get_value(Cass_killkey)) then
+	 	if not game:is_key_down(menu:get_value(Cass_combokey)) then
+	 		if not combo:get_mode() == MODE_LASTHIT then
+				orbwalker:enable_auto_attacks()
+			end
 		end
 	end
 
-	KillSteal()
+	if not game:is_key_down(menu:get_value(Cass_killkey)) and not game:is_key_down(menu:get_value(Cass_combokey)) then
+		KillSteal()
+	end
 end
 
 client:set_event_callback("on_tick", on_tick)
