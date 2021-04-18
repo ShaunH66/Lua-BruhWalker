@@ -5,17 +5,17 @@ end
 -- AutoUpdate
 do
     local function AutoUpdate()
-		local Version = 6.5
+		local Version = 6.7
 		local file_name = "CassioToThePeia.lua"
 		local url = "http://raw.githubusercontent.com/TheShaunyboi/BruhWalkerEncrypted/main/CassioToThePeia.lua"
         local web_version = http:get("https://raw.githubusercontent.com/TheShaunyboi/BruhWalkerEncrypted/main/CassioToThePeia.lua.version.txt")
         console:log("Cassiopeia.Lua Vers: "..Version)
 		console:log("Cassiopeia.Web Vers: "..tonumber(web_version))
 		if tonumber(web_version) == Version then
-            console:log("Sexy Cassiopeia v6.5 successfully loaded.....")
+            console:log("Sexy Cassiopeia v6.7 successfully loaded.....")
 						console:log("------------------------------------------------------------------------------------------------------------")
-						console:log("Update v6.5: Added Semi Key Kill Function, Added AA Comb Stop Level Slider, Added Heath Bar Damage Draw")
-						console:log("Adjusted R spelldata, Added Stop AA When Holding Last Hit Key")
+						console:log("Update v6.7: Added Semi Key Kill Function, Added AA Comb Stop Level Slider, Added Heath Bar Damage Draw")
+						console:log("Added R Interrupt Major Spells, Added Stop AA When Holding Last Hit Key")
 						console:log("------------------------------------------------------------------------------------------------------------")
         else
 			http:download_file(url, file_name)
@@ -144,6 +144,7 @@ Cass_combo_use_q = menu:add_checkbox("Use Q", Cass_combo, 1)
 Cass_combo_use_w = menu:add_checkbox("Use W", Cass_combo, 1)
 Cass_combo_use_e = menu:add_checkbox("Use E", Cass_combo, 1)
 Cass_combo_use_r = menu:add_checkbox("Use R", Cass_combo, 1)
+Cass_killkey = menu:add_keybinder("Unleash Full Can Kill Combo", Cass_combo, 88, "Full Combo Can Kill Target - Holding Kill key Will Perform R First Then Full Combo")
 Cass_combo_w_posbuff = menu:add_checkbox("Only W When Q Has Missed and Target Is Not Poisoned", Cass_combo, 1)
 Cass_combo_e_posbuff = menu:add_checkbox("Only E Combo When Posion Is Active", Cass_combo, 1)
 
@@ -169,14 +170,12 @@ Cass_jungleclear_use_e = menu:add_checkbox("use E", Cass_jungleclear, 1)
 Cass_jungleclear_mana = menu:add_slider("Minimum Mana To jungle Clear", Cass_jungleclear, 0, 200, 50)
 
 Cass_combo_r_options = menu:add_subcategory("R Settings", Cass_category)
+Cass_combo_use_Inter = menu:add_checkbox("R Interrupt Major Spells", Cass_combo_r_options, 1)
 Cass_combo_r_set_key = menu:add_keybinder("Semi Manual R Key", Cass_combo_r_options, 65)
 Cass_combo_r_enemy_hp = menu:add_slider("Use Combo R if Enemy HP is lower than [%]", Cass_combo_r_options, 1, 100, 50)
 Cass_combo_r_my_hp = menu:add_slider("Only Combo R if My HP is Greater than [%]", Cass_combo_r_options, 1, 100, 20)
 Cass_combo_r_auto = menu:add_checkbox("Use Auto R", Cass_combo_r_options, 1)
 Cass_combo_r_auto_x = menu:add_slider("Number Of Targets To Perform Auto R", Cass_combo_r_options, 1, 5, 3)
-
-Cass_kill = menu:add_subcategory("Semi Key -Can Kill Function-", Cass_category)
-Cass_killkey = menu:add_keybinder("Kill Key", Cass_kill, 88, "Full Combo Can Kill Target - Holding Kill key Will Perform R First Then Full Combo")
 
 Cass_draw = menu:add_subcategory("Drawing Features", Cass_category)
 Cass_draw_q = menu:add_checkbox("Draw Q", Cass_draw, 1)
@@ -314,7 +313,7 @@ local function CastR(unit)
 		if Ready(SLOT_R) then
 			origin = target.origin
 			x, y, z = origin.x, origin.y, origin.z
-			pred_output = pred:predict(0, 0.25, 825, 0, target, false, true)
+			pred_output = pred:predict(0, 0.25, 825, 10, target, false, true)
 
 			if pred_output.can_cast then
         castPos = pred_output.cast_pos
@@ -327,6 +326,7 @@ end
 -- Combo
 
 local function Combo()
+	local target = selector:find_target(825, mode_health)
 	local ChampLevel = myHero.level
 
 	if menu:get_value(Cass_aa) <= ChampLevel then
@@ -376,6 +376,8 @@ end
 --Harass
 
 local function Harass()
+	local target = selector:find_target(825, mode_health)
+
 	if menu:get_value(Cass_harass_use_q) == 1 then
 		if local_player.mana >= menu:get_value(Cass_harass_mana) and Ready(SLOT_Q) then
 			CastQ(target)
@@ -458,7 +460,7 @@ local function KillSteal()
 					if Ready(SLOT_R) then
 						origin = target.origin
 						x, y, z = origin.x, origin.y, origin.z
-						pred_output = pred:predict(0, 0.25, 825, 0, target, false, true)
+						pred_output = pred:predict(0, 0.25, 825, 10, target, false, true)
 
 						if pred_output.can_cast then
 		        	castPos = pred_output.cast_pos
@@ -622,7 +624,7 @@ local function AutoRxTargets()
 					if myHero:is_facing(target) and target:is_facing(myHero) then
 						origin = target.origin
 						x, y, z = origin.x, origin.y, origin.z
-						pred_output = pred:predict(0, 0.25, 825, 0, target, false, true)
+						pred_output = pred:predict(0, 0.25, 825, 10, target, false, true)
 
 						if pred_output.can_cast then
 			        castPos = pred_output.cast_pos
@@ -648,11 +650,25 @@ local function AutoELastHit(target)
 		if target.object_id ~= 0 and target.is_enemy and myHero:distance_to(target.origin) < 700 and IsValid(target) then
 			if GetMinionCount(700, target) >= 1 then
 				if GetEDmgLastHit(target) > target.health then
-					if combo:get_mode() ~= MODE_COMBO and combo:get_mode() ~= MODE_HARASS and not game:is_key_down(menu:get_value(Cass_combokey)) then
+					if combo:get_mode() ~= MODE_COMBO and not game:is_key_down(menu:get_value(Cass_combokey)) and not game:is_key_down(menu:get_value(Cass_killkey)) then
 						if Ready(SLOT_E) then
 							spellbook:cast_spell_targetted(SLOT_E, target, 0.125)
 						end
 					end
+				end
+			end
+		end
+	end
+end
+
+-- Auto R Interrupt
+
+local function on_possible_interrupt(obj, spell_name)
+	if IsValid(obj) then
+    if menu:get_value(Cass_combo_use_Inter) == 1 then
+      if myHero:distance_to(obj.origin) < 800 and Ready(SLOT_R) then
+				if myHero:is_facing(target) and target:is_facing(myHero) then
+        	CastR(obj)
 				end
 			end
 		end
@@ -703,7 +719,7 @@ local function on_draw()
 			if target.object_id ~= 0 and myHero:distance_to(target.origin) <= 1000 then
 				if menu:get_value(Cass_draw_kill) == 1 then
 					if fulldmg > target.health and IsValid(target) then
-						renderer:draw_text_big_centered(screen_size.width / 2, screen_size.height / 20 + 30, "Full Combo Can Kill Target - Hold KILL key")
+						renderer:draw_text_big_centered(screen_size.width / 2, screen_size.height / 20 + 30, "Unleash Full Can Kill Combo On Target - Hold KILL key")
 					end
 				end
 			end
@@ -766,3 +782,4 @@ end
 
 client:set_event_callback("on_tick", on_tick)
 client:set_event_callback("on_draw", on_draw)
+client:set_event_callback("on_possible_interrupt", on_possible_interrupt)
