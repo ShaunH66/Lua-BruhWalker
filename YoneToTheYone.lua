@@ -5,14 +5,14 @@ end
 -- AutoUpdate
 do
     local function AutoUpdate()
-		local Version = 1.1
+		local Version = 1.2
 		local file_name = "YoneToTheYone.lua"
 		local url = "http://raw.githubusercontent.com/TheShaunyboi/BruhWalkerEncrypted/main/YoneToTheYone.lua"
         local web_version = http:get("https://raw.githubusercontent.com/TheShaunyboi/BruhWalkerEncrypted/main/YoneToTheYone.lua.version.txt")
         console:log("YoneToTheYone.Lua Vers: "..Version)
 		console:log("YoneToTheYone.Web Vers: "..tonumber(web_version))
 		if tonumber(web_version) == Version then
-            console:log("Sexy Yone v1.1 successfully loaded.....")
+            console:log("Sexy Yone v1.2 successfully loaded.....")
         else
 			http:download_file(url, file_name)
             console:log("Sexy Yone Update available.....")
@@ -32,6 +32,8 @@ local local_player = game.local_player
 
 local Wcast = false
 local AutoTime = 0
+local AutoAATime = 0
+local AAcast = false
 
 local function Ready(spell)
   return spellbook:can_cast(spell)
@@ -42,7 +44,9 @@ end
 local Q = { range = 450, delay = .25 }
 local Q3 = { range = 850, delay = .25 }
 local W = { range = 600, delay = .35, width = 700, speed = 0 }
+local E = { range = 300, delay = .25, width = 225, speed = 0 }
 local R = { range = 950, delay = .75, width = 225, speed = 0 }
+local RF = { range = 1750, delay = .75, width = 225, speed = 0 }
 
 
 -- Return game data and maths
@@ -178,6 +182,16 @@ local function HasHealingBuff(unit)
     return false
 end
 
+local function HasBuff(unit, buffname)
+    if unit:has_buff(buffname) then
+        buff = unit:get_buff(buffname)
+        if buff.count > 0 then
+            return true
+        end
+    end
+    return false
+end
+
 local function GetGameTime()
 	return tonumber(game.game_time)
 end
@@ -194,6 +208,13 @@ local function IsYoneQ3()
 	QData = QSpell.spell_data
 	QName = QData.spell_name
 	if QName == "YoneQ3" then
+		return true
+	end
+	return false
+end
+
+local function HasCastedYoneE(unit)
+	if HasBuff(unit, "YoneE") then
 		return true
 	end
 	return false
@@ -239,10 +260,16 @@ yone_jungleclear = menu:add_subcategory("Jungle Clear", yone_category)
 yone_jungleclear_use_q = menu:add_checkbox("Use Q", yone_jungleclear, 1)
 yone_jungleclear_use_w = menu:add_checkbox("Use W", yone_jungleclear, 1)
 
+yone_engage = menu:add_subcategory("Yone! Engage", yone_category)
+yone_engage_enable = menu:add_checkbox("Enable Engage Function", yone_engage, 1)
+yone_combo_F_E_R = menu:add_keybinder("Semi Manual Flash > E > R Key", yone_engage, 90)
+
 yone_combo_r_options = menu:add_subcategory("R Settings", yone_category)
 yone_combo_r_enemy_hp = menu:add_slider("Use Combo R if Enemy HP is lower than [%]", yone_combo_r_options, 1, 100, 50)
 yone_combo_r_my_hp = menu:add_slider("Only Combo R if My HP is Greater than [%]", yone_combo_r_options, 1, 100, 20)
 yone_combo_r_set_key = menu:add_keybinder("Semi Manual R Key", yone_combo_r_options, 65)
+
+
 --[[yone_combo_r_auto = menu:add_checkbox("Use Auto R", yone_combo_r_options, 0)
 yone_combo_r_auto_x = menu:add_slider("Number Of Targets To Perform Auto R", yone_combo_r_options, 1, 5, 3)]]
 
@@ -250,9 +277,10 @@ yone_draw = menu:add_subcategory("Drawing Features", yone_category)
 yone_draw_q = menu:add_checkbox("Draw Q", yone_draw, 1)
 yone_draw_w = menu:add_checkbox("Draw W", yone_draw, 1)
 yone_draw_r = menu:add_checkbox("Draw R", yone_draw, 1)
+yone_draw_RF = menu:add_checkbox("Draw Flash > E > R Range", yone_draw, 1)
 yone_lasthit_draw = menu:add_checkbox("Draw Auto Q Last Hit", yone_draw, 1)
 yone_draw_kill = menu:add_checkbox("Draw Full Combo Can Kill", yone_draw, 1)
-yone_draw_kill_healthbar = menu:add_checkbox("Draw Full Combo On Target Health Bar", yone_draw, 1)
+yone_draw_kill_healthbar = menu:add_checkbox("Draw Full Combo On Target Health Bar", yone_draw, 1, "Health Bar Damage Is Computed From R, Q, W, E Return * 2 AA")
 
 -- Damage
 
@@ -370,19 +398,25 @@ local function Combo()
 
 	local Auto = myHero:get_basic_attack_data()
 	local CastDelay = Auto.attack_cast_delay
+	local AutoAA = myHero:get_basic_attack_data()
+	local CastAADelay = AutoAA.attack_cast_delay
 
 	target = selector:find_target(Q.range, mode_health)
 	if menu:get_value(yone_combo_use_q) == 1 then
-		if myHero:distance_to(target.origin) <= myHero.bounding_radius + 185 then
-			if menu:get_value(yone_combo_first_aa) == 1 and not orbwalker:can_attack() and not IsYoneQ3() then
+		if AutoAATime + CastAADelay < tonumber(game.game_time) then
+			if menu:get_value(yone_combo_first_aa) == 1 and AAcast and not IsYoneQ3() then
 				CastQ(target)
+				AAcast = false
 			end
 		end
 	end
 
 	if menu:get_value(yone_combo_use_q) == 1 then
-		if menu:get_value(yone_combo_first_aa) == 0 or not Ready(SLOT_W) and not IsYoneQ3() and not orbwalker:can_attack() then
-			CastQ(target)
+		if menu:get_value(yone_combo_first_aa) == 0 or not Ready(SLOT_W) and not IsYoneQ3() then
+			if AutoAATime + CastAADelay < tonumber(game.game_time) then
+				CastQ(target)
+				AAcast = false
+			end
 		end
 	end
 
@@ -559,6 +593,48 @@ local function ManualRCast()
 	end
 end
 
+-- Manual F > E > R Cast
+
+local function EFlashRCast()
+
+	local attackRange = myHero.attack_range
+	if orbwalker:can_attack() and orbwalker:can_move() then
+		if myHero:distance_to(target.origin) < attackRange then
+			orbwalker:attack_target(target)
+		end
+	end
+
+	target = selector:find_target(RF.range, mode_health)
+	if target.object_id ~= 0 then
+		if Ready(SLOT_R) and Ready(SLOT_F) and Ready(SLOT_E) then
+			origin = target.origin
+			x, y, z = origin.x, origin.y, origin.z
+			spellbook:cast_spell(SLOT_F, 0.1, x, y, z)
+		end
+	end
+
+	if target.object_id ~= 0 then
+		if not Ready(SLOT_F) and Ready(SLOT_E) and not HasCastedYoneE(myHero) then
+			origin = target.origin
+			x, y, z = origin.x, origin.y, origin.z
+			castPos = pred_output.cast_pos
+			spellbook:cast_spell(SLOT_E, E.delay, x, y, z)
+		end
+	end
+
+	if not Ready(SLOT_F) and Ready(SLOT_R) and HasCastedYoneE(myHero) then
+		Rtarget = selector:find_target(R.range, mode_health)
+		origin = Rtarget.origin
+		x, y, z = origin.x, origin.y, origin.z
+		pred_output = pred:predict(R.speed, R.delay, R.range, R.width, target, false, false)
+
+		if pred_output.can_cast then
+			castPos = pred_output.cast_pos
+			spellbook:cast_spell(SLOT_R, R.delay, castPos.x, castPos.y, castPos.z)
+		end
+	end
+end
+
 -- Auto R >= Targets
 
 --[[local function AutoRxTargets()
@@ -608,8 +684,9 @@ end
 
 function on_process_spell(obj, args)
 	if Is_Me(obj) then
-		if args.spell_name == "YoneQ" or "YoneQ3" then
+		if args.spell_name == "YoneQ" or "YoneQ3" or "YoneW" then
 			Wcast = false
+			AAcast = false
 			Target = selector:find_target(myHero.attack_range)
 			if Target.object_id ~= 0 and not Ready(SLOT_Q) then
 				orbwalker:attack_target(Target)
@@ -619,8 +696,14 @@ function on_process_spell(obj, args)
 			AutoTime = game.game_time
 			Wcast = true
 		end
+
+	if args.spell_name == "YoneBasicAttack" or "YoneBasicAttack2" or "YoneBasicAttack3" or "YoneBasicAttack4" or "YoneCritAttack" or "YoneCritAttack2" or "YoneCritAttack3" or "YoneCritAttack4" then
+			AutoAATime = game.game_time
+			AAcast = true
+		end
 	end
 end
+
 
 -- object returns, draw and tick usage
 
@@ -645,6 +728,12 @@ local function on_draw()
 			end
 		end
 
+		if menu:get_value(yone_draw_RF) == 1 then
+			if Ready(SLOT_R) and Ready(SLOT_F) and Ready(SLOT_E )then
+				renderer:draw_circle(x, y, z, RF.range, 225, 0, 0, 255)
+			end
+		end
+
 		if menu:get_value(yone_draw_r) == 1 then
 			if Ready(SLOT_R) then
 				renderer:draw_circle(x, y, z, R.range, 225, 0, 0, 255)
@@ -653,16 +742,17 @@ local function on_draw()
 
 		for i, target in ipairs(GetEnemyHeroes()) do
 			local fulldmg = GetQDmg(target) + GetWDmg(target) + GetRDmg(target) + myHero.total_attack_damage * 2
-			if menu:get_value(yone_draw_kill_healthbar) == 1 then
-				target:draw_damage_health_bar(fulldmg)
-
+			if Ready(SLOT_Q) and Ready(SLOT_W) and Ready(SLOT_R) then
 				if target.object_id ~= 0 and myHero:distance_to(target.origin) <= 1000 then
 					if menu:get_value(yone_draw_kill) == 1 then
-						if fulldmg > target.health and IsValid(target) and Ready(SLOT_R) then
-							renderer:draw_text_big_centered(screen_size.width / 2, screen_size.height / 20 + 30, "Full Combo + 3 AA Can Kill Target")
+						if fulldmg > target.health and IsValid(target) then
+							renderer:draw_text_big_centered(screen_size.width / 2, screen_size.height / 20 + 30, "Full Combo + 2 AA Can Kill Target")
 						end
 					end
 				end
+			end
+			if menu:get_value(yone_draw_kill_healthbar) == 1 then
+				target:draw_damage_health_bar(fulldmg)
 			end
 		end
 	end
@@ -675,7 +765,7 @@ local function on_draw()
 end
 
 local function on_tick()
-	if game:is_key_down(menu:get_value(yone_combokey)) and menu:get_value(yone_enabled) == 1 then
+	if game:is_key_down(menu:get_value(yone_combokey)) or game:is_key_down(menu:get_value(yone_combo_F_E_R)) and menu:get_value(yone_enabled) == 1 then
 		Combo()
 	end
 
@@ -690,6 +780,11 @@ local function on_tick()
 
 	if game:is_key_down(menu:get_value(yone_combo_r_set_key)) then
 		ManualRCast()
+	end
+
+	if game:is_key_down(menu:get_value(yone_combo_F_E_R)) and menu:get_value(yone_engage_enable) == 1 then
+		orbwalker:move_to()
+		EFlashRCast()
 	end
 
 	--[[if menu:get_value(yone_combo_r_auto) == 1 then
