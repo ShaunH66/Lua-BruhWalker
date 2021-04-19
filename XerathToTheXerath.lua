@@ -2,17 +2,16 @@ if game.local_player.champ_name ~= "Xerath" then
 	return
 end
 
---AutoUpdate
 do
     local function AutoUpdate()
-		local Version = 1
+		local Version = 1.2
 		local file_name = "XerathToTheXerath.lua"
-		local url = "http://raw.githubusercontent.com/TheShaunyboi/BruhWalkerEncrypted/main/XerathToTheXerath.lua"
+		local url = "https://raw.githubusercontent.com/TheShaunyboi/BruhWalkerEncrypted/main/XerathToTheXerath.lua"
         local web_version = http:get("https://raw.githubusercontent.com/TheShaunyboi/BruhWalkerEncrypted/main/XearthToTheXearth.lua.version.txt")
         console:log("XerathToTheXerath.Lua Vers: "..Version)
 		console:log("XerathToTheXerath.Web Vers: "..tonumber(web_version))
 		if tonumber(web_version) == Version then
-            console:log("Sexy Xerath v1 successfully loaded.....")
+            console:log("Sexy Xerath v1.2 successfully loaded.....")
         else
 			http:download_file(url, file_name)
             console:log("Sexy Xerath Update available.....")
@@ -41,11 +40,8 @@ end
 local Q = { range = 1450, delay = .25, width = 140, speed = 0 }
 local W = { range = 1000, delay = .25, width = 200, speed = 0 }
 local E = { range = 1125, delay = .25, width = 120, speed = 1400 }
-local R = { range = 3200, delay = .25, width = 200, speed = 0 }
+local R = { range = 5000, delay = .25, width = 200, speed = 0 }
 local FQ = { range = 1850, delay = .75, width = 225, speed = 0 }
-
-level = spellbook:get_spell_slot(SLOT_R).level
-rRange = {5000, 5000, 5000}
 
 
 -- Return game data and maths
@@ -219,6 +215,7 @@ xerath_ks_function = menu:add_subcategory("Kill Steal", xerath_category)
 xerath_ks_use_q = menu:add_checkbox("Use Q", xerath_ks_function, 1)
 xerath_ks_use_w = menu:add_checkbox("Use W", xerath_ks_function, 1)
 xerath_ks_use_r = menu:add_checkbox("Use R", xerath_ks_function, 1)
+xerath_ks_use_range = menu:add_slider("Target Greater Than Range To Use R Kill Steal", xerath_ks_function, 1, 5000, 1450)
 
 xerath_combo = menu:add_subcategory("Combo", xerath_category)
 xerath_combo_use_q = menu:add_checkbox("Use Q", xerath_combo, 1)
@@ -226,7 +223,8 @@ xerath_combo_use_w = menu:add_checkbox("Use W", xerath_combo, 1)
 xerath_combo_use_e = menu:add_checkbox("Use E", xerath_combo, 1)
 xerath_combo_r = menu:add_subcategory("R Combo Settings", xerath_combo)
 xerath_combo_use_r = menu:add_checkbox("Use R", xerath_combo_r, 1)
-xerath_combo_r_enemy_hp = menu:add_slider("Use Combo R if Enemy HP is lower than [%]", xerath_combo_r, 1, 100, 20)
+xerath_combo_use_range = menu:add_slider("Target Greater Than Range To Use R Combo", xerath_combo_r, 1, 5000, 1450)
+xerath_combo_r_enemy_hp = menu:add_slider("Use Combo R if Enemy HP is lower than [%]", xerath_combo_r, 1, 100, 40)
 xerath_combo_r_my_hp = menu:add_slider("Only Combo R if My HP is Greater than [%]", xerath_combo_r, 1, 100, 20)
 
 xerath_harass = menu:add_subcategory("Harass", xerath_category)
@@ -261,6 +259,7 @@ xerath_draw_r = menu:add_checkbox("Draw R", xerath_draw, 1)
 xerath_draw_fq = menu:add_checkbox("Draw Flash > Q Range", xerath_draw, 1)
 xerath_draw_kill = menu:add_checkbox("Draw Full Combo Can Kill", xerath_draw, 1)
 xerath_draw_kill_healthbar = menu:add_checkbox("Draw Full Combo On Target Health Bar", xerath_draw, 1, "Health Bar Damage Is Computed From R, Q, W")
+
 -- Casting
 
 local function CastQ(unit)
@@ -335,61 +334,19 @@ local function CastE(unit)
 end
 
 local function CastR(unit)
-	target = selector:find_target(rRange[level], mode_health)
+	target = selector:find_target(R.range, mode_health)
 
 	if target.object_id ~= 0 then
-		if Ready(SLOT_R) and IsValid(target) and myHero:distance_to(target.origin) > 1000 then
+		if Ready(SLOT_R) and IsValid(target) and myHero:distance_to(target.origin) > menu:get_value(xerath_combo_use_range) then
 			if target:health_percentage() <= menu:get_value(xerath_combo_r_enemy_hp) then
 				if local_player:health_percentage() >= menu:get_value(xerath_combo_r_my_hp) then
 					origin = target.origin
 					x, y, z = origin.x, origin.y, origin.z
-					pred_output = pred:predict(R.speed, R.delay, rRange[level], R.width, target, false, false)
+					pred_output = pred:predict(R.speed, R.delay, R.range, R.width, target, false, false)
 
 					if pred_output.can_cast then
 						castPos = pred_output.cast_pos
 						spellbook:cast_spell(SLOT_R, R.delay, castPos.x, castPos.y, castPos.z)
-					end
-				end
-			end
-		end
-	end
-end
-
-local function CastR2(unit)
-	target = selector:find_target(R2.range, mode_health)
-
-	if target.object_id ~= 0 then
-		if Ready(SLOT_R) and IsValid(target) then
-			if target:health_percentage() <= menu:get_value(xerath_combo_r_enemy_hp) then
-				if local_player:health_percentage() >= menu:get_value(xerath_combo_r_my_hp) then
-					origin = target.origin
-					x, y, z = origin.x, origin.y, origin.z
-					pred_output = pred:predict(R2.speed, R2.delay, R2.range, R2.width, target, false, false)
-
-					if pred_output.can_cast then
-						castPos = pred_output.cast_pos
-						spellbook:cast_spell(SLOT_R, R2.delay, castPos.x, castPos.y, castPos.z)
-					end
-				end
-			end
-		end
-	end
-end
-
-local function CastR3(unit)
-	target = selector:find_target(R3.range, mode_health)
-
-	if target.object_id ~= 0 then
-		if Ready(SLOT_R) and IsValid(target) then
-			if target:health_percentage() <= menu:get_value(xerath_combo_r_enemy_hp) then
-				if local_player:health_percentage() >= menu:get_value(xerath_combo_r_my_hp) then
-					origin = target.origin
-					x, y, z = origin.x, origin.y, origin.z
-					pred_output = pred:predict(R3.speed, R3.delay, R3.range, R3.width, target, false, false)
-
-					if pred_output.can_cast then
-						castPos = pred_output.cast_pos
-						spellbook:cast_spell(SLOT_R, R3.delay, castPos.x, castPos.y, castPos.z)
 					end
 				end
 			end
@@ -450,6 +407,7 @@ end
 
 -- KillSteal
 
+level = spellbook:get_spell_slot(SLOT_R).level
 local function KillSteal()
 
 	for i, target in ipairs(GetEnemyHeroes()) do
@@ -458,6 +416,10 @@ local function KillSteal()
 		local GetWDmg = getdmg("W", target, game.myHero, 1)
 		local GetEDmg = getdmg("E", target, game.myHero, 1)
 		local GetRDmg = getdmg("R", target, game.myHero, 1)
+
+		local level1dmg = (GetRDmg * 2)
+		local level2dmg = (GetRDmg * 3)
+		local level3dmg = (GetRDmg * 4)
 
 		if target.object_id ~= 0 and myHero:distance_to(target.origin) <= Q.range and IsValid(target) then
 			if menu:get_value(xerath_ks_use_q) == 1 then
@@ -500,6 +462,8 @@ local function KillSteal()
 				end
 			end
 		end
+
+
 		if target.object_id ~= 0 and myHero:distance_to(target.origin) <= W.range and IsValid(target) then
 			if menu:get_value(xerath_ks_use_w) == 1 then
 				if GetWDmg > target.health then
@@ -516,18 +480,46 @@ local function KillSteal()
 				end
 			end
 		end
+
 		if target.object_id ~= 0 and myHero:distance_to(target.origin) <= R.range and IsValid(target) then
-			if menu:get_value(xerath_ks_use_r) == 1 then
-				if (GetRDmg * level) > target.health and myHero:distance_to(target.origin) > 1200 then
-					if Ready(SLOT_R) then
+			if menu:get_value(xerath_ks_use_r) == 1 and level > 0 then
+
+				if level == 1 and level1dmg > target.health then
+					if myHero:distance_to(target.origin) > menu:get_value(xerath_ks_use_range) and Ready(SLOT_R) then
 						origin = target.origin
 						x, y, z = origin.x, origin.y, origin.z
-						pred_output = pred:predict(R.speed, R.delay, rRange[level], R.width, target, false, false)
+						pred_output = pred:predict(R.speed, R.delay, R.range, R.width, target, false, false)
 
 						if pred_output.can_cast then
 							castPos = pred_output.cast_pos
 							spellbook:cast_spell(SLOT_R, R.delay, castPos.x, castPos.y, castPos.z)
 						end
+					end
+				end
+			end
+
+			if level == 2 and level2dmg > target.health then
+				if myHero:distance_to(target.origin) > menu:get_value(xerath_ks_use_range) and Ready(SLOT_R) then
+					origin = target.origin
+					x, y, z = origin.x, origin.y, origin.z
+					pred_output = pred:predict(R.speed, R.delay, R.range, R.width, target, false, false)
+
+					if pred_output.can_cast then
+						castPos = pred_output.cast_pos
+						spellbook:cast_spell(SLOT_R, R.delay, castPos.x, castPos.y, castPos.z)
+					end
+				end
+			end
+
+			if level == 3 and level3dmg > target.health then
+				if myHero:distance_to(target.origin) > menu:get_value(xerath_ks_use_range) and Ready(SLOT_R) then
+					origin = target.origin
+					x, y, z = origin.x, origin.y, origin.z
+					pred_output = pred:predict(R.speed, R.delay, R.range, R.width, target, false, false)
+
+					if pred_output.can_cast then
+						castPos = pred_output.cast_pos
+						spellbook:cast_spell(SLOT_R, R.delay, castPos.x, castPos.y, castPos.z)
 					end
 				end
 			end
@@ -792,8 +784,8 @@ local function on_draw()
 
 	if menu:get_value(xerath_draw_r) == 1 then
 		if Ready(SLOT_R) then
-			renderer:draw_circle(x, y, z, rRange[level], 225, 0, 0, 255)
-			minimap:draw_circle(x, y, z, rRange[level], 255, 255, 255, 255)
+			renderer:draw_circle(x, y, z, R.range, 225, 0, 0, 255)
+			minimap:draw_circle(x, y, z, R.range, 255, 255, 255, 255)
 		end
 	end
 
