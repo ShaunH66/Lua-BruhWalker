@@ -5,18 +5,22 @@ end
 -- AutoUpdate
 do
     local function AutoUpdate()
-		local Version = 1.2
+		local Version = 1.3
 		local file_name = "YoneToTheYone.lua"
 		local url = "http://raw.githubusercontent.com/TheShaunyboi/BruhWalkerEncrypted/main/YoneToTheYone.lua"
         local web_version = http:get("https://raw.githubusercontent.com/TheShaunyboi/BruhWalkerEncrypted/main/YoneToTheYone.lua.version.txt")
         console:log("YoneToTheYone.Lua Vers: "..Version)
 		console:log("YoneToTheYone.Web Vers: "..tonumber(web_version))
 		if tonumber(web_version) == Version then
-            console:log("Sexy Yone v1.2 successfully loaded.....")
+            console:log("Sexy Yone v1.3 successfully loaded.....")
         else
 			http:download_file(url, file_name)
             console:log("Sexy Yone Update available.....")
-			console:log("Please reload via F5.....")
+			console:log("Please Reload via F5.....")
+			console:log("-----------------------------")
+			console:log("Please Reload via F5.....")
+			console:log("-----------------------------")
+			console:log("Please Reload via F5.....")
         end
 
     end
@@ -241,10 +245,13 @@ yone_lasthit_use = menu:add_checkbox("Use Q Last Hit", yone_lasthit, 1)
 yone_lasthit_auto = menu:add_checkbox("Auto Q Only Last Hit", yone_lasthit, 1)
 
 yone_combo = menu:add_subcategory("Combo", yone_category)
+yone_combo_first_aa = menu:add_checkbox("Use AA Before First Q In Combo", yone_combo, 1)
 yone_combo_use_q = menu:add_checkbox("Use Q", yone_combo, 1)
 yone_combo_use_w = menu:add_checkbox("Use W", yone_combo, 1)
-yone_combo_use_r = menu:add_checkbox("Use R", yone_combo, 1)
-yone_combo_first_aa = menu:add_checkbox("Use AA Before First Q", yone_combo, 1)
+yone_combo_r_setting = menu:add_subcategory("Combo R Settings", yone_combo)
+yone_combo_use_r = menu:add_checkbox("Use R", yone_combo_r_setting, 1)
+yone_combo_r_enemy_hp = menu:add_slider("Use Combo R if Enemy HP is lower than [%]", yone_combo_r_setting, 1, 100, 50)
+yone_combo_r_my_hp = menu:add_slider("Only Combo R if My HP is Greater than [%]", yone_combo_r_setting, 1, 100, 20)
 
 yone_harass = menu:add_subcategory("Harass", yone_category)
 yone_harass_use_q = menu:add_checkbox("Use Q", yone_harass, 1)
@@ -260,13 +267,11 @@ yone_jungleclear = menu:add_subcategory("Jungle Clear", yone_category)
 yone_jungleclear_use_q = menu:add_checkbox("Use Q", yone_jungleclear, 1)
 yone_jungleclear_use_w = menu:add_checkbox("Use W", yone_jungleclear, 1)
 
-yone_engage = menu:add_subcategory("Yone! Engage", yone_category)
+yone_engage = menu:add_subcategory("Yone Engage!", yone_category)
 yone_engage_enable = menu:add_checkbox("Enable Engage Function", yone_engage, 1)
 yone_combo_F_E_R = menu:add_keybinder("Semi Manual Flash > E > R Key", yone_engage, 90)
 
-yone_combo_r_options = menu:add_subcategory("R Settings", yone_category)
-yone_combo_r_enemy_hp = menu:add_slider("Use Combo R if Enemy HP is lower than [%]", yone_combo_r_options, 1, 100, 50)
-yone_combo_r_my_hp = menu:add_slider("Only Combo R if My HP is Greater than [%]", yone_combo_r_options, 1, 100, 20)
+yone_combo_r_options = menu:add_subcategory("Misc Settings", yone_category)
 yone_combo_r_set_key = menu:add_keybinder("Semi Manual R Key", yone_combo_r_options, 65)
 
 
@@ -413,10 +418,7 @@ local function Combo()
 
 	if menu:get_value(yone_combo_use_q) == 1 then
 		if menu:get_value(yone_combo_first_aa) == 0 or not Ready(SLOT_W) and not IsYoneQ3() then
-			if AutoAATime + CastAADelay < tonumber(game.game_time) then
-				CastQ(target)
-				AAcast = false
-			end
+			CastQ(target)
 		end
 	end
 
@@ -689,7 +691,7 @@ function on_process_spell(obj, args)
 			AAcast = false
 			Target = selector:find_target(myHero.attack_range)
 			if Target.object_id ~= 0 and not Ready(SLOT_Q) then
-				orbwalker:attack_target(Target)
+				--orbwalker:attack_target(Target)
 			end
 		end
 		if args.spell_name == "YoneBasicAttack" or "YoneBasicAttack2" or "YoneBasicAttack3" or "YoneBasicAttack4" or "YoneCritAttack" or "YoneCritAttack2" or "YoneCritAttack3" or "YoneCritAttack4" then
