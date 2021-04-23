@@ -4,7 +4,7 @@ end
 
 do
     local function AutoUpdate()
-		local Version = 1
+		local Version = 1.2
 		local file_name = "EzToTheReal.lua"
 		local url = "https://raw.githubusercontent.com/TheShaunyboi/BruhWalkerEncrypted/main/EzToTheReal.lua"
         local web_version = http:get("https://raw.githubusercontent.com/TheShaunyboi/BruhWalkerEncrypted/main/EzToTheReal.lua.version.txt")
@@ -15,11 +15,13 @@ do
         else
 			http:download_file(url, file_name)
             console:log("Sexy Ezreal Update available.....")
-						console:log("Please Reload via F5.....")
+						console:log("Added Blacklist Ultimate to Kill Steal and Combo R Settings")
+						console:log("Changed Auto Q Harass To Toggle Auto Q Harass")
+						console:log("Please Reload via F5!!.....")
 						console:log("-----------------------------")
-						console:log("Please Reload via F5.....")
+						console:log("Please Reload via F5!!.....")
 						console:log("-----------------------------")
-						console:log("Please Reload via F5.....")
+						console:log("Please Reload via F5!!.....")
         end
 
     end
@@ -243,6 +245,14 @@ ezreal_ks_use_q = menu:add_checkbox("Use Q", ezreal_ks_function, 1)
 ezreal_ks_use_w = menu:add_checkbox("Use W", ezreal_ks_function, 1)
 ezreal_ks_use_r = menu:add_checkbox("Use R", ezreal_ks_function, 1)
 ezreal_ks_use_range = menu:add_slider("Greater Than Range To Use R Kill Steal", ezreal_ks_function, 1, 5000, 1000)
+ezreal_ks_r_blacklist = menu:add_subcategory("Ultimate Kill Steal Blacklist", ezreal_ks_function)
+local players = game.players
+for _, t in pairs(players) do
+    if t and t.is_enemy then
+        menu:add_checkbox("Use R Kill Steal On: "..tostring(t.champ_name), ezreal_ks_r_blacklist, 1)
+    end
+end
+
 
 ezreal_combo = menu:add_subcategory("Combo", ezreal_category)
 ezreal_combo_use_q = menu:add_checkbox("Use Q", ezreal_combo, 1)
@@ -252,12 +262,19 @@ ezreal_combo_r = menu:add_subcategory("R Combo Settings", ezreal_combo)
 ezreal_combo_use_r = menu:add_checkbox("Use R", ezreal_combo_r, 1)
 ezreal_combo_use_range = menu:add_slider("Greater Than Range To Use R Combo", ezreal_combo_r, 1, 5000, 1000)
 ezreal_combo_r_enemy_hp = menu:add_slider("Combo R if Enemy HP is lower than [%]", ezreal_combo_r, 1, 100, 40)
-ezreal_combo_r_my_hp = menu:add_slider("Combo R if My HP is Greater than [%]", ezreal_combo_r, 1, 100, 20)
+ezreal_combo_r_blacklist = menu:add_subcategory("Ultimate Combo Blacklist", ezreal_combo_r)
+local players = game.players
+for _, v in pairs(players) do
+    if v and v.is_enemy then
+        menu:add_checkbox("Use R Combo On: "..tostring(v.champ_name), ezreal_combo_r_blacklist, 1)
+    end
+end
 
 ezreal_harass = menu:add_subcategory("Harass", ezreal_category)
 ezreal_harass_use_q = menu:add_checkbox("Use Q", ezreal_harass, 1)
 ezreal_harass_use_w = menu:add_checkbox("Use W", ezreal_harass, 1)
-ezreal_harass_use_auto_q = menu:add_checkbox("Auto Q Harass", ezreal_harass, 1)
+--ezreal_harass_use_auto_q = menu:add_checkbox("Auto Q Harass", ezreal_harass, 1)
+ezreal_harass_use_auto_q = menu:add_toggle("Toggle Auto Q Harass", 1, ezreal_harass, 90, true)
 ezreal_harass_min_mana = menu:add_slider("Minimum Mana To Harass", ezreal_harass, 1, 500, 100)
 
 --[[ezreal_lasthit = menu:add_subcategory("Last Hit", ezreal_category)
@@ -309,7 +326,7 @@ local function GetWDmg(unit)
   else
 			Damage = WDamage
   end
-	return unit:calculate_phys_damage(Damage)
+	return unit:calculate_magic_damage(Damage)
 end
 
 local function GetRDmg(unit)
@@ -322,7 +339,7 @@ local function GetRDmg(unit)
   else
 			Damage = RDamage
   end
-	return unit:calculate_phys_damage(Damage)
+	return unit:calculate_magic_damage(Damage)
 end
 
 
@@ -386,15 +403,13 @@ local function CastR(unit)
 	if target.object_id ~= 0 then
 		if Ready(SLOT_R) and IsValid(target) and myHero:distance_to(target.origin) > menu:get_value(ezreal_combo_use_range) then
 			if target:health_percentage() <= menu:get_value(ezreal_combo_r_enemy_hp) then
-				if local_player:health_percentage() >= menu:get_value(ezreal_combo_r_my_hp) then
-					origin = target.origin
-					x, y, z = origin.x, origin.y, origin.z
-					pred_output = pred:predict(R.speed, R.delay, R.range, R.width, target, false, false)
+				origin = target.origin
+				x, y, z = origin.x, origin.y, origin.z
+				pred_output = pred:predict(R.speed, R.delay, R.range, R.width, target, false, false)
 
-					if pred_output.can_cast then
-						castPos = pred_output.cast_pos
-						spellbook:cast_spell(SLOT_R, R.delay, castPos.x, castPos.y, castPos.z)
-					end
+				if menu:get_value_string("Use R Combo On: "..tostring(target.champ_name)) == 1 then
+					castPos = pred_output.cast_pos
+					spellbook:cast_spell(SLOT_R, R.delay, castPos.x, castPos.y, castPos.z)
 				end
 			end
 		end
@@ -506,13 +521,15 @@ local function AutoKill()
 			if menu:get_value(ezreal_ks_use_r) == 1 and GetRDmg(target) > target.health then
 				if target.object_id ~= 0 then
 					if Ready(SLOT_R) and IsValid(target) and myHero:distance_to(target.origin) > menu:get_value(ezreal_ks_use_range) then
-						origin = target.origin
-						x, y, z = origin.x, origin.y, origin.z
-						pred_output = pred:predict(R.speed, R.delay, R.range, R.width, target, false, false)
+						if menu:get_value_string("Use R Kill Steal On: "..tostring(target.champ_name)) == 1 then
+							origin = target.origin
+							x, y, z = origin.x, origin.y, origin.z
+							pred_output = pred:predict(R.speed, R.delay, R.range, R.width, target, false, false)
 
-						if pred_output.can_cast then
-							castPos = pred_output.cast_pos
-							spellbook:cast_spell(SLOT_R, R.delay, castPos.x, castPos.y, castPos.z)
+							if pred_output.can_cast then
+								castPos = pred_output.cast_pos
+								spellbook:cast_spell(SLOT_R, R.delay, castPos.x, castPos.y, castPos.z)
+							end
 						end
 					end
 				end
@@ -689,8 +706,8 @@ local function on_draw()
 	end
 
 	if menu:get_value(ezreal_harass_use_q) == 1 then
-		if menu:get_value(ezreal_harass_use_auto_q) == 1 then
-			renderer:draw_text_centered(screen_size.width / 2, 0, "Auto Q Harass Enabled")
+		if menu:get_toggle_state(ezreal_harass_use_auto_q) then
+			renderer:draw_text_centered(screen_size.width / 2, 0, "Toggle Auto Q Harass Enabled")
 		end
 	end
 
@@ -708,7 +725,7 @@ local function on_tick()
 		Harass()
 	end
 
-	if menu:get_value(ezreal_harass_use_auto_q) == 1 and combo:get_mode() ~= MODE_COMBO and not game:is_key_down(menu:get_value(ezreal_combokey)) then
+	if menu:get_toggle_state(ezreal_harass_use_auto_q) and combo:get_mode() ~= MODE_COMBO and not game:is_key_down(menu:get_value(ezreal_combokey)) then
 		AutoQHarass()
 	end
 
