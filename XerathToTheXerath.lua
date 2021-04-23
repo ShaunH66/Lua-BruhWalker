@@ -4,24 +4,29 @@ end
 
 do
     local function AutoUpdate()
-		local Version = 1.2
+		local Version = 1.4
 		local file_name = "XerathToTheXerath.lua"
 		local url = "https://raw.githubusercontent.com/TheShaunyboi/BruhWalkerEncrypted/main/XerathToTheXerath.lua"
         local web_version = http:get("https://raw.githubusercontent.com/TheShaunyboi/BruhWalkerEncrypted/main/XearthToTheXearth.lua.version.txt")
         console:log("XerathToTheXerath.Lua Vers: "..Version)
 		console:log("XerathToTheXerath.Web Vers: "..tonumber(web_version))
 		if tonumber(web_version) == Version then
-            console:log("Sexy Xerath v1.2 successfully loaded.....")
+            console:log("Sexy Xerath v1 successfully loaded.....")
         else
 			http:download_file(url, file_name)
             console:log("Sexy Xerath Update available.....")
-			console:log("Please reload via F5.....")
+						console:log("Added Blacklist Ultimate to Kill Steal and Combo R Settings")
+						console:log("Changed Semi R Manual To Cursor Targeting")
+						console:log("Please Reload via F5!!.....")
+						console:log("-----------------------------")
+						console:log("Please Reload via F5!!.....")
+						console:log("-----------------------------")
+						console:log("Please Reload via F5!!.....")
         end
 
     end
 
     AutoUpdate()
-
 end
 
 pred:use_prediction()
@@ -216,6 +221,13 @@ xerath_ks_use_q = menu:add_checkbox("Use Q", xerath_ks_function, 1)
 xerath_ks_use_w = menu:add_checkbox("Use W", xerath_ks_function, 1)
 xerath_ks_use_r = menu:add_checkbox("Use R", xerath_ks_function, 1)
 xerath_ks_use_range = menu:add_slider("Target Greater Than Range To Use R Kill Steal", xerath_ks_function, 1, 5000, 1450)
+xerath_ks_r_blacklist = menu:add_subcategory("Ultimate Kill Steal Blacklist", xerath_ks_function)
+local players = game.players
+for _, t in pairs(players) do
+    if t and t.is_enemy then
+        menu:add_checkbox("Use R Kill Steal On: "..tostring(t.champ_name), xerath_ks_r_blacklist, 1)
+    end
+end
 
 xerath_combo = menu:add_subcategory("Combo", xerath_category)
 xerath_combo_use_q = menu:add_checkbox("Use Q", xerath_combo, 1)
@@ -226,6 +238,13 @@ xerath_combo_use_r = menu:add_checkbox("Use R", xerath_combo_r, 1)
 xerath_combo_use_range = menu:add_slider("Target Greater Than Range To Use R Combo", xerath_combo_r, 1, 5000, 1450)
 xerath_combo_r_enemy_hp = menu:add_slider("Use Combo R if Enemy HP is lower than [%]", xerath_combo_r, 1, 100, 40)
 xerath_combo_r_my_hp = menu:add_slider("Only Combo R if My HP is Greater than [%]", xerath_combo_r, 1, 100, 20)
+xerath_combo_r_blacklist = menu:add_subcategory("Ultimate Combo Blacklist", xerath_combo_r)
+local players = game.players
+for _, v in pairs(players) do
+    if v and v.is_enemy then
+        menu:add_checkbox("Use R Combo On: "..tostring(v.champ_name), xerath_combo_r_blacklist, 1)
+    end
+end
 
 xerath_harass = menu:add_subcategory("Harass", xerath_category)
 xerath_harass_use_q = menu:add_checkbox("Use Q", xerath_harass, 1)
@@ -248,7 +267,7 @@ xerath_jungleclear_min_mana = menu:add_slider("Minimum Mana To jungle Clear", xe
 xerath_combo_r_options = menu:add_subcategory("Misc Settings", xerath_category)
 xerath_combo_use_inter = menu:add_checkbox("E Interrupt Major Spells", xerath_combo_r_options, 1)
 xerath_combo_panic_e_key = menu:add_keybinder("Semi Manual E Key", xerath_combo_r_options, 90)
-xerath_combo_r_set_key = menu:add_keybinder("Semi Manual R Key", xerath_combo_r_options, 65)
+xerath_combo_r_set_key = menu:add_keybinder("Semi Manual R Key - Enemy Nearest To Cursor", xerath_combo_r_options, 65)
 xerath_combo_fq_key = menu:add_keybinder("Semi Manual Flash > Q Key", xerath_combo_r_options, 88)
 
 xerath_draw = menu:add_subcategory("Drawing Features", xerath_category)
@@ -266,34 +285,30 @@ local function CastQ(unit)
 
 	Charge_buff = local_player:get_buff("xerathqvfx")
 	if Charge_buff.is_valid then
-		if menu:get_value(xerath_harass_use_q) == 1 then
-			local diff = game.game_time - Charge_buff.start_time
-			local range = 750 + ((650 / 1.5) * diff)
+		local diff = game.game_time - Charge_buff.start_time
+		local range = 750 + ((650 / 1.5) * diff)
 
-			if range > 1400 then
-				range = 1400
-			end
+		if range > 1400 then
+			range = 1400
+		end
 
-			target = selector:find_target(range, mode_health)
-			if target.object_id ~= 0 then
-				if Ready(SLOT_Q) and IsValid(target) then
-					origin = target.origin
-					pred_output = pred:predict(0, 0.6, range, 95, target, false, false)
+		target = selector:find_target(range, mode_health)
+		if target.object_id ~= 0 then
+			if Ready(SLOT_Q) and IsValid(target) then
+				origin = target.origin
+				pred_output = pred:predict(0, 0.6, range, 95, target, false, false)
 
-					if pred_output.can_cast then
-						cast_pos = pred_output.cast_pos
-						spellbook:release_charged_spell(SLOT_Q, 0.35, cast_pos.x, cast_pos.y, cast_pos.z)
-					end
+				if pred_output.can_cast then
+					cast_pos = pred_output.cast_pos
+					spellbook:release_charged_spell(SLOT_Q, 0.35, cast_pos.x, cast_pos.y, cast_pos.z)
 				end
 			end
 		end
 	else
-		if menu:get_value(xerath_harass_use_q) == 1 then
-			target = selector:find_target(Q.range, mode_health)
-			if target.object_id ~= 0 then
-				if Ready(SLOT_Q) then
-					spellbook:start_charged_spell(SLOT_Q)
-				end
+		target = selector:find_target(Q.range, mode_health)
+		if target.object_id ~= 0 then
+			if Ready(SLOT_Q) then
+				spellbook:start_charged_spell(SLOT_Q)
 			end
 		end
 	end
@@ -340,13 +355,15 @@ local function CastR(unit)
 		if Ready(SLOT_R) and IsValid(target) and myHero:distance_to(target.origin) > menu:get_value(xerath_combo_use_range) then
 			if target:health_percentage() <= menu:get_value(xerath_combo_r_enemy_hp) then
 				if local_player:health_percentage() >= menu:get_value(xerath_combo_r_my_hp) then
-					origin = target.origin
-					x, y, z = origin.x, origin.y, origin.z
-					pred_output = pred:predict(R.speed, R.delay, R.range, R.width, target, false, false)
+					if menu:get_value_string("Use R Combo On: "..tostring(target.champ_name)) == 1 then
+						origin = target.origin
+						x, y, z = origin.x, origin.y, origin.z
+						pred_output = pred:predict(R.speed, R.delay, R.range, R.width, target, false, false)
 
-					if pred_output.can_cast then
-						castPos = pred_output.cast_pos
-						spellbook:cast_spell(SLOT_R, R.delay, castPos.x, castPos.y, castPos.z)
+						if pred_output.can_cast then
+							castPos = pred_output.cast_pos
+							spellbook:cast_spell(SLOT_R, R.delay, castPos.x, castPos.y, castPos.z)
+						end
 					end
 				end
 			end
@@ -427,34 +444,30 @@ local function KillSteal()
 					if Ready(SLOT_Q) then
 						Charge_buff = local_player:get_buff("xerathqvfx")
 						if Charge_buff.is_valid then
-							if menu:get_value(xerath_harass_use_q) == 1 then
-								local diff = game.game_time - Charge_buff.start_time
-								local range = 750 + ((650 / 1.5) * diff)
+							local diff = game.game_time - Charge_buff.start_time
+							local range = 750 + ((650 / 1.5) * diff)
 
-								if range > 1400 then
-									range = 1400
-								end
+							if range > 1400 then
+								range = 1400
+							end
 
-								target = selector:find_target(range, mode_health)
-								if target.object_id ~= 0 then
-									if Ready(SLOT_Q) and IsValid(target) then
-										origin = target.origin
-										pred_output = pred:predict(0, 0.6, range, 95, target, false, false)
+							target = selector:find_target(range, mode_health)
+							if target.object_id ~= 0 then
+								if Ready(SLOT_Q) and IsValid(target) then
+									origin = target.origin
+									pred_output = pred:predict(0, 0.6, range, 95, target, false, false)
 
-										if pred_output.can_cast then
-											cast_pos = pred_output.cast_pos
-											spellbook:release_charged_spell(SLOT_Q, 0.35, cast_pos.x, cast_pos.y, cast_pos.z)
-										end
+									if pred_output.can_cast then
+										cast_pos = pred_output.cast_pos
+										spellbook:release_charged_spell(SLOT_Q, 0.35, cast_pos.x, cast_pos.y, cast_pos.z)
 									end
 								end
 							end
 						else
-							if menu:get_value(xerath_harass_use_q) == 1 then
-								target = selector:find_target(Q.range, mode_health)
-								if target.object_id ~= 0 then
-									if Ready(SLOT_Q) then
-										spellbook:start_charged_spell(SLOT_Q)
-									end
+							target = selector:find_target(Q.range, mode_health)
+							if target.object_id ~= 0 then
+								if Ready(SLOT_Q) then
+									spellbook:start_charged_spell(SLOT_Q)
 								end
 							end
 						end
@@ -486,6 +499,23 @@ local function KillSteal()
 
 				if level == 1 and level1dmg > target.health then
 					if myHero:distance_to(target.origin) > menu:get_value(xerath_ks_use_range) and Ready(SLOT_R) then
+						if menu:get_value_string("Use R Kill Steal On: "..tostring(target.champ_name)) == 1 then
+							origin = target.origin
+							x, y, z = origin.x, origin.y, origin.z
+							pred_output = pred:predict(R.speed, R.delay, R.range, R.width, target, false, false)
+
+							if pred_output.can_cast then
+								castPos = pred_output.cast_pos
+								spellbook:cast_spell(SLOT_R, R.delay, castPos.x, castPos.y, castPos.z)
+							end
+						end
+					end
+				end
+			end
+
+			if level == 2 and level2dmg > target.health then
+				if myHero:distance_to(target.origin) > menu:get_value(xerath_ks_use_range) and Ready(SLOT_R) then
+					if menu:get_value_string("Use R Kill Steal On: "..tostring(target.champ_name)) == 1 then
 						origin = target.origin
 						x, y, z = origin.x, origin.y, origin.z
 						pred_output = pred:predict(R.speed, R.delay, R.range, R.width, target, false, false)
@@ -498,28 +528,17 @@ local function KillSteal()
 				end
 			end
 
-			if level == 2 and level2dmg > target.health then
-				if myHero:distance_to(target.origin) > menu:get_value(xerath_ks_use_range) and Ready(SLOT_R) then
-					origin = target.origin
-					x, y, z = origin.x, origin.y, origin.z
-					pred_output = pred:predict(R.speed, R.delay, R.range, R.width, target, false, false)
-
-					if pred_output.can_cast then
-						castPos = pred_output.cast_pos
-						spellbook:cast_spell(SLOT_R, R.delay, castPos.x, castPos.y, castPos.z)
-					end
-				end
-			end
-
 			if level == 3 and level3dmg > target.health then
 				if myHero:distance_to(target.origin) > menu:get_value(xerath_ks_use_range) and Ready(SLOT_R) then
-					origin = target.origin
-					x, y, z = origin.x, origin.y, origin.z
-					pred_output = pred:predict(R.speed, R.delay, R.range, R.width, target, false, false)
+					if menu:get_value_string("Use R Kill Steal On: "..tostring(target.champ_name)) == 1 then
+						origin = target.origin
+						x, y, z = origin.x, origin.y, origin.z
+						pred_output = pred:predict(R.speed, R.delay, R.range, R.width, target, false, false)
 
-					if pred_output.can_cast then
-						castPos = pred_output.cast_pos
-						spellbook:cast_spell(SLOT_R, R.delay, castPos.x, castPos.y, castPos.z)
+						if pred_output.can_cast then
+							castPos = pred_output.cast_pos
+							spellbook:cast_spell(SLOT_R, R.delay, castPos.x, castPos.y, castPos.z)
+						end
 					end
 				end
 			end
@@ -540,32 +559,28 @@ local function Clear()
 
 						Charge_buff = local_player:get_buff("xerathqvfx")
 						if Charge_buff.is_valid then
-							if menu:get_value(xerath_harass_use_q) == 1 then
-								local diff = game.game_time - Charge_buff.start_time
-								local range = 750 + ((650 / 1.5) * diff)
+							local diff = game.game_time - Charge_buff.start_time
+							local range = 750 + ((650 / 1.5) * diff)
 
-								if range > 1400 then
-									range = 1400
-								end
+							if range > 1400 then
+								range = 1400
+							end
 
-								if target.object_id ~= 0 then
-									if Ready(SLOT_Q) and IsValid(target) then
-										origin = target.origin
-										pred_output = pred:predict(0, 0.6, range, 95, target, false, false)
+							if target.object_id ~= 0 then
+								if Ready(SLOT_Q) and IsValid(target) then
+									origin = target.origin
+									pred_output = pred:predict(0, 0.6, range, 95, target, false, false)
 
-										if pred_output.can_cast then
-											cast_pos = pred_output.cast_pos
-											spellbook:release_charged_spell(SLOT_Q, 0.35, cast_pos.x, cast_pos.y, cast_pos.z)
-										end
+									if pred_output.can_cast then
+										cast_pos = pred_output.cast_pos
+										spellbook:release_charged_spell(SLOT_Q, 0.35, cast_pos.x, cast_pos.y, cast_pos.z)
 									end
 								end
 							end
 						else
-							if menu:get_value(xerath_laneclear_use_q) == 1 then
-								if target.object_id ~= 0 then
-									if Ready(SLOT_Q) then
-										spellbook:start_charged_spell(SLOT_Q)
-									end
+							if target.object_id ~= 0 then
+								if Ready(SLOT_Q) then
+									spellbook:start_charged_spell(SLOT_Q)
 								end
 							end
 						end
@@ -600,52 +615,48 @@ local function JungleClear()
 
 		if target.object_id ~= 0 and menu:get_value(xerath_jungleclear_use_q) == 1 and myHero:distance_to(target.origin) < Q.range and IsValid(target) then
 			if myHero.mana >= menu:get_value(xerath_jungleclear_min_mana) then
-				if Ready(SLOT_Q) then
-					Charge_buff = local_player:get_buff("xerathqvfx")
-					if Charge_buff.is_valid then
-						if menu:get_value(xerath_harass_use_q) == 1 then
-							local diff = game.game_time - Charge_buff.start_time
-							local range = 750 + ((650 / 1.5) * diff)
 
-							if range > 1400 then
-								range = 1400
-							end
+				Charge_buff = local_player:get_buff("xerathqvfx")
+				if Charge_buff.is_valid then
+					local diff = game.game_time - Charge_buff.start_time
+					local range = 750 + ((650 / 1.5) * diff)
 
-							if target.object_id ~= 0 then
-								if Ready(SLOT_Q) and IsValid(target) then
-									origin = target.origin
-									pred_output = pred:predict(0, 0.6, range, 95, target, false, false)
+					if range > 1400 then
+						range = 1400
+					end
 
-									if pred_output.can_cast then
-										cast_pos = pred_output.cast_pos
-										spellbook:release_charged_spell(SLOT_Q, 0.35, cast_pos.x, cast_pos.y, cast_pos.z)
-									end
-								end
+					if target.object_id ~= 0 then
+						if Ready(SLOT_Q) and IsValid(target) then
+							origin = target.origin
+							pred_output = pred:predict(0, 0.6, range, 95, target, false, false)
+
+							if pred_output.can_cast then
+								cast_pos = pred_output.cast_pos
+								spellbook:release_charged_spell(SLOT_Q, 0.35, cast_pos.x, cast_pos.y, cast_pos.z)
 							end
 						end
 					else
-						if menu:get_value(xerath_laneclear_use_q) == 1 then
-							if target.object_id ~= 0 then
-								if Ready(SLOT_Q) then
-									spellbook:start_charged_spell(SLOT_Q)
-								end
+						if target.object_id ~= 0 then
+							if Ready(SLOT_Q) then
+								spellbook:start_charged_spell(SLOT_Q)
 							end
 						end
 					end
 				end
 			end
 		end
-		if target.object_id ~= 0 and menu:get_value(xerath_jungleclear_use_w) == 1 and myHero:distance_to(target.origin) < W.range and IsValid(target) then
-			if myHero.mana >= menu:get_value(xerath_jungleclear_min_mana) then
-				if Ready(SLOT_W) then
-					origin = target.origin
-					x, y, z = origin.x, origin.y, origin.z
-					pred_output = pred:predict(W.speed, W.delay, W.range, W.width, target, false, false)
+	end
 
-					if pred_output.can_cast then
-						castPos = pred_output.cast_pos
-						spellbook:cast_spell(SLOT_W, W.delay, castPos.x, castPos.y, castPos.z)
-					end
+	if target.object_id ~= 0 and menu:get_value(xerath_jungleclear_use_w) == 1 and myHero:distance_to(target.origin) < W.range and IsValid(target) then
+		if myHero.mana >= menu:get_value(xerath_jungleclear_min_mana) then
+			if Ready(SLOT_W) then
+				origin = target.origin
+				x, y, z = origin.x, origin.y, origin.z
+				pred_output = pred:predict(W.speed, W.delay, W.range, W.width, target, false, false)
+
+				if pred_output.can_cast then
+					castPos = pred_output.cast_pos
+					spellbook:cast_spell(SLOT_W, W.delay, castPos.x, castPos.y, castPos.z)
 				end
 			end
 		end
@@ -674,7 +685,7 @@ end
 -- Manual R Cast
 
 local function ManualRCast()
-	target = selector:find_target(R.range, mode_health)
+	target = selector:find_target(R.range, mode_cursor)
 
 	if target.object_id ~= 0 then
 		if Ready(SLOT_R) and IsValid(target) then
@@ -722,12 +733,10 @@ local function FQCast()
 			end
 		end
 	else
-		if menu:get_value(xerath_harass_use_q) == 1 then
-			target = selector:find_target(FQ.range, mode_health)
-			if target.object_id ~= 0 then
-				if Ready(SLOT_Q) then
-					spellbook:start_charged_spell(SLOT_Q)
-				end
+		target = selector:find_target(FQ.range, mode_health)
+		if target.object_id ~= 0 then
+			if Ready(SLOT_Q) then
+				spellbook:start_charged_spell(SLOT_Q)
 			end
 		end
 	end
