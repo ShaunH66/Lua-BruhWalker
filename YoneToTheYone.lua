@@ -5,22 +5,26 @@ end
 -- AutoUpdate
 do
     local function AutoUpdate()
-		local Version = 1.3
+		local Version = 1.4
 		local file_name = "YoneToTheYone.lua"
 		local url = "http://raw.githubusercontent.com/TheShaunyboi/BruhWalkerEncrypted/main/YoneToTheYone.lua"
         local web_version = http:get("https://raw.githubusercontent.com/TheShaunyboi/BruhWalkerEncrypted/main/YoneToTheYone.lua.version.txt")
         console:log("YoneToTheYone.Lua Vers: "..Version)
 		console:log("YoneToTheYone.Web Vers: "..tonumber(web_version))
 		if tonumber(web_version) == Version then
-            console:log("Sexy Yone v1.3 successfully loaded.....")
+            console:log("Sexy Yone v1 successfully loaded.....")
+						console:log("---------------------------------------")
+						console:log("Added Auto R 'X' Number Tragets Function")
+						console:log("Added check for Flash Slot Usage (D/F) for Yone! Engage")
+						console:log("---------------------------------------")
         else
 			http:download_file(url, file_name)
             console:log("Sexy Yone Update available.....")
-			console:log("Please Reload via F5.....")
+			console:log("Please Reload via F5!.....")
 			console:log("-----------------------------")
-			console:log("Please Reload via F5.....")
+			console:log("Please Reload via F5!.....")
 			console:log("-----------------------------")
-			console:log("Please Reload via F5.....")
+			console:log("Please Reload via F5!.....")
         end
 
     end
@@ -131,22 +135,47 @@ local function IsValid(unit)
 end
 
 local function GetDistanceSqr(unit, p2)
-	p2 = p2.origin or myHero.origin
-	p2x, p2y, p2z = p2.x, p2.y, p2.z
-	p1 = unit.origin
-	p1x, p1y, p1z = p1.x, p1.y, p1.z
-	local dx = p1x - p2x
-	local dz = (p1z or p1y) - (p2z or p2y)
-	return dx*dx + dz*dz
+    p2 = p2.origin or myHero.origin
+    p2x, p2y, p2z = p2.x, p2.y, p2.z
+    p1 = unit.origin
+    p1x, p1y, p1z = p1.x, p1.y, p1.z
+    local dx = p1x - p2x
+    local dz = (p1z or p1y) - (p2z or p2y)
+    return dx*dx + dz*dz
 end
 
-local function GetDistanceSqr2(unit, p2)
-	p2x, p2y, p2z = p2.x, p2.y, p2.z
-	p1 = unit.origin
-	p1x, p1y, p1z = p1.x, p1.y, p1.z
-	local dx = p1x - p2x
-	local dz = (p1z or p1y) - (p2z or p2y)
-	return dx*dx + dz*dz
+local function GetDistanceSqr2(p1, p2)
+    p2x, p2y, p2z = p2.x, p2.y, p2.z
+    p1x, p1y, p1z = p1.x, p1.y, p1.z
+    local dx = p1x - p2x
+    local dz = (p1z or p1y) - (p2z or p2y)
+    return dx*dx + dz*dz
+end
+
+local function VectorPointProjectionOnLineSegment(v1, v2, v)
+    local cx, cy, ax, ay, bx, by = v.x, (v.z or v.y), v1.x, (v1.z or v1.y), v2.x, (v2.z or v2.y)
+    local rL = ((cx - ax) * (bx - ax) + (cy - ay) * (by - ay)) / ((bx - ax) * (bx - ax) + (by - ay) * (by - ay))
+    local pointLine = { x = ax + rL * (bx - ax), y = ay + rL * (by - ay) }
+    local rS = rL < 0 and 0 or (rL > 1 and 1 or rL)
+    local isOnSegment = rS == rL
+    local pointSegment = isOnSegment and pointLine or { x = ax + rS * (bx - ax), y = ay + rS * (by - ay) }
+    return pointSegment, pointLine, isOnSegment
+end
+
+local function GetLineTargetCount(source, aimPos, delay, speed, width)
+    local Count = 0
+    players = game.players
+    for _, target in ipairs(players) do
+        local Range = 1100 * 1100
+        if target.object_id ~= 0 and IsValid(target) and target.is_enemy and GetDistanceSqr(myHero, target) < Range then
+
+            local pointSegment, pointLine, isOnSegment = VectorPointProjectionOnLineSegment(source.origin, aimPos, target.origin)
+            if pointSegment and isOnSegment and (GetDistanceSqr2(target.origin, pointSegment) <= (target.bounding_radius + width) * (target.bounding_radius + width)) then
+                Count = Count + 1
+            end
+        end
+    end
+    return Count
 end
 
 local function GetEnemyCount(range, unit)
@@ -224,6 +253,17 @@ local function HasCastedYoneE(unit)
 	return false
 end
 
+local function IsFlashSlotF()
+flash = spellbook:get_spell_slot(SLOT_F)
+FData = flash.spell_data
+FName = FData.spell_name
+--console:log(tostring(FName))
+if FName == "SummonerFlash" then
+	return true
+end
+return false
+end
+
 local function GetGameTime()
 	return tonumber(game.game_time)
 end
@@ -243,6 +283,7 @@ yone_ks_use_r = menu:add_checkbox("Use R", yone_ks_function, 1)
 yone_lasthit = menu:add_subcategory("Last Hit", yone_category)
 yone_lasthit_use = menu:add_checkbox("Use Q Last Hit", yone_lasthit, 1)
 yone_lasthit_auto = menu:add_checkbox("Auto Q Only Last Hit", yone_lasthit, 1)
+yone_lasthit_auto = menu:add_toggle("Toggle Auto Q Last Hit", 1, yone_lasthit, 90, true)
 
 yone_combo = menu:add_subcategory("Combo", yone_category)
 yone_combo_first_aa = menu:add_checkbox("Use AA Before First Q In Combo", yone_combo, 1)
@@ -251,7 +292,6 @@ yone_combo_use_w = menu:add_checkbox("Use W", yone_combo, 1)
 yone_combo_r_setting = menu:add_subcategory("Combo R Settings", yone_combo)
 yone_combo_use_r = menu:add_checkbox("Use R", yone_combo_r_setting, 1)
 yone_combo_r_enemy_hp = menu:add_slider("Use Combo R if Enemy HP is lower than [%]", yone_combo_r_setting, 1, 100, 50)
-yone_combo_r_my_hp = menu:add_slider("Only Combo R if My HP is Greater than [%]", yone_combo_r_setting, 1, 100, 20)
 
 yone_harass = menu:add_subcategory("Harass", yone_category)
 yone_harass_use_q = menu:add_checkbox("Use Q", yone_harass, 1)
@@ -269,14 +309,12 @@ yone_jungleclear_use_w = menu:add_checkbox("Use W", yone_jungleclear, 1)
 
 yone_engage = menu:add_subcategory("Yone Engage!", yone_category)
 yone_engage_enable = menu:add_checkbox("Enable Engage Function", yone_engage, 1)
-yone_combo_F_E_R = menu:add_keybinder("Semi Manual Flash > E > R Key", yone_engage, 90)
+yone_combo_F_E_R = menu:add_keybinder("Semi Manual Flash > E > R Key - Nearest To Cursor", yone_engage, 90)
 
-yone_combo_r_options = menu:add_subcategory("Misc Settings", yone_category)
-yone_combo_r_set_key = menu:add_keybinder("Semi Manual R Key", yone_combo_r_options, 65)
-
-
---[[yone_combo_r_auto = menu:add_checkbox("Use Auto R", yone_combo_r_options, 0)
-yone_combo_r_auto_x = menu:add_slider("Number Of Targets To Perform Auto R", yone_combo_r_options, 1, 5, 3)]]
+yone_combo_r_options = menu:add_subcategory("R Misc Features", yone_category)
+yone_combo_r_set_key = menu:add_keybinder("Semi Manual R Key - Nearest To Cursor", yone_combo_r_options, 65)
+yone_combo_r_auto = menu:add_checkbox("Use Auto R", yone_combo_r_options, 1)
+yone_combo_r_auto_x = menu:add_slider("Number Of Targets To Perform Auto R", yone_combo_r_options, 1, 5, 3)
 
 yone_draw = menu:add_subcategory("Drawing Features", yone_category)
 yone_draw_q = menu:add_checkbox("Draw Q", yone_draw, 1)
@@ -382,15 +420,13 @@ local function CastR(unit)
 	if target.object_id ~= 0 then
 		if Ready(SLOT_R) then
 			if target:health_percentage() <= menu:get_value(yone_combo_r_enemy_hp) then
-				if local_player:health_percentage() >= menu:get_value(yone_combo_r_my_hp) then
-					origin = target.origin
-					x, y, z = origin.x, origin.y, origin.z
-					pred_output = pred:predict(R.speed, R.delay, R.range, R.width, target, false, false)
+				origin = target.origin
+				x, y, z = origin.x, origin.y, origin.z
+				pred_output = pred:predict(R.speed, R.delay, R.range, R.width, target, false, false)
 
-					if pred_output.can_cast then
-        		castPos = pred_output.cast_pos
-        		spellbook:cast_spell(SLOT_R, R.delay, castPos.x, castPos.y, castPos.z)
-					end
+				if pred_output.can_cast then
+        	castPos = pred_output.cast_pos
+        	spellbook:cast_spell(SLOT_R, R.delay, castPos.x, castPos.y, castPos.z)
 				end
 			end
 		end
@@ -579,7 +615,7 @@ end
 -- Manual R Cast
 
 local function ManualRCast()
-	target = selector:find_target(R.range, mode_health)
+	target = selector:find_target(R.range, mode_cursor)
 
 	if target.object_id ~= 0 then
 		if Ready(SLOT_R) then
@@ -606,59 +642,92 @@ local function EFlashRCast()
 		end
 	end
 
-	target = selector:find_target(RF.range, mode_health)
-	if target.object_id ~= 0 then
-		if Ready(SLOT_R) and Ready(SLOT_F) and Ready(SLOT_E) then
-			origin = target.origin
-			x, y, z = origin.x, origin.y, origin.z
-			spellbook:cast_spell(SLOT_F, 0.1, x, y, z)
+	if IsFlashSlotF() then
+
+		target = selector:find_target(RF.range, mode_cursor)
+		if target.object_id ~= 0 then
+			if Ready(SLOT_R) and Ready(SLOT_F) and Ready(SLOT_E) then
+				origin = target.origin
+				x, y, z = origin.x, origin.y, origin.z
+				spellbook:cast_spell(SLOT_F, 0.1, x, y, z)
+			end
 		end
-	end
 
-	if target.object_id ~= 0 then
-		if not Ready(SLOT_F) and Ready(SLOT_E) and not HasCastedYoneE(myHero) then
-			origin = target.origin
-			x, y, z = origin.x, origin.y, origin.z
-			castPos = pred_output.cast_pos
-			spellbook:cast_spell(SLOT_E, E.delay, x, y, z)
+
+		if target.object_id ~= 0 then
+			if not Ready(SLOT_F) and Ready(SLOT_E) and not HasCastedYoneE(myHero) then
+				origin = target.origin
+				x, y, z = origin.x, origin.y, origin.z
+				castPos = pred_output.cast_pos
+				spellbook:cast_spell(SLOT_E, E.delay, x, y, z)
+			end
 		end
-	end
 
-	if not Ready(SLOT_F) and Ready(SLOT_R) and HasCastedYoneE(myHero) then
-		Rtarget = selector:find_target(R.range, mode_health)
-		origin = Rtarget.origin
-		x, y, z = origin.x, origin.y, origin.z
-		pred_output = pred:predict(R.speed, R.delay, R.range, R.width, target, false, false)
+		if not Ready(SLOT_F) and Ready(SLOT_R) and HasCastedYoneE(myHero) then
+			Rtarget = selector:find_target(R.range, mode_cursor)
+			origin = Rtarget.origin
+			x, y, z = origin.x, origin.y, origin.z
+			pred_output = pred:predict(R.speed, R.delay, R.range, R.width, target, false, false)
 
-		if pred_output.can_cast then
-			castPos = pred_output.cast_pos
-			spellbook:cast_spell(SLOT_R, R.delay, castPos.x, castPos.y, castPos.z)
+			if pred_output.can_cast then
+				castPos = pred_output.cast_pos
+				spellbook:cast_spell(SLOT_R, R.delay, castPos.x, castPos.y, castPos.z)
+			end
+		end
+
+	else
+
+		target = selector:find_target(RF.range, mode_cursor)
+		if target.object_id ~= 0 then
+			if Ready(SLOT_R) and Ready(SLOT_D) and Ready(SLOT_E) then
+				origin = target.origin
+				x, y, z = origin.x, origin.y, origin.z
+				spellbook:cast_spell(SLOT_D, 0.1, x, y, z)
+			end
+		end
+
+
+		if target.object_id ~= 0 then
+			if not Ready(SLOT_D) and Ready(SLOT_E) and not HasCastedYoneE(myHero) then
+				origin = target.origin
+				x, y, z = origin.x, origin.y, origin.z
+				castPos = pred_output.cast_pos
+				spellbook:cast_spell(SLOT_E, E.delay, x, y, z)
+			end
+		end
+
+		if not Ready(SLOT_D) and Ready(SLOT_R) and HasCastedYoneE(myHero) then
+			Rtarget = selector:find_target(R.range, mode_cursor)
+			origin = Rtarget.origin
+			x, y, z = origin.x, origin.y, origin.z
+			pred_output = pred:predict(R.speed, R.delay, R.range, R.width, target, false, false)
+
+			if pred_output.can_cast then
+				castPos = pred_output.cast_pos
+				spellbook:cast_spell(SLOT_R, R.delay, castPos.x, castPos.y, castPos.z)
+			end
 		end
 	end
 end
 
 -- Auto R >= Targets
 
---[[local function AutoRxTargets()
+function AutoR()
+  local Count = 0
+  players = game.players
+  for _, target in ipairs(players) do
+    if Ready(SLOT_R) and target.is_enemy and IsValid(target) and myHero:distance_to(target.origin) <= R.range then
+      pred_output = pred:predict(R.speed, R.delay, R.range, R.width, target, false, false)
+      output = pred_output.cast_pos
 
-	local function AutoRxTargets()
-	for i, target in ipairs(GetEnemyHeroes()) do
-
-		if target.object_id ~= 0 and myHero:distance_to(target.origin) <= R.range and Ready(SLOT_R) and IsValid(target) then
-			if GetEnemyCount(R.range, myHero) >= menu:get_value(yone_combo_r_auto_x) then
-				if Ready(SLOT_R) then
-					origin = target.origin
-					x, y, z = origin.x, origin.y, origin.z
-					pred_output = pred:predict(R.speed, R.delay, R.range, R.width, target, false, false)
-					if pred_output.can_cast then
-						castPos = pred_output.cast_pos
-						spellbook:cast_spell(SLOT_R, R.delay, castPos.x, castPos.y, castPos.z)
-					end
-				end
+			local Count = GetLineTargetCount(myHero, output, R.delay, R.range, R.width / 2)
+      if Count >= menu:get_value(yone_combo_r_auto_x) then
+				castPos = pred_output.cast_pos
+				spellbook:cast_spell(SLOT_R, R.delay, castPos.x, castPos.y, castPos.z)
 			end
 		end
 	end
-end]]
+end
 
 -- Auto Q last Hit
 
@@ -732,7 +801,7 @@ local function on_draw()
 
 		if menu:get_value(yone_draw_RF) == 1 then
 			if Ready(SLOT_R) and Ready(SLOT_F) and Ready(SLOT_E )then
-				renderer:draw_circle(x, y, z, RF.range, 225, 0, 0, 255)
+				renderer:draw_circle(x, y, z, RF.range, 225, 255, 0, 255)
 			end
 		end
 
@@ -761,7 +830,7 @@ local function on_draw()
 
 	if menu:get_value(yone_lasthit_draw) == 1 then
 		if menu:get_value(yone_lasthit_auto) == 1 then
-			renderer:draw_text_big_centered(screen_size.width / 2, 0, "Auto Q Only Last Hit Enabled")
+			renderer:draw_text_centered(screen_size.width / 2, 0, "Toggle Auto Q Last Hit Enabled")
 		end
 	end
 end
@@ -789,9 +858,9 @@ local function on_tick()
 		EFlashRCast()
 	end
 
-	--[[if menu:get_value(yone_combo_r_auto) == 1 then
-		AutoRxTargets()
-	end]]
+	if menu:get_value(yone_combo_r_auto) == 1 then
+		AutoR()
+	end
 
 	if combo:get_mode() == MODE_LASTHIT and menu:get_value(yone_lasthit_use) == 1 and menu:get_value(yone_lasthit_auto) == 0 then
 		AutoQLastHit()
