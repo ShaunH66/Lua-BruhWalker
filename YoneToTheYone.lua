@@ -5,7 +5,7 @@ end
 -- AutoUpdate
 do
     local function AutoUpdate()
-		local Version = 1.4
+		local Version = 1.5
 		local file_name = "YoneToTheYone.lua"
 		local url = "http://raw.githubusercontent.com/TheShaunyboi/BruhWalkerEncrypted/main/YoneToTheYone.lua"
         local web_version = http:get("https://raw.githubusercontent.com/TheShaunyboi/BruhWalkerEncrypted/main/YoneToTheYone.lua.version.txt")
@@ -282,7 +282,6 @@ yone_ks_use_r = menu:add_checkbox("Use R", yone_ks_function, 1)
 
 yone_lasthit = menu:add_subcategory("Last Hit", yone_category)
 yone_lasthit_use = menu:add_checkbox("Use Q Last Hit", yone_lasthit, 1)
-yone_lasthit_auto = menu:add_checkbox("Auto Q Only Last Hit", yone_lasthit, 1)
 yone_lasthit_auto = menu:add_toggle("Toggle Auto Q Last Hit", 1, yone_lasthit, 90, true)
 
 yone_combo = menu:add_subcategory("Combo", yone_category)
@@ -550,7 +549,7 @@ local function Clear()
 	minions = game.minions
 	for i, target in ipairs(minions) do
 
-		if menu:get_value(yone_laneclear_use_q) == 1 and menu:get_value(yone_lasthit_auto) == 0 then
+		if menu:get_value(yone_laneclear_use_q) == 1 and not menu:get_toggle_state(yone_lasthit_auto) then
 			if target.object_id ~= 0 and target.is_enemy and myHero:distance_to(target.origin) < Q.range and IsValid(target) then
 				if GetMinionCount(Q.range, target) >= menu:get_value(yone_laneclear_min_q) then
 					if not orbwalker:can_attack() or myHero.attack_range < myHero:distance_to(target.origin) then
@@ -829,7 +828,7 @@ local function on_draw()
 	end
 
 	if menu:get_value(yone_lasthit_draw) == 1 then
-		if menu:get_value(yone_lasthit_auto) == 1 then
+		if menu:get_toggle_state(yone_lasthit_auto) then
 			renderer:draw_text_centered(screen_size.width / 2, 0, "Toggle Auto Q Last Hit Enabled")
 		end
 	end
@@ -862,10 +861,10 @@ local function on_tick()
 		AutoR()
 	end
 
-	if combo:get_mode() == MODE_LASTHIT and menu:get_value(yone_lasthit_use) == 1 and menu:get_value(yone_lasthit_auto) == 0 then
+	if combo:get_mode() == MODE_LASTHIT and menu:get_value(yone_lasthit_use) == 1 and not menu:get_toggle_state(yone_lasthit_auto) then
 		AutoQLastHit()
 	end
-	if menu:get_value(yone_lasthit_auto) == 1 and menu:get_value(yone_lasthit_use) == 1 then
+	if menu:get_toggle_state(yone_lasthit_auto) and menu:get_value(yone_lasthit_use) == 1 then
 		AutoQLastHit()
 	end
 
