@@ -4,7 +4,7 @@ end
 
 do
     local function AutoUpdate()
-		local Version = 1.2
+		local Version = 1.3
 		local file_name = "EzToTheReal.lua"
 		local url = "https://raw.githubusercontent.com/TheShaunyboi/BruhWalkerEncrypted/main/EzToTheReal.lua"
         local web_version = http:get("https://raw.githubusercontent.com/TheShaunyboi/BruhWalkerEncrypted/main/EzToTheReal.lua.version.txt")
@@ -12,16 +12,18 @@ do
 		console:log("EzToTheReal.Web Vers: "..tonumber(web_version))
 		if tonumber(web_version) == Version then
             console:log("Sexy Ezreal v1 successfully loaded.....")
-        else
-			http:download_file(url, file_name)
-            console:log("Sexy Ezreal Update available.....")
+						console:log("---------------------------------------")
 						console:log("Added Blacklist Ultimate to Kill Steal and Combo R Settings")
 						console:log("Changed Auto Q Harass To Toggle Auto Q Harass")
-						console:log("Please Reload via F5!!.....")
-						console:log("-----------------------------")
-						console:log("Please Reload via F5!!.....")
-						console:log("-----------------------------")
-						console:log("Please Reload via F5!!.....")
+						console:log("---------------------------------------")
+        else
+			http:download_file(url, file_name)
+			      console:log("Sexy Ezreal Update available.....")
+						console:log("Please Reload via F5!.....")
+						console:log("----------------------------")
+						console:log("Please Reload via F5!.....")
+						console:log("----------------------------")
+						console:log("Please Reload via F5!.....")
         end
 
     end
@@ -654,7 +656,7 @@ local function on_gap_close(obj, data)
 
 	for i, Hero in pairs(GetAllyHeroes()) do
 		if IsValid(obj) and menu:get_value(ezreal_misc_anti_e) == 1 then
-			if Hero.is_enemy and Hero.object_id ~= myHero.object_id then
+			if Hero.object_id ~= myHero.object_id then
 				if myHero:distance_to(hero.origin) <= 1500 then
 					CastE(Hero)
 				end
@@ -710,9 +712,6 @@ local function on_draw()
 			renderer:draw_text_centered(screen_size.width / 2, 0, "Toggle Auto Q Harass Enabled")
 		end
 	end
-
-
-
 end
 
 local function on_tick()
