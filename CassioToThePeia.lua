@@ -5,17 +5,18 @@ end
 -- AutoUpdate
 do
     local function AutoUpdate()
-		local Version = 6.7
+		local Version = 6.8
 		local file_name = "CassioToThePeia.lua"
 		local url = "http://raw.githubusercontent.com/TheShaunyboi/BruhWalkerEncrypted/main/CassioToThePeia.lua"
         local web_version = http:get("https://raw.githubusercontent.com/TheShaunyboi/BruhWalkerEncrypted/main/CassioToThePeia.lua.version.txt")
         console:log("Cassiopeia.Lua Vers: "..Version)
 		console:log("Cassiopeia.Web Vers: "..tonumber(web_version))
 		if tonumber(web_version) == Version then
-            console:log("Sexy Cassiopeia v6.7 successfully loaded.....")
+            console:log("Sexy Cassiopeia v6 successfully loaded.....")
 						console:log("------------------------------------------------------------------------------------------------------------")
-						console:log("Update v6.7: Added Semi Key Kill Function, Added AA Comb Stop Level Slider, Added Heath Bar Damage Draw")
+						console:log("Added Semi Key Kill Function, Added AA Comb Stop Level Slider, Added Heath Bar Damage Draw")
 						console:log("Added R Interrupt Major Spells, Added Stop AA When Holding Last Hit Key")
+						console:log("Adjusted Posion check")
 						console:log("------------------------------------------------------------------------------------------------------------")
         else
 			http:download_file(url, file_name)
@@ -113,7 +114,7 @@ local function GetMinionCount(range, unit)
 end
 
 local function HasPoison(unit)
-    if unit:has_buff_type(23) then
+    if unit:has_buff_type(poison) then
         return true
     end
     return false
