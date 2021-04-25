@@ -4,7 +4,7 @@ end
 
 do
     local function AutoUpdate()
-		local Version = 1.5
+		local Version = 1.6
 		local file_name = "EzToTheReal.lua"
 		local url = "https://raw.githubusercontent.com/TheShaunyboi/BruhWalkerEncrypted/main/EzToTheReal.lua"
         local web_version = http:get("https://raw.githubusercontent.com/TheShaunyboi/BruhWalkerEncrypted/main/EzToTheReal.lua.version.txt")
@@ -13,7 +13,7 @@ do
 		if tonumber(web_version) == Version then
             console:log("Sexy Ezreal v1 successfully loaded.....")
 						console:log("---------------------------------------")
-						console:log("Added Blacklist Ultimate to Kill Steal and Combo R Settings")
+						console:log("Added Stop Auto Q Harass If Ezreal Is Under Enemy Turret")
 						console:log("Changed Auto Q Harass To Toggle Auto Q Harass")
 						console:log("Added Auto W Turret Toggle, Fixed W on EPIC Monsters")
 						console:log("---------------------------------------")
@@ -231,7 +231,7 @@ local function IsUnderTurret(unit)
     turrets = game.turrets
     for i, v in ipairs(turrets) do
         if v and v.is_enemy then
-            local range = (W.range)
+            local range = (v.bounding_radius / 2 + 775 + unit.bounding_radius / 2)
             if v.is_alive then
                 if v:distance_to(unit.origin) < range then
                     return true
@@ -469,7 +469,7 @@ local function AutoQHarass()
 	if menu:get_value(ezreal_harass_use_q) == 1 then
 		if myHero.mana >= menu:get_value(ezreal_harass_min_mana) then
 			if combo:get_mode() ~= MODE_COMBO and not game:is_key_down(menu:get_value(ezreal_combokey)) then
-				if Ready(SLOT_Q) then
+				if Ready(SLOT_Q) and not IsUnderTurret(myHero) then
 					CastQ(target)
 				end
 			end
