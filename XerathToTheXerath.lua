@@ -4,7 +4,7 @@ end
 
 do
     local function AutoUpdate()
-		local Version = 1.6
+		local Version = 1.7
 		local file_name = "XerathToTheXerath.lua"
 		local url = "https://raw.githubusercontent.com/TheShaunyboi/BruhWalkerEncrypted/main/XerathToTheXerath.lua"
         local web_version = http:get("https://raw.githubusercontent.com/TheShaunyboi/BruhWalkerEncrypted/main/XearthToTheXearth.lua.version.txt")
@@ -653,28 +653,28 @@ local function JungleClear()
 								spellbook:release_charged_spell(SLOT_Q, 0.35, cast_pos.x, cast_pos.y, cast_pos.z)
 							end
 						end
-					else
-						if target.object_id ~= 0 then
-							if Ready(SLOT_Q) then
-								spellbook:start_charged_spell(SLOT_Q)
-							end
+					end
+				else
+					if target.object_id ~= 0 then
+						if Ready(SLOT_Q) then
+							spellbook:start_charged_spell(SLOT_Q)
 						end
 					end
 				end
 			end
 		end
-	end
 
-	if target.object_id ~= 0 and menu:get_value(xerath_jungleclear_use_w) == 1 and myHero:distance_to(target.origin) < W.range and IsValid(target) then
-		if myHero.mana >= menu:get_value(xerath_jungleclear_min_mana) then
-			if Ready(SLOT_W) then
-				origin = target.origin
-				x, y, z = origin.x, origin.y, origin.z
-				pred_output = pred:predict(W.speed, W.delay, W.range, W.width, target, false, false)
+		if target.object_id ~= 0 and menu:get_value(xerath_jungleclear_use_w) == 1 and myHero:distance_to(target.origin) < W.range and IsValid(target) then
+			if myHero.mana >= menu:get_value(xerath_jungleclear_min_mana) then
+				if Ready(SLOT_W) then
+					origin = target.origin
+					x, y, z = origin.x, origin.y, origin.z
+					pred_output = pred:predict(W.speed, W.delay, W.range, W.width, target, false, false)
 
-				if pred_output.can_cast then
-					castPos = pred_output.cast_pos
-					spellbook:cast_spell(SLOT_W, W.delay, castPos.x, castPos.y, castPos.z)
+					if pred_output.can_cast then
+						castPos = pred_output.cast_pos
+						spellbook:cast_spell(SLOT_W, W.delay, castPos.x, castPos.y, castPos.z)
+					end
 				end
 			end
 		end
