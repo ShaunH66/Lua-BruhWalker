@@ -4,7 +4,7 @@ end
 
 do
     local function AutoUpdate()
-		local Version = 1.3
+		local Version = 1.5
 		local file_name = "EzToTheReal.lua"
 		local url = "https://raw.githubusercontent.com/TheShaunyboi/BruhWalkerEncrypted/main/EzToTheReal.lua"
         local web_version = http:get("https://raw.githubusercontent.com/TheShaunyboi/BruhWalkerEncrypted/main/EzToTheReal.lua.version.txt")
@@ -15,6 +15,7 @@ do
 						console:log("---------------------------------------")
 						console:log("Added Blacklist Ultimate to Kill Steal and Combo R Settings")
 						console:log("Changed Auto Q Harass To Toggle Auto Q Harass")
+						console:log("Added Auto W Turret Toggle, Fixed W on EPIC Monsters")
 						console:log("---------------------------------------")
         else
 			http:download_file(url, file_name)
@@ -193,16 +194,6 @@ local function HasBuff(unit, buffname)
     return false
 end
 
-local function GetAllyHeroes()
-	local _AllyHeroes = {}
-	players = game.players
-	for i, unit in ipairs(players) do
-		if unit and not unit.is_enemy and unit.object_id ~= myHero.object_id then
-			table.insert(_AllyHeroes, unit)
-		end
-	end
-	return _AllyHeroes
-end
 
 local function GetGameTime()
 	return tonumber(game.game_time)
@@ -223,17 +214,32 @@ local function IsWattached(unit)
 end
 
 local function EpicMonster(unit)
-	if unit.object_name == "SRU_Baron"
-		or unit.object_name == "SRU_RiftHerald"
-		or unit.object_name == "SRU_Dragon_Water"
-		or unit.object_name == "SRU_Dragon_Fire"
-		or unit.object_name == "SRU_Dragon_Earth"
-		or unit.object_name == "SRU_Dragon_Air"
-		or unit.object_name == "SRU_Dragon_Elder" then
+	if unit.champ_name == "SRU_Baron"
+		or unit.champ_name == "SRU_RiftHerald"
+		or unit.champ_name == "SRU_Dragon_Water"
+		or unit.champ_name == "SRU_Dragon_Fire"
+		or unit.champ_name == "SRU_Dragon_Earth"
+		or unit.champ_name == "SRU_Dragon_Air"
+		or unit.champ_name == "SRU_Dragon_Elder" then
 		return true
 	else
 		return false
 	end
+end
+
+local function IsUnderTurret(unit)
+    turrets = game.turrets
+    for i, v in ipairs(turrets) do
+        if v and v.is_enemy then
+            local range = (W.range)
+            if v.is_alive then
+                if v:distance_to(unit.origin) < range then
+                    return true
+                end
+            end
+        end
+    end
+    return false
 end
 
 -- Menu Config
@@ -297,11 +303,13 @@ ezreal_jungleclear_min_mana = menu:add_slider("Minimum Mana To jungle Clear", ez
 ezreal_misc_options = menu:add_subcategory("Misc Settings", ezreal_category)
 ezreal_misc_anti_e = menu:add_checkbox("E Anti Gap Closer", ezreal_misc_options, 1)
 ezreal_combo_r_set_key = menu:add_keybinder("Semi Manual R Key", ezreal_misc_options, 65)
+ezreal_misc_w_turret = menu:add_toggle("Toggle Auto W Turret", 1, ezreal_misc_options, 85, true)
 
 ezreal_draw = menu:add_subcategory("Drawing Features", ezreal_category)
 ezreal_draw_q = menu:add_checkbox("Draw Q", ezreal_draw, 1)
 ezreal_draw_e = menu:add_checkbox("Draw E", ezreal_draw, 1)
---ezreal_lasthit_draw = menu:add_checkbox("Auto Q Last Hit Draw", ezreal_draw, 1)
+ezreal_auto_q_draw = menu:add_checkbox("Toggle Auto Q Harass Draw", ezreal_draw, 1)
+ezreal_auto_turret_draw = menu:add_checkbox("Toggle Auto W Turret Draw", ezreal_draw, 1)
 ezreal_draw_kill = menu:add_checkbox("Draw Full Combo Can Kill", ezreal_draw, 1)
 ezreal_draw_kill_healthbar = menu:add_checkbox("Draw Full Combo On Target Health Bar", ezreal_draw, 1, "Health Bar Damage Is Computed From R, Q, W")
 
@@ -383,19 +391,10 @@ local function CastW(unit)
 end
 
 local function CastE(unit)
-	target = selector:find_target(E.range, mode_health)
-
-	if target.object_id ~= 0 then
-		if Ready(SLOT_E) and IsValid(target) then
-			origin = target.origin
-			x, y, z = origin.x, origin.y, origin.z
-			pred_output = pred:predict(E.speed, E.delay, E.range, E.width, target, false, true)
-
-			if pred_output.can_cast then
-				castPos = pred_output.cast_pos
-				spellbook:cast_spell(SLOT_E, E.delay, castPos.x, castPos.y, castPos.z)
-			end
-		end
+	pred_output = pred:predict(E.speed, E.delay, E.range, E.width, unit, false, false)
+	if pred_output.can_cast then
+		castPos = pred_output.cast_pos
+		spellbook:cast_spell(SLOT_E, E.delay, castPos.x, castPos.y, castPos.z)
 	end
 end
 
@@ -621,6 +620,31 @@ local function ManualRCast()
 	end
 end
 
+-- W Turret Cast
+
+local function ManualWCast()
+
+	turrets = game.turrets
+	for i, v in ipairs(turrets) do
+		if v and v.is_enemy then
+			local range = (W.range)
+			if v.is_alive then
+				if myHero:distance_to(v.origin) < range and Ready(SLOT_W) then
+					origin = v.origin
+					x, y, z = origin.x, origin.y, origin.z
+					pred_output = pred:predict(W.speed, W.delay, W.range, W.width, v, false, false)
+
+					if pred_output.can_cast then
+						castPos = pred_output.cast_pos
+						spellbook:cast_spell(SLOT_W, W.delay, castPos.x, castPos.y, castPos.z)
+					end
+				end
+			end
+		end
+	end
+end
+
+
 -- Last Hit
 
 --[[local function Lasthit()
@@ -654,11 +678,12 @@ end]]
 
 local function on_gap_close(obj, data)
 
-	for i, Hero in pairs(GetAllyHeroes()) do
-		if IsValid(obj) and menu:get_value(ezreal_misc_anti_e) == 1 then
-			if Hero.object_id ~= myHero.object_id then
-				if myHero:distance_to(hero.origin) <= 1500 then
-					CastE(Hero)
+	local players = game.players
+  for _, v in ipairs(players) do
+		if not v.is_enemy and v.object_id ~= myHero.object_id then
+			if IsValid(obj) and menu:get_value(ezreal_misc_anti_e) == 1 then
+				if myHero:distance_to(v.origin) <= 1500 then
+					CastE(v)
 				end
 			end
 		end
@@ -707,11 +732,20 @@ local function on_draw()
 		end
 	end
 
-	if menu:get_value(ezreal_harass_use_q) == 1 then
-		if menu:get_toggle_state(ezreal_harass_use_auto_q) then
-			renderer:draw_text_centered(screen_size.width / 2, 0, "Toggle Auto Q Harass Enabled")
+	if menu:get_value(ezreal_auto_q_draw) == 1 then
+		if menu:get_value(ezreal_harass_use_q) == 1 then
+			if menu:get_toggle_state(ezreal_harass_use_auto_q) then
+				renderer:draw_text_centered(screen_size.width / 2, 0, "Toggle Auto Q Harass Enabled")
+			end
 		end
 	end
+
+	if menu:get_value(ezreal_auto_turret_draw) == 1 then
+		if menu:get_toggle_state(ezreal_misc_w_turret) then
+			renderer:draw_text_centered(screen_size.width / 2, screen_size.height / 50, "Toggle Auto W Turret Enabled")
+		end
+	end
+
 end
 
 local function on_tick()
@@ -746,6 +780,10 @@ local function on_tick()
 	if menu:get_value(ezreal_auto_lasthit) == 1 and combo:get_mode() ~= MODE_COMBO and not game:is_key_down(menu:get_value(ezreal_combokey)) then
 		Lasthit()
 	end]]
+
+	if menu:get_toggle_state(ezreal_misc_w_turret) and not game:is_key_down(menu:get_value(ezreal_combokey)) then
+		ManualWCast()
+	end
 
 	AutoKill()
 end
