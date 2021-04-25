@@ -4,7 +4,7 @@ end
 
 do
     local function AutoUpdate()
-		local Version = 1.4
+		local Version = 1.6
 		local file_name = "XerathToTheXerath.lua"
 		local url = "https://raw.githubusercontent.com/TheShaunyboi/BruhWalkerEncrypted/main/XerathToTheXerath.lua"
         local web_version = http:get("https://raw.githubusercontent.com/TheShaunyboi/BruhWalkerEncrypted/main/XearthToTheXearth.lua.version.txt")
@@ -12,16 +12,21 @@ do
 		console:log("XerathToTheXerath.Web Vers: "..tonumber(web_version))
 		if tonumber(web_version) == Version then
             console:log("Sexy Xerath v1 successfully loaded.....")
+						console:log("--------------------------------------------------------------------")
+						console:log("Added Blacklist Ultimate to Kill Steal and Combo R Settings")
+						console:log("Changed Semi R Manual To Cursor Targeting")
+						console:log("Added E Combo Max Usage Range Slider")
+						console:log("Added check for Flash Slot Usage (D/F) for Semi Manual Flash > Q Key")
+						console:log("Added E Anti Gap Closer")
+						console:log("--------------------------------------------------------------------")
         else
 			http:download_file(url, file_name)
             console:log("Sexy Xerath Update available.....")
-						console:log("Added Blacklist Ultimate to Kill Steal and Combo R Settings")
-						console:log("Changed Semi R Manual To Cursor Targeting")
-						console:log("Please Reload via F5!!.....")
+						console:log("Please Reload via F5!.....")
 						console:log("-----------------------------")
-						console:log("Please Reload via F5!!.....")
+						console:log("Please Reload via F5!.....")
 						console:log("-----------------------------")
-						console:log("Please Reload via F5!!.....")
+						console:log("Please Reload via F5!.....")
         end
 
     end
@@ -210,6 +215,17 @@ local function IsQCharging(unit)
 	return false
 end
 
+local function IsFlashSlotF()
+flash = spellbook:get_spell_slot(SLOT_F)
+FData = flash.spell_data
+FName = FData.spell_name
+--console:log(tostring(FName))
+if FName == "SummonerFlash" then
+	return true
+end
+return false
+end
+
 -- Menu Config
 
 xerath_category = menu:add_category("Shaun's Sexy Xerath")
@@ -233,6 +249,8 @@ xerath_combo = menu:add_subcategory("Combo", xerath_category)
 xerath_combo_use_q = menu:add_checkbox("Use Q", xerath_combo, 1)
 xerath_combo_use_w = menu:add_checkbox("Use W", xerath_combo, 1)
 xerath_combo_use_e = menu:add_checkbox("Use E", xerath_combo, 1)
+xerath_combo_use_e_set = menu:add_subcategory("E Combo Settings", xerath_combo)
+xerath_combo_use_e_range = menu:add_slider("E Max Range Usage", xerath_combo_use_e_set, 1, 1125, 1125)
 xerath_combo_r = menu:add_subcategory("R Combo Settings", xerath_combo)
 xerath_combo_use_r = menu:add_checkbox("Use R", xerath_combo_r, 1)
 xerath_combo_use_range = menu:add_slider("Target Greater Than Range To Use R Combo", xerath_combo_r, 1, 5000, 1450)
@@ -263,8 +281,8 @@ xerath_jungleclear_use_q = menu:add_checkbox("Use Q", xerath_jungleclear, 1)
 xerath_jungleclear_use_w = menu:add_checkbox("Use W", xerath_jungleclear, 1)
 xerath_jungleclear_min_mana = menu:add_slider("Minimum Mana To jungle Clear", xerath_jungleclear, 1, 500, 200)
 
-
 xerath_combo_r_options = menu:add_subcategory("Misc Settings", xerath_category)
+xerath_combo_use_gap = menu:add_checkbox("E Anti Gap Closer", xerath_combo_r_options, 1)
 xerath_combo_use_inter = menu:add_checkbox("E Interrupt Major Spells", xerath_combo_r_options, 1)
 xerath_combo_panic_e_key = menu:add_keybinder("Semi Manual E Key", xerath_combo_r_options, 90)
 xerath_combo_r_set_key = menu:add_keybinder("Semi Manual R Key - Enemy Nearest To Cursor", xerath_combo_r_options, 65)
@@ -335,7 +353,7 @@ local function CastE(unit)
 	target = selector:find_target(E.range, mode_health)
 
 	if target.object_id ~= 0 then
-		if Ready(SLOT_E) and IsValid(target) then
+		if Ready(SLOT_E) and IsValid(target) and myHero:distance_to(target.origin) <= menu:get_value(xerath_combo_use_e_range) then
 			origin = target.origin
 			x, y, z = origin.x, origin.y, origin.z
 			pred_output = pred:predict(E.speed, E.delay, E.range, E.width, target, false, true)
@@ -705,38 +723,81 @@ end
 
 local function FQCast()
 
-	Charge_buff = local_player:get_buff("xerathqvfx")
-	if Charge_buff.is_valid then
-		local diff = game.game_time - Charge_buff.start_time
-		local range = 750 + ((650 / 1.5) * diff)
+	if IsFlashSlotF() then
 
-		if range > 1400 then
-			range = 1400
-			Ftarget = selector:find_target(FQ.range, mode_health)
-			origin = Ftarget.origin
-			Fx, Fy, Fz = origin.x, origin.y, origin.z
-			spellbook:cast_spell(SLOT_F, 0.1, Fx, Fy, Fz)
-		end
+		Charge_buff = local_player:get_buff("xerathqvfx")
+		if Charge_buff.is_valid then
+			local diff = game.game_time - Charge_buff.start_time
+			local range = 750 + ((650 / 1.5) * diff)
 
-		target = selector:find_target(range, mode_health)
-		if target.object_id ~= 0 then
-			if Ready(SLOT_Q) and IsValid(target) then
-				origin = target.origin
-				pred_output = pred:predict(0, 0.6, range, 95, target, false, false)
 
-				if pred_output.can_cast then
-					cast_pos = pred_output.cast_pos
-					if not Ready(SLOT_F) then
-						spellbook:release_charged_spell(SLOT_Q, 0.35, cast_pos.x, cast_pos.y, cast_pos.z)
+			if range > 1400 then
+				range = 1400
+				Ftarget = selector:find_target(FQ.range, mode_health)
+				origin = Ftarget.origin
+				Fx, Fy, Fz = origin.x, origin.y, origin.z
+				spellbook:cast_spell(SLOT_F, 0.1, Fx, Fy, Fz)
+			end
+
+			target = selector:find_target(range, mode_health)
+			if target.object_id ~= 0 then
+				if Ready(SLOT_Q) and IsValid(target) then
+					origin = target.origin
+					pred_output = pred:predict(0, 0.6, range, 95, target, false, false)
+
+					if pred_output.can_cast then
+						cast_pos = pred_output.cast_pos
+						if not Ready(SLOT_F) then
+							spellbook:release_charged_spell(SLOT_Q, 0.35, cast_pos.x, cast_pos.y, cast_pos.z)
+						end
 					end
 				end
 			end
+		else
+			target = selector:find_target(FQ.range, mode_health)
+			if target.object_id ~= 0 then
+				if Ready(SLOT_Q) then
+					spellbook:start_charged_spell(SLOT_Q)
+				end
+			end
 		end
+
 	else
-		target = selector:find_target(FQ.range, mode_health)
-		if target.object_id ~= 0 then
-			if Ready(SLOT_Q) then
-				spellbook:start_charged_spell(SLOT_Q)
+
+		Charge_buff = local_player:get_buff("xerathqvfx")
+		if Charge_buff.is_valid then
+			local diff = game.game_time - Charge_buff.start_time
+			local range = 750 + ((650 / 1.5) * diff)
+
+
+			if range > 1400 then
+				range = 1400
+				Ftarget = selector:find_target(FQ.range, mode_health)
+				origin = Ftarget.origin
+				Fx, Fy, Fz = origin.x, origin.y, origin.z
+				spellbook:cast_spell(SLOT_D, 0.1, Fx, Fy, Fz)
+			end
+
+			target = selector:find_target(range, mode_health)
+			if target.object_id ~= 0 then
+				if Ready(SLOT_Q) and IsValid(target) then
+					origin = target.origin
+					pred_output = pred:predict(0, 0.6, range, 95, target, false, false)
+
+					if pred_output.can_cast then
+						cast_pos = pred_output.cast_pos
+						if not Ready(SLOT_D) then
+							spellbook:release_charged_spell(SLOT_Q, 0.35, cast_pos.x, cast_pos.y, cast_pos.z)
+						end
+					end
+				end
+			end
+		else
+			target = selector:find_target(FQ.range, mode_health)
+			if target.object_id ~= 0 then
+				if Ready(SLOT_Q) then
+					spellbook:start_charged_spell(SLOT_Q)
+				end
 			end
 		end
 	end
@@ -747,6 +808,19 @@ end
 local function on_possible_interrupt(obj, spell_name)
 	if IsValid(obj) then
     if menu:get_value(xerath_combo_use_inter) == 1 then
+      if myHero:distance_to(obj.origin) < E.range and Ready(SLOT_E) then
+        CastE(obj)
+			end
+		end
+	end
+end
+
+-- Gap Close
+
+local function on_gap_close(obj, data)
+
+	if IsValid(obj) then
+    if menu:get_value(xerath_combo_use_gap) == 1 then
       if myHero:distance_to(obj.origin) < E.range and Ready(SLOT_E) then
         CastE(obj)
 			end
@@ -855,3 +929,4 @@ end
 client:set_event_callback("on_tick", on_tick)
 client:set_event_callback("on_draw", on_draw)
 client:set_event_callback("on_possible_interrupt", on_possible_interrupt)
+client:set_event_callback("on_gap_close", on_gap_close)
