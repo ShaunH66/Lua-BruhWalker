@@ -4,16 +4,18 @@ end
 
 do
     local function AutoUpdate()
-		local Version = 1
+		local Version = 1.1
 		local file_name = "VladToTheImir.lua"
 		local url = "https://raw.githubusercontent.com/TheShaunyboi/BruhWalkerEncrypted/main/VladToTheImir.lua"
         local web_version = http:get("https://raw.githubusercontent.com/TheShaunyboi/BruhWalkerEncrypted/main/VladToTheImir.lua.version.txt")
         console:log("VladToTheImir.Lua Vers: "..Version)
 		console:log("VladToTheImir.Web Vers: "..tonumber(web_version))
 		if tonumber(web_version) == Version then
-						console:log("-----------------------------------------")
+						console:log("-------------------------------------------------")
             console:log("Shaun's Sexy Vladimir v1 successfully loaded.....")
-						console:log("-----------------------------------------")
+            console:log("Added Disable E Lane Clear Under Enemy Turret")
+            console:log("Fixed E Spam Bug, I'm Sorry Homies")
+						console:log("-------------------------------------------------")
 
         else
 			http:download_file(url, file_name)
@@ -29,161 +31,6 @@ do
 
     AutoUpdate()
 end
-
---[[local CCSpells = {
-	["AatroxW"] = {charName = "Aatrox", displayName = "Infernal Chains", slot = "W", type = "linear", speed = 1800, range = 825, delay = 0.25, radius = 80, collision = true},
-	["AhriSeduce"] = {charName = "Ahri", displayName = "Seduce", slot = "E", type = "linear", speed = 1500, range = 975, delay = 0.25, radius = 60, collision = true},
-	["AhriQ"] = {charName = "Ahri", displayName = "Ahri Orb of Deception", slot = "Q", type = "linear", speed = 1750, range = 925, delay = 0.25, radius = 100, collision = true},
-	["AkaliR"] = {charName = "Akali", displayName = "Perfect Execution [First]", slot = "R", type = "linear", speed = 1800, range = 525, delay = 0, radius = 65, collision = false},
-	["AniviaQ"] = {charName = "Anivia", displayName = "Flash Frost", slot = "Q", type = "linear", speed = 850, range = 1075, delay = 0.5, radius = 125, collision = true},
-	["AsheR"] = {charName = "Ashe", displayName = "Enchanted Crysta lArrow", slot = "R", type = "linear", speed = 1600, range = 25000, delay = 0.25, radius = 130, collision = true},
-	["AsheW"] = {charName = "Ashe", displayName = "Volley Attack", slot = "W", type = "linear", speed = 1500, range = 1350, delay = 0.25, radius = 20, collision = true},
-	["AzirQ"] = {charName = "AzirQ", displayName = "Conquering Sands", slot = "Q", type = "linear", speed = 1600, range = 1150, delay = 0.25, radius = 80, collision = true},
-	["AzirQ"] = {charName = "AzirQ", displayName = "Conquering Sands", slot = "Q", type = "linear", speed = 1600, range = 1150, delay = 0.25, radius = 80, collision = true},
-	["AkaliE"] = {charName = "Akali", displayName = "Shuriken Flip", slot = "E", type = "linear", speed = 1800, range = 825, delay = 0.25, radius = 70, collision = true},
-	["Pulverize"] = {charName = "Alistar", displayName = "Pulverize", slot = "Q", type = "circular", speed = math.huge, range = 0, delay = 0.25, radius = 365, collision = false},
-	["BandageToss"] = {charName = "Amumu", displayName = "Bandage Toss", slot = "Q", type = "linear", speed = 2000, range = 1100, delay = 0.25, radius = 80, collision = true},
-	["CurseoftheSadMummy"] = {charName = "Amumu", displayName = "Curse of the Sad Mummy", slot = "R", type = "circular", speed = math.huge, range = 0, delay = 0.25, radius = 550, collision = false},
-	["AniviaQ"] = {charName = "Anivia", displayName = "Flash Frost", slot = "Q", type = "linear", speed = 850, range = 1100, delay = 0.25, radius = 110, collision = false},
-	["EnchantedCrystalArrow"] = {charName = "Ashe", displayName = "Enchanted Crystal Arrow", slot = "R", type = "linear", speed = 1600, range = 25000, delay = 0.25, radius = 130, collision = false},
-	["AurelionSolQ"] = {charName = "AurelionSol", displayName = "Starsurge", slot = "Q", type = "linear", speed = 850, range = 25000, delay = 0, radius = 110, collision = false},
-	["AzirR"] = {charName = "Azir", displayName = "Emperor's Divide", slot = "R", type = "linear", speed = 1400, range = 500, delay = 0.3, radius = 250, collision = false},
-	["ApheliosR"] = {charName = "Aphelios", displayName = "Moonlight Vigil", slot = "R", type = "linear", speed = 2050, range = 1600, delay = 0.5, radius = 125, collision = false},
-	["BardQ"] = {charName = "Bard", displayName = "Cosmic Binding", slot = "Q", type = "linear", speed = 1500, range = 950, delay = 0.25, radius = 60, collision = true},
-	["BardR"] = {charName = "Bard", displayName = "Tempered Fate", slot = "R", type = "circular", speed = 2100, range = 3400, delay = 0.5, radius = 350, collision = false},
-	["BrandQ"] = {charName = "Brand", displayName = "Sear", slot = "Q", type = "linear", speed = 1600, range = 1050, delay = 0.25, radius = 60, collision = true},
-	["RocketGrab"] = {charName = "Blitzcrank", displayName = "Rocket Grab", slot = "Q", type = "linear", speed = 1800, range = 1150, delay = 0.25, radius = 140, collision = true},
-	["BraumQ"] = {charName = "Braum", displayName = "Winter's Bite", slot = "Q", type = "linear", speed = 1700, range = 1000, delay = 0.25, radius = 70, collision = true},
-	["BraumR"] = {charName = "Braum", displayName = "Glacial Fissure", slot = "R", type = "linear", speed = 1400, range = 1250, delay = 0.5, radius = 115, collision = false},
-	["CaitlynYordleTrap"] = {charName = "Caitlyn", displayName = "Yordle Trap", slot = "W", type = "circular", speed = math.huge, range = 800, delay = 0.25, radius = 75, collision = false},
-	["CaitlynEntrapment"] = {charName = "Caitlyn", displayName = "Entrapment", slot = "E", type = "linear", speed = 1600, range = 750, delay = 0.15, radius = 70, collision = true},
-	["InfectedCleaverMissile"] = {charName = "DrMundo", displayName = "Infected Cleaver", slot = "Q", type = "linear", speed = 2000, range = 975, delay = 0.25, radius = 60, collision = true},
-	["DravenDoubleShot"] = {charName = "Draven", displayName = "Double Shot", slot = "E", type = "linear", speed = 1600, range = 1050, delay = 0.25, radius = 130, collision = false},
-	["DravenRCast"] = {charName = "Draven", displayName = "Whirling Death", slot = "R", type = "linear", speed = 2000, range = 12500, delay = 0.25, radius = 160, collision = false},
-	["DianaQ"] = {charName = "Diana", displayName = "Crescent Strike", slot = "Q", type = "circular", speed = 1900, range = 900, delay = 0.25, radius = 185, collision = true},
-	["EkkoQ"] = {charName = "Ekko", displayName = "Timewinder", slot = "Q", type = "linear", speed = 1650, range = 1175, delay = 0.25, radius = 60, collision = false},
-	["EliseHumanE"] = {charName = "Elise", displayName = "Cocoon", slot = "E", type = "linear", speed = 1600, range = 1075, delay = 0.25, radius = 55, collision = true},
-	["EzrealR"] = {charName = "Ezreal", displayName = "Trueshot Barrage", slot = "R", type = "linear", speed = 2000, range = 12500, delay = 1, radius = 160, collision = true},
-	["EzrealQ"] = {charName = "Ezreal", displayName = "Mystic Shot", slot = "Q", type = "linear", speed = 2000, range = 1200, delay = 0.25, radius = 60, collision = true},
-	["FizzR"] = {charName = "Fizz", displayName = "Chum the Waters", slot = "R", type = "linear", speed = 1300, range = 1300, delay = 0.25, radius = 150, collision = false},
-	["GalioE"] = {charName = "Galio", displayName = "Justice Punch", slot = "E", type = "linear", speed = 2300, range = 650, delay = 0.4, radius = 160, collision = false},
-	["GnarQMissile"] = {charName = "Gnar", displayName = "Boomerang Throw", slot = "Q", type = "linear", speed = 2500, range = 1125, delay = 0.25, radius = 55, collision = false},
-	["GnarBigQMissile"] = {charName = "Gnar", displayName = "Boulder Toss", slot = "Q", type = "linear", speed = 2100, range = 1125, delay = 0.5, radius = 90, collision = true},
-	["GnarBigW"] = {charName = "Gnar", displayName = "Wallop", slot = "W", type = "linear", speed = math.huge, range = 575, delay = 0.6, radius = 100, collision = false},
-	["GnarR"] = {charName = "Gnar", displayName = "GNAR!", slot = "R", type = "circular", speed = math.huge, range = 0, delay = 0.25, radius = 475, collision = false},
-	["GragasQ"] = {charName = "Gragas", displayName = "Barrel Roll", slot = "Q", type = "circular", speed = 1000, range = 850, delay = 0.25, radius = 275, collision = false},
-	["GragasR"] = {charName = "Gragas", displayName = "Explosive Cask", slot = "R", type = "circular", speed = 1800, range = 1000, delay = 0.25, radius = 400, collision = false},
-	["GravesSmokeGrenade"] = {charName = "Graves", displayName = "Smoke Grenade", slot = "W", type = "circular", speed = 1500, range = 950, delay = 0.15, radius = 250, collision = false},
-	["HeimerdingerE"] = {charName = "Heimerdinger", displayName = "CH-2 Electron Storm Grenade", slot = "E", type = "circular", speed = 1200, range = 970, delay = 0.25, radius = 250, collision = false},
-	["HeimerdingerEUlt"] = {charName = "Heimerdinger", displayName = "CH-2 Electron Storm Grenade", slot = "E", type = "circular", speed = 1200, range = 970, delay = 0.25, radius = 250, collision = false},
-	["IreliaR"] = {charName = "Irelia", displayName = "Vanguard's Edge", slot = "R", type = "linear", speed = 2000, range = 950, delay = 0.4, radius = 160, collision = false},
-	["IvernQ"] = {charName = "Ivern", displayName = "Rootcaller", slot = "Q", type = "linear", speed = 1300, range = 1075, delay = 0.25, radius = 80, collision = true},
-	["IllaoiE"] = {charName = "Illaoi", displayName = "Test of Spirit", slot = "E", type = "linear", speed = 1900, range = 900, delay = 0.25, radius = 50, collision = true},
-	["IvernQ"] = {charName = "Ivern", displayName = "Rootcaller", slot = "Q", type = "linear", speed = 1300, range = 1075, delay = 0.25, radius = 80, collision = true},
-	["HowlingGaleSpell"] = {charName = "Janna", displayName = "Howling Gale", slot = "Q", type = "linear", speed = 667, range = 1750, delay = 0, radius = 100, collision = false},
-	["JarvanIVDragonStrike"] = {charName = "JarvanIV", displayName = "Dragon Strike", slot = "Q", type = "linear", speed = math.huge, range = 770, delay = 0.4, radius = 70, collision = false},
-	["JhinW"] = {charName = "Jhin", displayName = "Deadly Flourish", slot = "W", type = "linear", speed = 5000, range = 2550, delay = 0.75, radius = 40, collision = false},
-	["JhinRShot"] = {charName = "Jhin", displayName = "Curtain Call", slot = "R", type = "linear", speed = 5000, range = 3500, delay = 0.25, radius = 80, collision = false},
-	["JhinE"] = {charName = "Jhin", displayName = "Captive Audience", slot = "E", type = "circular", speed = 1600, range = 750, delay = 0.25, radius = 130, collision = false},
-	["JinxWMissile"] = {charName = "Jinx", displayName = "Zap!", slot = "W", type = "linear", speed = 3300, range = 1450, delay = 0.6, radius = 60, collision = true},
-	["JinxR"] = {charName = "Jinx", displayName = "Super Mega Death Rocket!", slot = "R", type = "linear", speed = 1700, range = 0.25, delay = 0.6, radius = 60, collision = true},
-	["KarmaQ"] = {charName = "Karma", displayName = "Inner Flame", slot = "Q", type = "linear", speed = 1700, range = 950, delay = 0.25, radius = 60, collision = true},
-	["KarmaQMantra"] = {charName = "Karma", displayName = "Inner Flame [Mantra]", slot = "Q", origin = "linear", type = "linear", speed = 1700, range = 950, delay = 0.25, radius = 80, collision = true},
-	["KayleQ"] = {charName = "Kayle", displayName = "Radiant Blast", slot = "Q", type = "linear", speed = 2000, range = 850, delay = 0.5, radius = 60, collision = false},
-	["KaynW"] = {charName = "Kayn", displayName = "Blade's Reach", slot = "W", type = "linear", speed = math.huge, range = 700, delay = 0.55, radius = 90, collision = false},
-	["KhazixWLong"] = {charName = "Khazix", displayName = "Void Spike [Threeway]", slot = "W", type = "threeway", speed = 1700, range = 1000, delay = 0.25, radius = 70,angle = 23, collision = true},
-	["KledQ"] = {charName = "Kled", displayName = "Beartrap on a Rope", slot = "Q", type = "linear", speed = 1600, range = 800, delay = 0.25, radius = 45, collision = true},
-	["BlindMonkQOne"] = {charName = "Leesin", displayName = "Sonic Wave", slot = "Q", type = "linear", speed = 1800, range = 1100, delay = 0.25, radius = 60, collision = true},
-	["LeblancE"] = {charName = "Leblanc", displayName = "Ethereal Chains [Standard]", slot = "E", type = "linear", speed = 1750, range = 925, delay = 0.25, radius = 55, collision = true},
-	["LeblancRE"] = {charName = "Leblanc", displayName = "Ethereal Chains [Ultimate]", slot = "E", type = "linear", speed = 1750, range = 925, delay = 0.25, radius = 55, collision = true},
-	["LeonaZenithBlade"] = {charName = "Leona", displayName = "Zenith Blade", slot = "E", type = "linear", speed = 2000, range = 875, delay = 0.25, radius = 70, collision = false},
-	["LissandraQMissile"] = {charName = "Lissandra", displayName = "Ice Shard", slot = "Q", type = "linear", speed = 2200, range = 750, delay = 0.25, radius = 75, collision = false},
-	["LuluQ"] = {charName = "Lulu", displayName = "Glitterlance", slot = "Q", type = "linear", speed = 1450, range = 925, delay = 0.25, radius = 60, collision = false},
-	["LucianQ"] = {charName = "Lucian", displayName = "Piercing Light", slot = "Q", type = "linear", speed = math.huge, range = 1140, delay = 0.25, radius = 65, collision = false},
-	["LuxLightBinding"] = {charName = "Lux", displayName = "Light Binding", slot = "Q", type = "linear", speed = 1200, range = 1175, delay = 0.25, radius = 50, collision = false},
-	["LuxMaliceCannonMis"] = {charName = "Lux", displayName = "Ult", slot = "R", type = "linear", speed = math.huge, range = 3340, delay = 1, radius = 100, collision = false},
-	["Landslide"] = {charName = "Malphite", displayName = "Ground Slam", slot = "E", type = "circular", speed = math.huge, range = 0, delay = 0.242, radius = 400, collision = false},
-	["MalzaharQ"] = {charName = "Malzahar", displayName = "Call of the Void", slot = "Q", type = "rectangular", speed = 1600, range = 900, delay = 0.5, radius = 400, radius2 = 100, collision = false},
-	["MaokaiQ"] = {charName = "Maokai", displayName = "Bramble Smash", slot = "Q", type = "linear", speed = 1600, range = 600, delay = 0.375, radius = 110, collision = false},
-	["MorganaQ"] = {charName = "Morgana", displayName = "Dark Binding", slot = "Q", type = "linear", speed = 1200, range = 1250, delay = 0.25, radius = 70, collision = true},
-	["NamiQ"] = {charName = "Nami", displayName = "Aqua Prison", slot = "Q", type = "circular", speed = math.huge, range = 875, delay = 1, radius = 180, collision = false},
-	["NamiRMissile"] = {charName = "Nami", displayName = "Tidal Wave", slot = "R", type = "linear", speed = 850, range = 2750, delay = 0.5, radius = 250, collision = false},
-	["NautilusAnchorDragMissile"] = {charName = "Nautilus", displayName = "Dredge Line", slot = "Q", type = "linear", speed = 2000, range = 925, delay = 0.25, radius = 90, collision = true},
-	["NeekoQ"] = {charName = "Neeko", displayName = "Blooming Burst", slot = "Q", type = "circular", speed = 1500, range = 800, delay = 0.25, radius = 200, collision = false},
-	["NeekoE"] = {charName = "Neeko", displayName = "Tangle-Barbs", slot = "E", type = "linear", speed = 1400, range = 1000, delay = 0.25, radius = 65, collision = false},
-	["NidaleeQ"] = {charName = "Niddalee", displayName = "Javelin Toss", slot = "Q", type = "linear", speed = 1300, range = 1500, delay = 0.25, radius = 40, collision = true},
-	["OlafAxeThrowCast"] = {charName = "Olaf", displayName = "Undertow", slot = "Q", type = "linear", speed = 1600, range = 1000, delay = 0.25, radius = 90, collision = false},
-	["OrnnQ"] = {charName = "Ornn", displayName = "Volcanic Rupture", slot = "Q", type = "linear", speed = 1800, range = 800, delay = 0.3, radius = 65, collision = false},
-	["OrnnE"] = {charName = "Ornn", displayName = "Searing Charge", slot = "E", type = "linear", speed = 1600, range = 800, delay = 0.35, radius = 150, collision = false},
-	["OrnnRCharge"] = {charName = "Ornn", displayName = "Call of the Forge God", slot = "R", type = "linear", speed = 1650, range = 2500, delay = 0.5, radius = 200, collision = false},
-	["PoppyQSpell"] = {charName = "Poppy", displayName = "Hammer Shock", slot = "Q", type = "linear", speed = math.huge, range = 430, delay = 0.332, radius = 100, collision = false},
-	["PoppyRSpell"] = {charName = "Poppy", displayName = "Keeper's Verdict", slot = "R", type = "linear", speed = 2000, range = 1200, delay = 0.33, radius = 100, collision = false},
-	["PykeQMelee"] = {charName = "Pyke", displayName = "Bone Skewer [Melee]", slot = "Q", type = "linear", speed = math.huge, range = 400, delay = 0.25, radius = 70, collision = false},
-	["PykeQRange"] = {charName = "Pyke", displayName = "Bone Skewer [Range]", slot = "Q", type = "linear", speed = 2000, range = 1100, delay = 0.2, radius = 70, collision = true},
-	["PykeE"] = {charName = "Pyke", displayName = "Phantom Undertow", slot = "E", type = "linear", speed = 3000, range = 25000, delay = 0, radius = 110, collision = false},
-	["QiyanaR"] = {charName = "Qiyana", displayName = "Supreme Display of Talent", slot = "R", type = "linear", speed = 2000, range = 950, delay = 0.25, radius = 190, collision = false},
-	["RakanW"] = {charName = "Rakan", displayName = "Grand Entrance", slot = "W", type = "circular", speed = math.huge, range = 650, delay = 0.7, radius = 265, collision = false},
-	["RengarE"] = {charName = "Rengar", displayName = "Bola Strike", slot = "E", type = "linear", speed = 1500, range = 1000, delay = 0.25, radius = 70, collision = true},
-	["RumbleGrenade"] = {charName = "Rumble", displayName = "Electro Harpoon", slot = "E", type = "linear", speed = 2000, range = 850, delay = 0.25, radius = 60, collision = true},
-	["SejuaniR"] = {charName = "Sejuani", displayName = "Glacial Prison", slot = "R", type = "linear", speed = 1600, range = 1300, delay = 0.25, radius = 120, collision = false},
-	["ShyvanaTransformLeap"] = {charName = "Shyvana", displayName = "Transform Leap", slot = "R", type = "linear", speed = 700, range = 850, delay = 0.25, radius = 150, collision = false},
-	["SionQ"] = {charName = "Sion", displayName = "Decimating Smash", slot = "Q", origin = "", type = "linear", speed = math.huge, range = 750, delay = 2, radius = 150, collision = false},
-	["SionE"] = {charName = "Sion", displayName = "Roar of the Slayer", slot = "E", type = "linear", speed = 1800, range = 800, delay = 0.25, radius = 80, collision = false},
-	["SkarnerFractureMissile"] = {charName = "Skarner", displayName = "Fracture", slot = "E", type = "linear", speed = 1500, range = 1000, delay = 0.25, radius = 70, collision = false},
-	["SonaR"] = {charName = "Sona", displayName = "Crescendo", slot = "R", type = "linear", speed = 2400, range = 1000, delay = 0.25, radius = 140, collision = false},
-	["SorakaQ"] = {charName = "Soraka", displayName = "Starcall", slot = "Q", type = "circular", speed = 1150, range = 810, delay = 0.25, radius = 235, collision = false},
-	["SwainW"] = {charName = "Swain", displayName = "Vision of Empire", slot = "W", type = "circular", speed = math.huge, range = 3500, delay = 1.5, radius = 300, collision = false},
-	["SwainE"] = {charName = "Swain", displayName = "Nevermove", slot = "E", type = "linear", speed = 1800, range = 850, delay = 0.25, radius = 85, collision = false},
-	["SylasE2"] = {charName = "Sylas", displayName = "Abduct", slot = "E", type = "linear", speed = 1600, range = 850, delay = 0.25, radius = 60, collision = true},
-	["SyndraE"] = {charName = "Syndra", displayName = "Scatter the Weak", slot = "E", type = "linear", speed = 2000, range = 850, delay =  0.25, radius = 90, collision = true},
-	["TahmKenchQ"] = {charName = "TahmKench", displayName = "Tongue Lash", slot = "Q", type = "linear", speed = 2800, range = 800, delay = 0.25, radius = 70, collision = true},
-	["TaliyahWVC"] = {charName = "Taliyah", displayName = "Seismic Shove", slot = "W", type = "circular", speed = math.huge, range = 900, delay = 0.85, radius = 150, collision = false},
-	["TaliyahR"] = {charName = "Taliyah", displayName = "Weaver's Wall", slot = "R", type = "linear", speed = 1700, range = 3000, delay = 1, radius = 120, collision = false},
-	["ThreshE"] = {charName = "Thresh", displayName = "Flay", slot = "E", type = "linear", speed = math.huge, range = 500, delay = 0.389, radius = 110, collision = true},
-	["ThreshQ"] = {charName = "Thresh", displayName = "Death Sentence", slot = "Q", type = "linear", speed = 1900, range = 1200, delay = 0.5, radius = 70, collision = true},
-	["OriannaQ"] = {charName = "Orianna", displayName = "Command: Dissonance", slot = "Q", type = "circular", speed = 1150, range = 1825, delay = 0.25, radius = 250, collision = false},
-	["TristanaW"] = {charName = "Tristana", displayName = "Rocket Jump", slot = "W", type = "circular", speed = 1100, range = 900, delay = 0.25, radius = 300, collision = false},
-	["UrgotQ"] = {charName = "Urgot", displayName = "Corrosive Charge", slot = "Q", type = "circular", speed = math.huge, range = 800, delay = 0.6, radius = 180, collision = false},
-	["UrgotE"] = {charName = "Urgot", displayName = "Disdain", slot = "E", type = "linear", speed = 1540, range = 475, delay = 0.45, radius = 100, collision = false},
-	["UrgotR"] = {charName = "Urgot", displayName = "Fear Beyond Death", slot = "R", type = "linear", speed = 3200, range = 1600, delay = 0.4, radius = 80, collision = false},
-	["VarusR"] = {charName = "Varus", displayName = "Chain of Corruption", slot = "R", type = "linear", speed = 1950, range = 1200, delay = 0.25, radius = 120, collision = false},
-	["VelkozQ"] = {charName = "Velkoz", displayName = "Plasma Fission", slot = "Q", type = "linear", speed = 1300, range = 1050, delay = 0.25, radius = 50, collision = true},
-	["VelkozE"] = {charName = "Velkoz", displayName = "Tectonic Disruption", slot = "E", type = "circular", speed = math.huge, range = 800, delay = 0.8, radius = 185, collision = false},
-	["ViktorGravitonField"] = {charName = "Viktor", displayName = "Graviton Field", slot = "W", type = "circular", speed = math.huge, range = 800, delay = 1.75, radius = 270, collision = false},
-	["WarwickR"] = {charName = "Warwick", displayName = "Infinite Duress", slot = "R", type = "linear", speed = 1800, range = 3000, delay = 0.1, radius = 55, collision = false},
-	["XerathArcaneBarrage2"] = {charName = "Xerath", displayName = "Arcane Barrage", slot = "W", type = "circular", speed = math.huge, range = 1000, delay = 0.75, radius = 235, collision = false},
-	["XerathMageSpear"] = {charName = "Xerath", displayName = "Mage Spear", slot = "E", type = "linear", speed = 1400, range = 1050, delay = 0.2, radius = 60, collision = true},
-	["XinZhaoW"] = {charName = "XinZhao", displayName = "Wind Becomes Lightning", slot = "W", type = "linear", speed = 5000, range = 900, delay = 0.5, radius = 40, collision = false},
-	["ZacQ"] = {charName = "Zac", displayName = "Stretching Strikes", slot = "Q", type = "linear", speed = 2800, range = 800, delay = 0.33, radius = 120, collision = false},
-	["ZiggsW"] = {charName = "Ziggs", displayName = "Satchel Charge", slot = "W", type = "circular", speed = 1750, range = 1000, delay = 0.25, radius = 240, collision = false},
-	["ZiggsE"] = {charName = "Ziggs", displayName = "Hexplosive Minefield", slot = "E", type = "circular", speed = 1800, range = 900, delay = 0.25, radius = 250, collision = false},
-	["ZileanQ"] = {charName = "Zilean", displayName = "Time Bomb", slot = "Q", type = "circular", speed = math.huge, range = 900, delay = 0.8, radius = 150, collision = false},
-	["RengarE"] = {charName = "Rengar", displayName = "Bola Strike", slot = "E", type = "linear", speed = 1500, range = 1000, delay = 0.25, radius = 70, collision = true},
-	["ZoeE"] = {charName = "Zoe", displayName = "Sleepy Trouble Bubble", slot = "E", type = "linear", speed = 1700, range = 800, delay = 0.3, radius = 50, collision = true},
-	["ZyraE"] = {charName = "Zyra", displayName = "Grasping Roots", slot = "E", type = "linear", speed = 1150, range = 1100, delay = 0.25, radius = 70, collision = false},
-	["ZyraR"] = {charName = "Zyra", displayName = "Stranglethorns", slot = "R", type = "circular", speed = math.huge, range = 700, delay = 2, radius = 500, collision = false},
-	["RivenR"] = {charName = "Riven", displayName = "Wind Slash", slot = "R", type = "linear", speed = 1600, range = 1100, delay = 0.25, radius = 100, collision = true},
-	["BrandConflagration"] = {charName = "Brand", slot = "R", type = "targeted", displayName = "Conflagration", range = 625,cc = true},
-	["JarvanIVCataclysm"] = {charName = "JarvanIV", slot = "R", type = "targeted", displayName = "Cataclysm", range = 650},
-	["JayceThunderingBlow"] = {charName = "Jayce", slot = "E", type = "targeted", displayName = "Thundering Blow", range = 240},
-	["BlindMonkRKick"] = {charName = "LeeSin", slot = "R", type = "targeted", displayName = "Dragon's Rage", range = 375},
-	["LissandraR"] = {charName = "Lissandra", slot = "R", type = "targeted", displayName = "Frozen Tomb", range = 550},
-	["SeismicShard"] = {charName = "Malphite", slot = "Q", type = "targeted", displayName = "Seismic Shard", range = 625,cc = true},
-	["AlZaharNetherGrasp"] = {charName = "Malzahar", slot = "R", type = "targeted", displayName = "Nether Grasp", range = 700},
-	["MaokaiW"] = {charName = "Maokai", slot = "W", type = "targeted", displayName = "Twisted Advance", range = 525},
-	["NautilusR"] = {charName = "Nautilus", slot = "R", type = "targeted", displayName = "Depth Charge", range = 825},
-	["PoppyE"] = {charName = "Poppy", slot = "E", type = "targeted", displayName = "Heroic Charge", range = 475},
-	["RyzeW"] = {charName = "Ryze", slot = "W", type = "targeted", displayName = "Rune Prison", range = 615},
-	["SkarnerImpale"] = {charName = "Skarner", slot = "R", type = "targeted", displayName = "Impale", range = 350},
-	["TahmKenchW"] = {charName = "TahmKench", slot = "W", type = "targeted", displayName = "Devour", range = 250},
-	["TristanaR"] = {charName = "Tristana", slot = "R", type = "targeted", displayName = "Buster Shot", range = 669},
-	["GarenR"] = {charName = "Garen", slot = "R", type = "targeted", displayName = "Demacian Justice", range = 400},
-	["ChoGathR"] = {charName = "ChoGath", slot = "R", type = "targeted", displayName = "Feast", range = 175},
-	["GarenQ"] = {charName = "Garen", slot = "Q", type = "targeted", displayName = "Decisive Strike", range = 300},
-	["DariusR"] = {charName = "Darius", slot = "R", type = "targeted", displayName = "Noxian Guillotine", range = 460},
-	["DariusE"] = {charName = "Darius", displayName = "Apprehend", slot = "E", type = "circular", speed = math.huge, range = 570, delay = 0.32, radius = 55, collision = false},
-
-}]]
 
 pred:use_prediction()
 require "PKDamageLib"
@@ -769,8 +616,7 @@ end
 
 local function AutoKill()
 
-	players = game.players
-	for _, target in ipairs(players) do
+	for i, target in ipairs(GetEnemyHeroes()) do
 
 		if target.object_id ~= 0 and myHero:distance_to(target.origin) <= Q.range and IsValid(target) then
 			if menu:get_value(vlad_ks_use_q) == 1 then
@@ -822,7 +668,7 @@ local function Clear()
 		if menu:get_value(vlad_laneclear_use_e) == 1 then
 
 			if IsValid(target) and target.object_id ~= 0 and target.is_enemy and myHero:distance_to(target.origin) < E.range then
-				if GetMinionCount(E.range, target) >= menu:get_value(vlad_laneclear_e_min) then
+				if GetMinionCount(E.range, target) >= menu:get_value(vlad_laneclear_e_min) and not IsUnderTurret(myHero) then
 
 					local Charge_buff = local_player:get_buff("VladimirE")
 					if Charge_buff.is_valid then
@@ -917,53 +763,26 @@ end
 -- Life Saver --
 
 local function Wlifeaver()
-	target = selector:find_target(R.range, mode_distance)
-	if menu:get_value(vlad_misc_life) == 1 and Ready(SLOT_W) then
-		if target.object_id ~= 0 then
-			if myHero:health_percentage() <= menu:get_value(vlad_misc_life_hp) then
-				if myHero:distance_to(target.origin) <= R.range and IsValid(target) then
-					CastW()
-				end
-			end
-		end
-	end
+
+  for i, target in ipairs(GetEnemyHeroes()) do
+	  if menu:get_value(vlad_misc_life) == 1 and Ready(SLOT_W) then
+		  if target.object_id ~= 0 then
+			  if myHero:health_percentage() <= menu:get_value(vlad_misc_life_hp) then
+				  if myHero:distance_to(target.origin) <= R.range and IsValid(target) then
+					  CastW()
+				  end
+			  end
+		  end
+	  end
+  end
 end
-
--- Last Hit
-
---[[local function Lasthit()
-
-	minions = game.minions
-	for i, target in ipairs(minions) do
-
-		if target.object_id ~= 0 and target.is_enemy and myHero:distance_to(target.origin) < Q.range then
-			if IsValid(target) and GetMinionCount(Q.range, target) >= 1 then
-				if GetQDmg(target) > target.health then
-					if combo:get_mode() ~= MODE_COMBO and not game:is_key_down(menu:get_value(vlad_combokey)) then
-						if Ready(SLOT_Q) then
-							console:log("screen_size.width: " .. tostring(GetQDmg(target)))
-							origin = target.origin
-							x, y, z = origin.x, origin.y, origin.z
-							pred_output = pred:predict(Q.speed, Q.delay, Q.range, Q.width, target, true, true)
-
-							if pred_output.can_cast then
-								castPos = pred_output.cast_pos
-								spellbook:cast_spell(SLOT_Q, Q.delay, castPos.x, castPos.y, castPos.z)
-							end
-						end
-					end
-				end
-			end
-		end
-	end
-end]]
 
 -- Anti E Gap
 
 local function on_gap_close(obj, data)
 
 	if IsValid(obj) and menu:get_value(vlad_misc_anti_w) == 1 then
-		if myHero:distance_to(obj.origin) <= W.range and Ready(SLOT_W) then
+		if myHero:distance_to(obj.origin) <= R.range and Ready(SLOT_W) then
 			CastW()
 		end
 	end
@@ -1020,14 +839,6 @@ local function on_draw()
 		end
 	end
 
-
-
-	--[[if menu:get_value(vlad_auto_turret_draw) == 1 then
-		if menu:get_toggle_state(vlad_misc_w_turret) then
-			renderer:draw_text_centered(screen_size.width / 2, screen_size.height / 50, "Toggle Auto W Turret Enabled")
-		end
-	end]]
-
 end
 
 local function on_tick()
@@ -1061,41 +872,11 @@ local function on_tick()
 		AoEDraw()
 	end
 
-	Wlifeaver()
+  if menu:get_value(vlad_misc_life) == 1 then
+	  Wlifeaver()
+  end
 
 	AutoKill()
-
-	--[[if game:is_key_down(menu:get_value(vlad_lasthit_use_q)) and menu:get_value(vlad_auto_lasthit) == 0 then
-		if combo:get_mode() == MODE_LASTHIT then
-			Lasthit()
-		end
-	end
-
-	if menu:get_value(vlad_auto_lasthit) == 1 and combo:get_mode() ~= MODE_COMBO and not game:is_key_down(menu:get_value(vlad_combokey)) then
-		Lasthit()
-	end]]
-
-
-	--[[if SpellName and Spell then
-		if CCSpells[SpellName] and Ready(SLOT_W) then
-			local Col = VectorPointProjectionOnLineSegment(Spell.start_pos, Spell.end_pos, myHero.origin)
-			local Radius = (CCSpells[SpellName].radius + myHero.bounding_radius) * (CCSpells[SpellName].radius + myHero.bounding_radius)
-			if GetDistanceSqr2(myHero, Spell.end_pos) < Radius or GetDistanceSqr2(myHero, Col) < Radius then
-				local TimeToHit = (myHero:distance_to(Spell.start_pos) / CCSpells[SpellName].speed)
-				if game.game_time - Spell.start_time >= (TimeToHit - 0.3) then
-					SpellName = nil
-					Spell = nil
-					spellbook:cast_spell(SLOT_W, 0.3)
-					SpellName = nil
-					Spell = nil
-					return
-				end
-			end
-		else
-			SpellName = nil
-			Spell = nil
-		end
-	end]]
 
 end
 
