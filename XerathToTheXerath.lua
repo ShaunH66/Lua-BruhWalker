@@ -4,20 +4,21 @@ end
 
 do
     local function AutoUpdate()
-		local Version = 1.7
+		local Version = 1.8
 		local file_name = "XerathToTheXerath.lua"
 		local url = "https://raw.githubusercontent.com/TheShaunyboi/BruhWalkerEncrypted/main/XerathToTheXerath.lua"
         local web_version = http:get("https://raw.githubusercontent.com/TheShaunyboi/BruhWalkerEncrypted/main/XearthToTheXearth.lua.version.txt")
         console:log("XerathToTheXerath.Lua Vers: "..Version)
 		console:log("XerathToTheXerath.Web Vers: "..tonumber(web_version))
 		if tonumber(web_version) == Version then
-            console:log("Sexy Xerath v1 successfully loaded.....")
+            console:log("Sexy Xerath v1.8 successfully loaded.....")
 						console:log("--------------------------------------------------------------------")
 						console:log("Added Blacklist Ultimate to Kill Steal and Combo R Settings")
 						console:log("Changed Semi R Manual To Cursor Targeting")
 						console:log("Added E Combo Max Usage Range Slider")
 						console:log("Added check for Flash Slot Usage (D/F) for Semi Manual Flash > Q Key")
 						console:log("Added E Anti Gap Closer")
+						console:log("Updated For Latest Bruh Patch")
 						console:log("--------------------------------------------------------------------")
         else
 			http:download_file(url, file_name)
@@ -288,7 +289,7 @@ xerath_combo_panic_e_key = menu:add_keybinder("Semi Manual E Key", xerath_combo_
 xerath_combo_r_set_key = menu:add_keybinder("Semi Manual R Key - Enemy Nearest To Cursor", xerath_combo_r_options, 65)
 xerath_combo_fq_key = menu:add_keybinder("Semi Manual Flash > Q Key", xerath_combo_r_options, 88)
 
-xerath_draw = menu:add_subcategory("Drawing Features", xerath_category)
+xerath_draw = menu:add_subcategory("The Drawing Features", xerath_category)
 xerath_draw_q = menu:add_checkbox("Draw Q", xerath_draw, 1)
 xerath_draw_w = menu:add_checkbox("Draw W", xerath_draw, 1)
 xerath_draw_e = menu:add_checkbox("Draw E", xerath_draw, 1)
@@ -333,58 +334,42 @@ local function CastQ(unit)
 end
 
 local function CastW(unit)
-	target = selector:find_target(W.range, mode_health)
 
-	if target.object_id ~= 0 then
-		if Ready(SLOT_W) and IsValid(target) then
-			origin = target.origin
-			x, y, z = origin.x, origin.y, origin.z
-			pred_output = pred:predict(W.speed, W.delay, W.range, W.width, target, false, false)
+	if unit.object_id ~= 0 then
+		origin = target.origin
+		x, y, z = origin.x, origin.y, origin.z
+		pred_output = pred:predict(W.speed, W.delay, W.range, W.width, unit, false, false)
 
-			if pred_output.can_cast then
-				castPos = pred_output.cast_pos
-				spellbook:cast_spell(SLOT_W, W.delay, castPos.x, castPos.y, castPos.z)
-			end
+		if pred_output.can_cast then
+			castPos = pred_output.cast_pos
+			spellbook:cast_spell(SLOT_W, W.delay, castPos.x, castPos.y, castPos.z)
 		end
 	end
 end
 
 local function CastE(unit)
-	target = selector:find_target(E.range, mode_health)
 
-	if target.object_id ~= 0 then
-		if Ready(SLOT_E) and IsValid(target) and myHero:distance_to(target.origin) <= menu:get_value(xerath_combo_use_e_range) then
-			origin = target.origin
-			x, y, z = origin.x, origin.y, origin.z
-			pred_output = pred:predict(E.speed, E.delay, E.range, E.width, target, false, true)
+	origin = unit.origin
+	x, y, z = origin.x, origin.y, origin.z
+	pred_output = pred:predict(E.speed, E.delay, E.range, E.width, unit, false, true)
 
-			if pred_output.can_cast then
-				castPos = pred_output.cast_pos
-				spellbook:cast_spell(SLOT_E, E.delay, castPos.x, castPos.y, castPos.z)
-			end
-		end
+	if pred_output.can_cast then
+		castPos = pred_output.cast_pos
+		spellbook:cast_spell(SLOT_E, E.delay, castPos.x, castPos.y, castPos.z)
 	end
 end
 
 local function CastR(unit)
 	target = selector:find_target(R.range, mode_health)
 
-	if target.object_id ~= 0 then
-		if Ready(SLOT_R) and IsValid(target) and myHero:distance_to(target.origin) > menu:get_value(xerath_combo_use_range) then
-			if target:health_percentage() <= menu:get_value(xerath_combo_r_enemy_hp) then
-				if local_player:health_percentage() >= menu:get_value(xerath_combo_r_my_hp) then
-					if menu:get_value_string("Use R Combo On: "..tostring(target.champ_name)) == 1 then
-						origin = target.origin
-						x, y, z = origin.x, origin.y, origin.z
-						pred_output = pred:predict(R.speed, R.delay, R.range, R.width, target, false, false)
+	if unit.object_id ~= 0 then
+		origin = unit.origin
+		x, y, z = origin.x, origin.y, origin.z
+		pred_output = pred:predict(R.speed, R.delay, R.range, R.width, unit, false, false)
 
-						if pred_output.can_cast then
-							castPos = pred_output.cast_pos
-							spellbook:cast_spell(SLOT_R, R.delay, castPos.x, castPos.y, castPos.z)
-						end
-					end
-				end
-			end
+		if pred_output.can_cast then
+			castPos = pred_output.cast_pos
+			spellbook:cast_spell(SLOT_R, R.delay, castPos.x, castPos.y, castPos.z)
 		end
 	end
 end
@@ -393,39 +378,48 @@ end
 
 local function Combo()
 
+	target = selector:find_target(R.range, mode_health)
+
 	if menu:get_value(xerath_combo_use_q) == 1 then
-		if Ready(SLOT_Q) then
+		if Ready(SLOT_Q) and myHero:distance_to(target.origin) <= Q.range then
 			CastQ(target)
 		end
 	end
 
 	if menu:get_value(xerath_combo_use_w) == 1 then
-		if Ready(SLOT_W) then
+		if Ready(SLOT_W) and IsValid(target) and myHero:distance_to(target.origin) <= W.range then
 			CastW(target)
 		end
 	end
 
 	if menu:get_value(xerath_combo_use_e) == 1 then
-		if Ready(SLOT_E) then
+		if Ready(SLOT_E) and IsValid(target) and myHero:distance_to(target.origin) <= menu:get_value(xerath_combo_use_e_range) then
 			CastE(target)
 		end
 	end
 
 	if menu:get_value(xerath_combo_use_r) == 1 then
-		if Ready(SLOT_R) then
-			CastR(target)
+		if Ready(SLOT_R) and IsValid(target) and myHero:distance_to(target.origin) > menu:get_value(xerath_combo_use_range) then
+			if target:health_percentage() <= menu:get_value(xerath_combo_r_enemy_hp) then
+				if local_player:health_percentage() >= menu:get_value(xerath_combo_r_my_hp) then
+					if menu:get_value_string("Use R Combo On: "..tostring(target.champ_name)) == 1 then
+						CastR(target)
+					end
+				end
+			end
 		end
 	end
-
 end
 
 --Harass
 
 local function Harass()
 
+	target = selector:find_target(R.range, mode_health)
+
 	if menu:get_value(xerath_harass_use_q) == 1 then
 		if myHero.mana >= menu:get_value(xerath_harass_min_mana) then
-			if Ready(SLOT_Q) then
+			if Ready(SLOT_Q) and myHero:distance_to(target.origin) <= Q.range then
 				CastQ(target)
 			end
 		end
@@ -433,7 +427,7 @@ local function Harass()
 
 	if menu:get_value(xerath_harass_use_w) == 1 then
 		if myHero.mana >= menu:get_value(xerath_harass_min_mana) then
-			if Ready(SLOT_W) then
+			if Ready(SLOT_W) and IsValid(target) and myHero:distance_to(target.origin) <= W.range then
 				CastW(target)
 			end
 		end
@@ -736,7 +730,9 @@ local function FQCast()
 				Ftarget = selector:find_target(FQ.range, mode_health)
 				origin = Ftarget.origin
 				Fx, Fy, Fz = origin.x, origin.y, origin.z
-				spellbook:cast_spell(SLOT_F, 0.1, Fx, Fy, Fz)
+				if Ready(SLOT_F) then
+					spellbook:cast_spell(SLOT_F, 0.1, Fx, Fy, Fz)
+				end
 			end
 
 			target = selector:find_target(range, mode_health)
@@ -884,7 +880,7 @@ local function on_draw()
 			if target.object_id ~= 0 and myHero:distance_to(target.origin) <= Q.range then
 				if menu:get_value(xerath_draw_kill) == 1 then
 					if fulldmg > target.health and IsValid(target) then
-						renderer:draw_text_big_centered(screen_size.width / 2, screen_size.height / 20 + 30, "Full Combo Can Kill Q > W > R")
+						renderer:draw_text_big_centered(screen_size.width / 2, screen_size.height / 20 + 30, "Full Combo Rotation Can Kill")
 					end
 				end
 			end
