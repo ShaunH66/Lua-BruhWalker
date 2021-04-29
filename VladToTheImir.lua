@@ -4,7 +4,7 @@ end
 
 do
     local function AutoUpdate()
-		local Version = 1.1
+		local Version = 1.2
 		local file_name = "VladToTheImir.lua"
 		local url = "https://raw.githubusercontent.com/TheShaunyboi/BruhWalkerEncrypted/main/VladToTheImir.lua"
         local web_version = http:get("https://raw.githubusercontent.com/TheShaunyboi/BruhWalkerEncrypted/main/VladToTheImir.lua.version.txt")
@@ -12,9 +12,9 @@ do
 		console:log("VladToTheImir.Web Vers: "..tonumber(web_version))
 		if tonumber(web_version) == Version then
 						console:log("-------------------------------------------------")
-            console:log("Shaun's Sexy Vladimir v1 successfully loaded.....")
-            console:log("Added Disable E Lane Clear Under Enemy Turret")
-            console:log("Fixed E Spam Bug, I'm Sorry Homies")
+            console:log("Shaun's Sexy Vladimir v1.2 successfully loaded.....")
+            console:log("Added Q last Hit")
+						console:log("Updated For lastest BruhWalker Patch")
 						console:log("-------------------------------------------------")
 
         else
@@ -424,21 +424,13 @@ vlad_jungleclear = menu:add_subcategory("Jungle Clear", vlad_category)
 vlad_jungleclear_use_q = menu:add_checkbox("Use Q", vlad_jungleclear, 1)
 vlad_jungleclear_use_e = menu:add_checkbox("Use E", vlad_jungleclear, 1)
 
+vlad_lasthit = menu:add_subcategory("Last Hit", vlad_category)
+vlad_lasthit_use_q = menu:add_checkbox("Use Q", vlad_lasthit, 1)
+
 vlad_auto_w = menu:add_subcategory("EPIC Pool Features", vlad_category)
 vlad_misc_anti_w = menu:add_checkbox("W Anti Gap Closer", vlad_auto_w, 1)
 vlad_misc_life = menu:add_checkbox("Enable W Life Saver", vlad_auto_w, 1)
 vlad_misc_life_hp = menu:add_slider("Vlad Health [%] To use W Life Saver", vlad_auto_w, 1, 100, 15)
---vlad_auto_w_use = menu:add_checkbox("Auto W Incomming Spells", vlad_auto_w, 1)
---vlad_blockList = menu:add_subcategory("Spell List", vlad_auto_w)
-
---[[for i, spell in pairs(CCSpells) do
-	if not CCSpells[i] then return end
-	for j, k in pairs(GetEnemyHeroes()) do
-		if spell.charName == k.champ_name then
-			i = menu:add_checkbox(""..spell.charName.." "..spell.slot.." | "..spell.displayName, vlad_blockList, 1)
-		end
-	end
-end]]
 
 vlad_r_misc_options = menu:add_subcategory("INSANE Ulitmate Features", vlad_category)
 vlad_combo_r_set_key = menu:add_keybinder("Semi Manual R Key - Closest To Cursor Target", vlad_r_misc_options, 65)
@@ -552,7 +544,7 @@ local function Combo()
 	end
 
 	if menu:get_value(vlad_combo_use_q) == 1 then
-		if myHero:distance_to(target.origin) <= Q.range and IsValid(target) then
+		if myHero:distance_to(target.origin) <= Q.range and IsValid(target) and not HasEMark(myHero) then
 			if Ready(SLOT_Q) then
 				CastQ(target)
 			end
@@ -560,13 +552,13 @@ local function Combo()
 	end
 
 	if menu:get_value(vlad_combo_use_e) == 1 then
-		if myHero:distance_to(target.origin) <= E.range and IsValid(target) then
+		if myHero:distance_to(target.origin) <= E.range and IsValid(target) and not Ready(SLOT_Q) then
 			CastE(target)
 		end
 	end
 
 	if menu:get_value(vlad_combo_use_w) == 1 then
-		if myHero:distance_to(target.origin) <= E.range and IsValid(target) and HasEMark(myHero) then
+		if myHero:distance_to(target.origin) <= E.range and IsValid(target) and HasEMark(myHero) and not Ready(SLOT_Q) and not Ready(SLOT_E) then
 			if Ready(SLOT_W) then
 				CastW()
 			end
@@ -788,6 +780,24 @@ local function on_gap_close(obj, data)
 	end
 end
 
+local function QLastHit()
+
+	minions = game.minions
+	for i, target in ipairs(minions) do
+		if menu:get_value(vlad_lasthit_use_q) == 1 then
+			if target.object_id ~= 0 and target.is_enemy and myHero:distance_to(target.origin) < Q.range and IsValid(target) then
+				if GetMinionCount(Q.range, target) >= 1 then
+					if GetQDmg(target) > target.health then
+						if Ready(SLOT_Q) then
+							CastQ(target)
+						end
+					end
+				end
+			end
+		end
+	end
+end
+
 -- object returns, draw and tick usage
 
 screen_size = game.screen_size
@@ -851,7 +861,14 @@ local function on_tick()
 		Harass()
 	end
 
-	if menu:get_toggle_state(vlad_harass_use_auto_q) and not game:is_key_down(menu:get_value(vlad_combokey)) then
+	if combo:get_mode() == MODE_LASTHIT then
+		QLastHit()
+		QLastHitEnabled = true
+	else
+		QLastHitEnabled = false
+	end
+
+	if menu:get_toggle_state(vlad_harass_use_auto_q) and not game:is_key_down(menu:get_value(vlad_combokey)) and not QLastHitEnabled then
 		AutoQHarass()
 	end
 
