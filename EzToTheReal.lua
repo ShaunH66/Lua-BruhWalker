@@ -4,19 +4,20 @@ end
 
 do
     local function AutoUpdate()
-		local Version = 1.6
+		local Version = 1.7
 		local file_name = "EzToTheReal.lua"
 		local url = "https://raw.githubusercontent.com/TheShaunyboi/BruhWalkerEncrypted/main/EzToTheReal.lua"
         local web_version = http:get("https://raw.githubusercontent.com/TheShaunyboi/BruhWalkerEncrypted/main/EzToTheReal.lua.version.txt")
         console:log("EzToTheReal.Lua Vers: "..Version)
 		console:log("EzToTheReal.Web Vers: "..tonumber(web_version))
 		if tonumber(web_version) == Version then
-            console:log("Sexy Ezreal v1 successfully loaded.....")
-						console:log("---------------------------------------")
-						console:log("Added Stop Auto Q Harass If Ezreal Is Under Enemy Turret")
-						console:log("Changed Auto Q Harass To Toggle Auto Q Harass")
-						console:log("Added Auto W Turret Toggle, Fixed W on EPIC Monsters")
-						console:log("---------------------------------------")
+            console:log("Sexy Ezreal v1.7 successfully loaded.....")
+						console:log("----------------------------------------------------------------")
+						console:log("Added - Adjusted R Prediction To Fix Backwards R Usage")
+						console:log("Changed - Toggle W Turret Only Fire Inside Turret Range ")
+						console:log("Changed - Adjusted Combo Order To Allow For Max W Damage Output")
+						console:log("Updated For latest BruhWalker Patch")
+						console:log("----------------------------------------------------------------")
         else
 			http:download_file(url, file_name)
 			      console:log("Sexy Ezreal Update available.....")
@@ -33,7 +34,6 @@ do
 end
 
 pred:use_prediction()
-require "PKDamageLib"
 
 local myHero = game.local_player
 local local_player = game.local_player
@@ -46,7 +46,7 @@ end
 -- Ranges
 
 local Q = { range = 1200, delay = .25, width = 120, speed = 2000 }
-local W = { range = 1200, delay = .25, width = 120, speed = 2000 }
+local W = { range = 1200, delay = .25, width = 160, speed = 1700 }
 local E = { range = 475, delay = .25, width = 0, speed = 2000 }
 local R = { range = 6000, delay = 1, width = 320, speed = 2000 }
 
@@ -265,7 +265,6 @@ end
 ezreal_combo = menu:add_subcategory("Combo", ezreal_category)
 ezreal_combo_use_q = menu:add_checkbox("Use Q", ezreal_combo, 1)
 ezreal_combo_use_w = menu:add_checkbox("Use W", ezreal_combo, 1)
-ezreal_combo_use_e = menu:add_checkbox("Use E", ezreal_combo, 1)
 ezreal_combo_r = menu:add_subcategory("R Combo Settings", ezreal_combo)
 ezreal_combo_use_r = menu:add_checkbox("Use R", ezreal_combo_r, 1)
 ezreal_combo_use_range = menu:add_slider("Greater Than Range To Use R Combo", ezreal_combo_r, 1, 5000, 1000)
@@ -281,14 +280,8 @@ end
 ezreal_harass = menu:add_subcategory("Harass", ezreal_category)
 ezreal_harass_use_q = menu:add_checkbox("Use Q", ezreal_harass, 1)
 ezreal_harass_use_w = menu:add_checkbox("Use W", ezreal_harass, 1)
---ezreal_harass_use_auto_q = menu:add_checkbox("Auto Q Harass", ezreal_harass, 1)
 ezreal_harass_use_auto_q = menu:add_toggle("Toggle Auto Q Harass", 1, ezreal_harass, 90, true)
 ezreal_harass_min_mana = menu:add_slider("Minimum Mana To Harass", ezreal_harass, 1, 500, 100)
-
---[[ezreal_lasthit = menu:add_subcategory("Last Hit", ezreal_category)
-ezreal_lasthit_use_q = menu:add_checkbox("Use Q", ezreal_lasthit, 1)
-ezreal_auto_lasthit = menu:add_checkbox("Auto Q Last Hit", ezreal_lasthit, 1)
-ezreal_lasthit_min_mana = menu:add_slider("Minimum Mana To Last Hit", ezreal_lasthit, 1, 500, 100]]
 
 ezreal_laneclear = menu:add_subcategory("Lane Clear", ezreal_category)
 ezreal_laneclear_use_q = menu:add_checkbox("Use Q", ezreal_laneclear, 1)
@@ -301,7 +294,6 @@ ezreal_jungleclear_min_mana = menu:add_slider("Minimum Mana To jungle Clear", ez
 
 
 ezreal_misc_options = menu:add_subcategory("Misc Settings", ezreal_category)
-ezreal_misc_anti_e = menu:add_checkbox("E Anti Gap Closer", ezreal_misc_options, 1)
 ezreal_combo_r_set_key = menu:add_keybinder("Semi Manual R Key", ezreal_misc_options, 65)
 ezreal_misc_w_turret = menu:add_toggle("Toggle Auto W Turret", 1, ezreal_misc_options, 85, true)
 
@@ -356,64 +348,32 @@ end
 -- Casting
 
 local function CastQ(unit)
-
-	target = selector:find_target(Q.range, mode_health)
-
-	if target.object_id ~= 0 then
-		if Ready(SLOT_Q) and IsValid(target) then
-			origin = target.origin
-			x, y, z = origin.x, origin.y, origin.z
-			pred_output = pred:predict(Q.speed, Q.delay, Q.range, Q.width, target, true, true)
-
-			if pred_output.can_cast then
-				castPos = pred_output.cast_pos
-				spellbook:cast_spell(SLOT_Q, Q.delay, castPos.x, castPos.y, castPos.z)
-			end
-		end
+	origin = unit.origin
+	x, y, z = origin.x, origin.y, origin.z
+	pred_output = pred:predict(Q.speed, Q.delay, Q.range, Q.width, unit, true, true)
+	if pred_output.can_cast then
+		castPos = pred_output.cast_pos
+		spellbook:cast_spell(SLOT_Q, Q.delay, castPos.x, castPos.y, castPos.z)
 	end
 end
 
 local function CastW(unit)
-	target = selector:find_target(W.range, mode_health)
-
-	if target.object_id ~= 0 then
-		if Ready(SLOT_W) and IsValid(target) then
-			origin = target.origin
-			x, y, z = origin.x, origin.y, origin.z
-			pred_output = pred:predict(W.speed, W.delay, W.range, W.width, target, false, false)
-
-			if pred_output.can_cast then
-				castPos = pred_output.cast_pos
-				spellbook:cast_spell(SLOT_W, W.delay, castPos.x, castPos.y, castPos.z)
-			end
-		end
-	end
-end
-
-local function CastE(unit)
-	pred_output = pred:predict(E.speed, E.delay, E.range, E.width, unit, false, false)
+	origin = unit.origin
+	x, y, z = origin.x, origin.y, origin.z
+	pred_output = pred:predict(W.speed, W.delay, W.range, W.width, unit, false, false)
 	if pred_output.can_cast then
 		castPos = pred_output.cast_pos
-		spellbook:cast_spell(SLOT_E, E.delay, castPos.x, castPos.y, castPos.z)
+		spellbook:cast_spell(SLOT_W, W.delay, castPos.x, castPos.y, castPos.z)
 	end
 end
 
 local function CastR(unit)
-	target = selector:find_target(R.range, mode_health)
-
-	if target.object_id ~= 0 then
-		if Ready(SLOT_R) and IsValid(target) and myHero:distance_to(target.origin) > menu:get_value(ezreal_combo_use_range) then
-			if target:health_percentage() <= menu:get_value(ezreal_combo_r_enemy_hp) then
-				origin = target.origin
-				x, y, z = origin.x, origin.y, origin.z
-				pred_output = pred:predict(R.speed, R.delay, R.range, R.width, target, false, false)
-
-				if menu:get_value_string("Use R Combo On: "..tostring(target.champ_name)) == 1 then
-					castPos = pred_output.cast_pos
-					spellbook:cast_spell(SLOT_R, R.delay, castPos.x, castPos.y, castPos.z)
-				end
-			end
-		end
+	origin = unit.origin
+	x, y, z = origin.x, origin.y, origin.z
+	pred_output = pred:predict(R.speed, R.delay, R.range, R.width, unit, false, false)
+	if pred_output.can_cast then
+		castPos = pred_output.cast_pos
+		spellbook:cast_spell(SLOT_R, R.delay, castPos.x, castPos.y, castPos.z)
 	end
 end
 
@@ -421,42 +381,59 @@ end
 
 local function Combo()
 
-	if menu:get_value(ezreal_combo_use_q) == 1 then
-		if Ready(SLOT_Q) then
-			CastQ(target)
-		end
-	end
+	local target = selector:find_target(R.range, mode_health)
 
 	if menu:get_value(ezreal_combo_use_w) == 1 then
-		if Ready(SLOT_W) then
-			CastW(target)
+		if myHero:distance_to(target.origin) <= W.range and IsValid(target) then
+			if Ready(SLOT_W) then
+				CastW(target)
+			end
 		end
 	end
 
-	if menu:get_value(ezreal_combo_use_r) == 1 then
-		if Ready(SLOT_R) then
-			CastR(target)
-		end
-	end
-
-end
-
---Harass
-
-local function Harass()
-
-	if menu:get_value(ezreal_harass_use_q) == 1 then
-		if myHero.mana >= menu:get_value(ezreal_harass_min_mana) then
+	if menu:get_value(ezreal_combo_use_q) == 1 then
+		if myHero:distance_to(target.origin) <= Q.range and IsValid(target) then
 			if Ready(SLOT_Q) then
 				CastQ(target)
 			end
 		end
 	end
 
+	if menu:get_value(ezreal_combo_use_r) == 1 then
+		if myHero:distance_to(target.origin) > menu:get_value(ezreal_combo_use_range) and IsValid(target) then
+			if target:health_percentage() <= menu:get_value(ezreal_combo_r_enemy_hp) then
+				if menu:get_value_string("Use R Combo On: "..tostring(target.champ_name)) == 1 then
+					if Ready(SLOT_R) then
+						CastR(target)
+					end
+				end
+			end
+		end
+	end
+end
+
+--Harass
+
+local function Harass()
+
+	local target = selector:find_target(Q.range, mode_health)
+
+	if menu:get_value(ezreal_harass_use_q) == 1 then
+		if myHero.mana >= menu:get_value(ezreal_harass_min_mana) then
+			if myHero:distance_to(target.origin) <= Q.range and IsValid(target) then
+				if Ready(SLOT_Q) then
+					CastQ(target)
+				end
+			end
+		end
+	end
+
 	if menu:get_value(ezreal_harass_use_w) == 1 then
 		if myHero.mana >= menu:get_value(ezreal_harass_min_mana) then
-			if Ready(SLOT_W) then
-				CastW(target)
+			if myHero:distance_to(target.origin) <= W.range and IsValid(target) then
+				if Ready(SLOT_W) then
+					CastW(target)
+				end
 			end
 		end
 	end
@@ -466,11 +443,15 @@ end
 
 local function AutoQHarass()
 
+	local target = selector:find_target(Q.range, mode_health)
+
 	if menu:get_value(ezreal_harass_use_q) == 1 then
 		if myHero.mana >= menu:get_value(ezreal_harass_min_mana) then
 			if combo:get_mode() ~= MODE_COMBO and not game:is_key_down(menu:get_value(ezreal_combokey)) then
-				if Ready(SLOT_Q) and not IsUnderTurret(myHero) then
-					CastQ(target)
+				if myHero:distance_to(target.origin) <= Q.range and IsValid(target) then
+					if Ready(SLOT_Q) and not IsUnderTurret(myHero) then
+						CastQ(target)
+					end
 				end
 			end
 		end
@@ -488,14 +469,7 @@ local function AutoKill()
 			if menu:get_value(ezreal_ks_use_q) == 1 then
 				if GetQDmg(target) > target.health then
 					if Ready(SLOT_Q) then
-						origin = target.origin
-						x, y, z = origin.x, origin.y, origin.z
-						pred_output = pred:predict(Q.speed, Q.delay, Q.range, Q.width, target, true, true)
-
-						if pred_output.can_cast then
-							castPos = pred_output.cast_pos
-							spellbook:cast_spell(SLOT_Q, Q.delay, castPos.x, castPos.y, castPos.z)
-						end
+						CastQ(target)
 					end
 				end
 			end
@@ -505,14 +479,7 @@ local function AutoKill()
 			if menu:get_value(ezreal_ks_use_w) == 1 then
 				if GetWDmg(target) > target.health then
 					if Ready(SLOT_W) then
-						origin = target.origin
-						x, y, z = origin.x, origin.y, origin.z
-						pred_output = pred:predict(W.speed, W.delay, W.range, W.width, target, false, false)
-
-						if pred_output.can_cast then
-							castPos = pred_output.cast_pos
-							spellbook:cast_spell(SLOT_W, W.delay, castPos.x, castPos.y, castPos.z)
-						end
+						CastW(target)
 					end
 				end
 			end
@@ -523,14 +490,7 @@ local function AutoKill()
 				if target.object_id ~= 0 then
 					if Ready(SLOT_R) and IsValid(target) and myHero:distance_to(target.origin) > menu:get_value(ezreal_ks_use_range) then
 						if menu:get_value_string("Use R Kill Steal On: "..tostring(target.champ_name)) == 1 then
-							origin = target.origin
-							x, y, z = origin.x, origin.y, origin.z
-							pred_output = pred:predict(R.speed, R.delay, R.range, R.width, target, false, false)
-
-							if pred_output.can_cast then
-								castPos = pred_output.cast_pos
-								spellbook:cast_spell(SLOT_R, R.delay, castPos.x, castPos.y, castPos.z)
-							end
+							CastR(target)
 						end
 					end
 				end
@@ -547,7 +507,7 @@ local function Clear()
 
 		if menu:get_value(ezreal_laneclear_use_q) == 1 and myHero.mana >= menu:get_value(ezreal_laneclear_min_mana) then
 			if target.object_id ~= 0 and target.is_enemy and myHero:distance_to(target.origin) < Q.range and IsValid(target) then
-				if GetMinionCount(Q.range, target) then
+				if GetMinionCount(Q.range, target) >= 1 then
 					if Ready(SLOT_Q) then
 						origin = target.origin
 						x, y, z = origin.x, origin.y, origin.z
@@ -584,9 +544,10 @@ local function JungleClear()
 				end
 			end
 		end
+
 		if target.object_id ~= 0 and menu:get_value(ezreal_jungleclear_use_w) == 1 and myHero:distance_to(target.origin) < W.range and IsValid(target) then
 			if myHero.mana >= menu:get_value(ezreal_jungleclear_min_mana) then
-				if EpicMonster(target) and Ready(SLOT_W) then
+				if EpicMonster(target) and Ready(SLOT_W) and not Ready(SLOT_Q) then
 					origin = target.origin
 					x, y, z = origin.x, origin.y, origin.z
 					pred_output = pred:predict(W.speed, W.delay, W.range, W.width, target, false, false)
@@ -604,18 +565,11 @@ end
 -- Manual R Cast
 
 local function ManualRCast()
-	target = selector:find_target(R.range, mode_health)
+	target = selector:find_target(R.range, mode_cursor)
 
 	if target.object_id ~= 0 then
 		if Ready(SLOT_R) and IsValid(target) then
-			origin = target.origin
-			x, y, z = origin.x, origin.y, origin.z
-			pred_output = pred:predict(R.speed, R.delay, R.range, R.width, target, false, false)
-
-			if pred_output.can_cast then
-				castPos = pred_output.cast_pos
-				spellbook:cast_spell(SLOT_R, R.delay, castPos.x, castPos.y, castPos.z)
-			end
+			CastR(target)
 		end
 	end
 end
@@ -625,65 +579,11 @@ end
 local function ManualWCast()
 
 	turrets = game.turrets
-	for i, v in ipairs(turrets) do
-		if v and v.is_enemy then
-			local range = (W.range)
-			if v.is_alive then
-				if myHero:distance_to(v.origin) < range and Ready(SLOT_W) then
-					origin = v.origin
-					x, y, z = origin.x, origin.y, origin.z
-					pred_output = pred:predict(W.speed, W.delay, W.range, W.width, v, false, false)
-
-					if pred_output.can_cast then
-						castPos = pred_output.cast_pos
-						spellbook:cast_spell(SLOT_W, W.delay, castPos.x, castPos.y, castPos.z)
-					end
-				end
-			end
-		end
-	end
-end
-
-
--- Last Hit
-
---[[local function Lasthit()
-
-	minions = game.minions
-	for i, target in ipairs(minions) do
-
-		if target.object_id ~= 0 and target.is_enemy and myHero:distance_to(target.origin) < Q.range then
-			if IsValid(target) and GetMinionCount(Q.range, target) >= 1 then
-				if GetQDmg(target) > target.health then
-					if combo:get_mode() ~= MODE_COMBO and not game:is_key_down(menu:get_value(ezreal_combokey)) then
-						if Ready(SLOT_Q) then
-							console:log("screen_size.width: " .. tostring(GetQDmg(target)))
-							origin = target.origin
-							x, y, z = origin.x, origin.y, origin.z
-							pred_output = pred:predict(Q.speed, Q.delay, Q.range, Q.width, target, true, true)
-
-							if pred_output.can_cast then
-								castPos = pred_output.cast_pos
-								spellbook:cast_spell(SLOT_Q, Q.delay, castPos.x, castPos.y, castPos.z)
-							end
-						end
-					end
-				end
-			end
-		end
-	end
-end]]
-
--- Anti E Gap
-
-local function on_gap_close(obj, data)
-
-	local players = game.players
-  for _, v in ipairs(players) do
-		if not v.is_enemy and v.object_id ~= myHero.object_id then
-			if IsValid(obj) and menu:get_value(ezreal_misc_anti_e) == 1 then
-				if myHero:distance_to(v.origin) <= 1500 then
-					CastE(v)
+	for i, target in ipairs(turrets) do
+		if target and target.is_enemy then
+			if target.is_alive then
+				if IsUnderTurret(myHero) and Ready(SLOT_W) then
+					CastW(target)
 				end
 			end
 		end
@@ -722,7 +622,7 @@ local function on_draw()
 			if target.object_id ~= 0 and myHero:distance_to(target.origin) <= Q.range then
 				if menu:get_value(ezreal_draw_kill) == 1 then
 					if fulldmg > target.health and IsValid(target) then
-						renderer:draw_text_big_centered(screen_size.width / 2, screen_size.height / 20 + 50, "Full Combo Can Kill Q > W > R")
+						renderer:draw_text_big_centered(screen_size.width / 2, screen_size.height / 20 + 50, "Full Combo Rotation Kill")
 					end
 				end
 			end
@@ -771,16 +671,6 @@ local function on_tick()
 		ManualRCast()
 	end
 
-	--[[if game:is_key_down(menu:get_value(ezreal_lasthit_use_q)) and menu:get_value(ezreal_auto_lasthit) == 0 then
-		if combo:get_mode() == MODE_LASTHIT then
-			Lasthit()
-		end
-	end
-
-	if menu:get_value(ezreal_auto_lasthit) == 1 and combo:get_mode() ~= MODE_COMBO and not game:is_key_down(menu:get_value(ezreal_combokey)) then
-		Lasthit()
-	end]]
-
 	if menu:get_toggle_state(ezreal_misc_w_turret) and not game:is_key_down(menu:get_value(ezreal_combokey)) then
 		ManualWCast()
 	end
@@ -790,4 +680,3 @@ end
 
 client:set_event_callback("on_tick", on_tick)
 client:set_event_callback("on_draw", on_draw)
-client:set_event_callback("on_gap_close", on_gap_close)
