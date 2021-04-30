@@ -5,18 +5,16 @@ end
 -- AutoUpdate
 do
     local function AutoUpdate()
-		local Version = 6.8
+		local Version = 6.9
 		local file_name = "CassioToThePeia.lua"
 		local url = "http://raw.githubusercontent.com/TheShaunyboi/BruhWalkerEncrypted/main/CassioToThePeia.lua"
         local web_version = http:get("https://raw.githubusercontent.com/TheShaunyboi/BruhWalkerEncrypted/main/CassioToThePeia.lua.version.txt")
         console:log("Cassiopeia.Lua Vers: "..Version)
 		console:log("Cassiopeia.Web Vers: "..tonumber(web_version))
 		if tonumber(web_version) == Version then
-            console:log("Sexy Cassiopeia v6 successfully loaded.....")
+            console:log("Sexy Cassiopeia v6.9 successfully loaded.....")
 						console:log("------------------------------------------------------------------------------------------------------------")
-						console:log("Added Semi Key Kill Function, Added AA Comb Stop Level Slider, Added Heath Bar Damage Draw")
-						console:log("Added R Interrupt Major Spells, Added Stop AA When Holding Last Hit Key")
-						console:log("Adjusted Posion check")
+						console:log("Added Blacklist Ulitmate To Combo + Kill Steal")
 						console:log("------------------------------------------------------------------------------------------------------------")
         else
 			http:download_file(url, file_name)
@@ -134,6 +132,13 @@ Cass_ks_use_q = menu:add_checkbox("Use Q", Cass_ks_function, 1)
 Cass_ks_use_w = menu:add_checkbox("Use W", Cass_ks_function, 1)
 Cass_ks_use_e = menu:add_checkbox("Use E", Cass_ks_function, 1)
 Cass_ks_use_r = menu:add_checkbox("Use R", Cass_ks_function, 1)
+Cass_ks_use_r_blacklist = menu:add_subcategory("Ultimate Kill Steal Blacklist", Cass_ks_function)
+local players = game.players
+for _, t in pairs(players) do
+    if t and t.is_enemy then
+        menu:add_checkbox("Use R Kill Steal On: "..tostring(t.champ_name), Cass_ks_use_r_blacklist, 1)
+    end
+end
 
 Cass_lasthit = menu:add_subcategory("Last Hit", Cass_category)
 Cass_lasthit_use = menu:add_checkbox("Use E Last Hit", Cass_lasthit, 1)
@@ -145,6 +150,13 @@ Cass_combo_use_q = menu:add_checkbox("Use Q", Cass_combo, 1)
 Cass_combo_use_w = menu:add_checkbox("Use W", Cass_combo, 1)
 Cass_combo_use_e = menu:add_checkbox("Use E", Cass_combo, 1)
 Cass_combo_use_r = menu:add_checkbox("Use R", Cass_combo, 1)
+Cass_combo_use_r_blacklist = menu:add_subcategory("Ultimate Combo Blacklist", Cass_combo)
+local players = game.players
+for _, v in pairs(players) do
+    if v and v.is_enemy then
+        menu:add_checkbox("Use R Combo On: "..tostring(v.champ_name), Cass_combo_use_r_blacklist, 1)
+    end
+end
 Cass_killkey = menu:add_keybinder("Unleash Full Can Kill Combo", Cass_combo, 88, "Full Combo Can Kill Target - Holding Kill key Will Perform R First Then Full Combo")
 Cass_combo_w_posbuff = menu:add_checkbox("Only W When Q Has Missed and Target Is Not Poisoned", Cass_combo, 1)
 Cass_combo_e_posbuff = menu:add_checkbox("Only E Combo When Posion Is Active", Cass_combo, 1)
@@ -368,7 +380,9 @@ local function Combo()
 	if menu:get_value(Cass_combo_use_r) == 1 then
 		if target:health_percentage() <= menu:get_value(Cass_combo_r_enemy_hp) and local_player:health_percentage() >= menu:get_value(Cass_combo_r_my_hp) then
 			if myHero:is_facing(target) and target:is_facing(myHero) and Ready(SLOT_R) then
-				CastR(target)
+				if menu:get_value_string("Use R Combo On: "..tostring(target.champ_name)) == 1 then
+					CastR(target)
+				end
 			end
 		end
 	end
@@ -458,7 +472,7 @@ local function KillSteal()
 		if target.object_id ~= 0 and myHero:distance_to(target.origin) <= 800 and Ready(SLOT_R) and IsValid(target) then
 			if menu:get_value(Cass_ks_use_r) == 1 then
 				if GetRDmg(target) > target.health then
-					if Ready(SLOT_R) then
+					if Ready(SLOT_R) and menu:get_value_string("Use R Kill Steal On: "..tostring(target.champ_name)) == 1 then
 						origin = target.origin
 						x, y, z = origin.x, origin.y, origin.z
 						pred_output = pred:predict(0, 0.25, 825, 10, target, false, true)
@@ -776,9 +790,7 @@ local function on_tick()
 		end
 	end
 
-	if not game:is_key_down(menu:get_value(Cass_killkey)) and not game:is_key_down(menu:get_value(Cass_combokey)) then
-		KillSteal()
-	end
+	KillSteal()
 end
 
 client:set_event_callback("on_tick", on_tick)
