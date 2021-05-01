@@ -276,6 +276,13 @@ end
 return false
 end
 
+function IsKillable(unit)
+	if unit:has_buff_type(15) or unit:has_buff_type(17) or unit:has_buff("sionpassivezombie") then
+		return false
+	end
+	return true
+end
+
 local function GetGameTime()
 	return tonumber(game.game_time)
 end
@@ -463,7 +470,7 @@ local function Combo()
 	target = selector:find_target(R.range, mode_health)
 
 	if menu:get_value(yone_combo_use_q) == 1 then
-		if myHero:distance_to(target.origin) <= Q3.range and IsValid(target) then
+		if myHero:distance_to(target.origin) <= Q3.range and IsValid(target) and IsKillable(target) then
 			if AutoAATime + CastAADelay < tonumber(game.game_time) then
 				if menu:get_value(yone_combo_first_aa) == 1 and AAcast and not IsYoneQ3() then
 					CastQ(target)
@@ -474,7 +481,7 @@ local function Combo()
 	end
 
 	if menu:get_value(yone_combo_use_q) == 1 then
-		if myHero:distance_to(target.origin) <= Q.range and IsValid(target) then
+		if myHero:distance_to(target.origin) <= Q.range and IsValid(target) and IsKillable(target) then
 			if menu:get_value(yone_combo_first_aa) == 0 or not Ready(SLOT_W) and not IsYoneQ3() then
 				CastQ(target)
 			end
@@ -482,7 +489,7 @@ local function Combo()
 	end
 
 	if menu:get_value(yone_combo_use_q) == 1 then
-		if myHero:distance_to(target.origin) <= Q3.range and IsValid(target) then
+		if myHero:distance_to(target.origin) <= Q3.range and IsValid(target) and IsKillable(target) then
 			if IsYoneQ3() then
 				CastQ3(target)
 			end
@@ -490,7 +497,7 @@ local function Combo()
 	end
 
 	if menu:get_value(yone_combo_use_w) == 1 then
-		if myHero:distance_to(target.origin) <= W.range and IsValid(target) then
+		if myHero:distance_to(target.origin) <= W.range and IsValid(target) and IsKillable(target) then
 			if AutoTime + CastDelay < tonumber(game.game_time) and not Ready(SLOT_Q) then
 				if Wcast then
 					CastW(target)
@@ -501,7 +508,7 @@ local function Combo()
 	end
 
 	if menu:get_value(yone_combo_use_r) == 1 then
-		if myHero:distance_to(target.origin) <= R.range and IsValid(target) then
+		if myHero:distance_to(target.origin) <= R.range and IsValid(target) and IsKillable(target) then
 			if menu:get_value_string("Use R Combo On: "..tostring(target.champ_name)) == 1 then
 				if target:health_percentage() <= menu:get_value(yone_combo_r_enemy_hp) then
 					CastR(target)
@@ -518,20 +525,20 @@ local function Harass()
 	target = selector:find_target(R.range, mode_health)
 
 	if menu:get_value(yone_harass_use_q) == 1 and IsYoneQ() then
-		if myHero:distance_to(target.origin) <= Q.range and IsValid(target) then
+		if myHero:distance_to(target.origin) <= Q.range and IsValid(target) and IsKillable(target) then
 			CastQ(target)
 		end
 	end
 
 	if menu:get_value(yone_harass_use_q) == 1 and IsYoneQ3() then
-		if myHero:distance_to(target.origin) <= Q3.range and IsValid(target) then
+		if myHero:distance_to(target.origin) <= Q3.range and IsValid(target) and IsKillable(target) then
 			CastQ(target)
 		end
 	end
 
 
 	if menu:get_value(yone_harass_use_w) == 1 then
-		if myHero:distance_to(target.origin) <= W.range and IsValid(target) then
+		if myHero:distance_to(target.origin) <= W.range and IsValid(target) and IsKillable(target) then
 			CastW(target)
 		end
 	end
@@ -543,7 +550,7 @@ local function KillSteal()
 
 	for i, target in ipairs(GetEnemyHeroes()) do
 
-		if target.object_id ~= 0 and myHero:distance_to(target.origin) <= Q.range and Ready(SLOT_Q) and IsValid(target) then
+		if target.object_id ~= 0 and myHero:distance_to(target.origin) <= Q.range and Ready(SLOT_Q) and IsValid(target) and IsKillable(target) then
 			if menu:get_value(yone_ks_use_q) == 1 then
 				if GetQDmg(target) > target.health then
 					if Ready(SLOT_Q) then
@@ -554,7 +561,7 @@ local function KillSteal()
 				end
 			end
 		end
-		if target.object_id ~= 0 and myHero:distance_to(target.origin) <=  W.range and Ready(SLOT_W) and IsValid(target) then
+		if target.object_id ~= 0 and myHero:distance_to(target.origin) <=  W.range and Ready(SLOT_W) and IsValid(target) and IsKillable(target) then
 			if menu:get_value(yone_ks_use_w) == 1 then
 				if GetWDmg(target) > target.health then
 					if Ready(SLOT_W) then
@@ -570,7 +577,7 @@ local function KillSteal()
 				end
 			end
 		end
-		if target.object_id ~= 0 and myHero:distance_to(target.origin) <= R.range and Ready(SLOT_R) and IsValid(target) then
+		if target.object_id ~= 0 and myHero:distance_to(target.origin) <= R.range and Ready(SLOT_R) and IsValid(target) and IsKillable(target) then
 			if menu:get_value(yone_ks_use_r) == 1 then
 				if GetRDmg(target) > target.health then
 					if menu:get_value_string("Use R Kill Steal On: "..tostring(target.champ_name)) == 1 then
@@ -665,7 +672,7 @@ local function ManualRCast()
 	target = selector:find_target(R.range, mode_cursor)
 
 	if target.object_id ~= 0 then
-		if Ready(SLOT_R) then
+		if Ready(SLOT_R) and IsValid(target) and IsKillable(target) then
 			origin = target.origin
 			x, y, z = origin.x, origin.y, origin.z
 			pred_output = pred:predict(R.speed, R.delay, R.range, R.width, target, false, false)
@@ -693,7 +700,7 @@ local function EFlashRCast()
 
 		target = selector:find_target(RF.range, mode_cursor)
 		if target.object_id ~= 0 then
-			if Ready(SLOT_R) and Ready(SLOT_F) and Ready(SLOT_E) then
+			if Ready(SLOT_R) and Ready(SLOT_F) and Ready(SLOT_E) and IsValid(target) and IsKillable(target) then
 				origin = target.origin
 				x, y, z = origin.x, origin.y, origin.z
 				spellbook:cast_spell(SLOT_F, 0.1, x, y, z)
