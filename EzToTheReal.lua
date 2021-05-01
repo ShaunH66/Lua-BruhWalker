@@ -4,19 +4,20 @@ end
 
 do
     local function AutoUpdate()
-		local Version = 1.7
+		local Version = 1.8
 		local file_name = "EzToTheReal.lua"
 		local url = "https://raw.githubusercontent.com/TheShaunyboi/BruhWalkerEncrypted/main/EzToTheReal.lua"
         local web_version = http:get("https://raw.githubusercontent.com/TheShaunyboi/BruhWalkerEncrypted/main/EzToTheReal.lua.version.txt")
         console:log("EzToTheReal.Lua Vers: "..Version)
 		console:log("EzToTheReal.Web Vers: "..tonumber(web_version))
 		if tonumber(web_version) == Version then
-            console:log("Sexy Ezreal v1.7 successfully loaded.....")
+            console:log("Sexy Ezreal v1.8 successfully loaded.....")
 						console:log("----------------------------------------------------------------")
 						console:log("Added - Adjusted R Prediction To Fix Backwards R Usage")
 						console:log("Changed - Toggle W Turret Only Fire Inside Turret Range ")
 						console:log("Changed - Adjusted Combo Order To Allow For Max W Damage Output")
 						console:log("Updated For latest BruhWalker Patch")
+						console:log("Added IsKillable Check (Sion R etc..)")
 						console:log("----------------------------------------------------------------")
         else
 			http:download_file(url, file_name)
@@ -242,6 +243,13 @@ local function IsUnderTurret(unit)
     return false
 end
 
+function IsKillable(unit)
+	if unit:has_buff_type(15) or unit:has_buff_type(17) or unit:has_buff("sionpassivezombie") then
+		return false
+	end
+	return true
+end
+
 -- Menu Config
 
 ezreal_category = menu:add_category("Shaun's Sexy Ezreal")
@@ -384,7 +392,7 @@ local function Combo()
 	local target = selector:find_target(R.range, mode_health)
 
 	if menu:get_value(ezreal_combo_use_w) == 1 then
-		if myHero:distance_to(target.origin) <= W.range and IsValid(target) then
+		if myHero:distance_to(target.origin) <= W.range and IsValid(target) and IsKillable(target) then
 			if Ready(SLOT_W) then
 				CastW(target)
 			end
@@ -392,7 +400,7 @@ local function Combo()
 	end
 
 	if menu:get_value(ezreal_combo_use_q) == 1 then
-		if myHero:distance_to(target.origin) <= Q.range and IsValid(target) then
+		if myHero:distance_to(target.origin) <= Q.range and IsValid(target) and IsKillable(target) then
 			if Ready(SLOT_Q) then
 				CastQ(target)
 			end
@@ -400,7 +408,7 @@ local function Combo()
 	end
 
 	if menu:get_value(ezreal_combo_use_r) == 1 then
-		if myHero:distance_to(target.origin) > menu:get_value(ezreal_combo_use_range) and IsValid(target) then
+		if myHero:distance_to(target.origin) > menu:get_value(ezreal_combo_use_range) and IsValid(target) and IsKillable(target) then
 			if target:health_percentage() <= menu:get_value(ezreal_combo_r_enemy_hp) then
 				if menu:get_value_string("Use R Combo On: "..tostring(target.champ_name)) == 1 then
 					if Ready(SLOT_R) then
@@ -420,7 +428,7 @@ local function Harass()
 
 	if menu:get_value(ezreal_harass_use_q) == 1 then
 		if myHero.mana >= menu:get_value(ezreal_harass_min_mana) then
-			if myHero:distance_to(target.origin) <= Q.range and IsValid(target) then
+			if myHero:distance_to(target.origin) <= Q.range and IsValid(target) and IsKillable(target) then
 				if Ready(SLOT_Q) then
 					CastQ(target)
 				end
@@ -430,7 +438,7 @@ local function Harass()
 
 	if menu:get_value(ezreal_harass_use_w) == 1 then
 		if myHero.mana >= menu:get_value(ezreal_harass_min_mana) then
-			if myHero:distance_to(target.origin) <= W.range and IsValid(target) then
+			if myHero:distance_to(target.origin) <= W.range and IsValid(target) and IsKillable(target) then
 				if Ready(SLOT_W) then
 					CastW(target)
 				end
@@ -448,7 +456,7 @@ local function AutoQHarass()
 	if menu:get_value(ezreal_harass_use_q) == 1 then
 		if myHero.mana >= menu:get_value(ezreal_harass_min_mana) then
 			if combo:get_mode() ~= MODE_COMBO and not game:is_key_down(menu:get_value(ezreal_combokey)) then
-				if myHero:distance_to(target.origin) <= Q.range and IsValid(target) then
+				if myHero:distance_to(target.origin) <= Q.range and IsValid(target) and IsKillable(target) then
 					if Ready(SLOT_Q) and not IsUnderTurret(myHero) then
 						CastQ(target)
 					end
@@ -465,7 +473,7 @@ local function AutoKill()
 	for i, target in ipairs(GetEnemyHeroes()) do
 
 
-		if target.object_id ~= 0 and myHero:distance_to(target.origin) <= Q.range and IsValid(target) then
+		if target.object_id ~= 0 and myHero:distance_to(target.origin) <= Q.range and IsValid(target) and IsKillable(target) then
 			if menu:get_value(ezreal_ks_use_q) == 1 then
 				if GetQDmg(target) > target.health then
 					if Ready(SLOT_Q) then
@@ -475,7 +483,7 @@ local function AutoKill()
 			end
 		end
 
-		if target.object_id ~= 0 and myHero:distance_to(target.origin) <= W.range and IsValid(target) then
+		if target.object_id ~= 0 and myHero:distance_to(target.origin) <= W.range and IsValid(target) and IsKillable(target) then
 			if menu:get_value(ezreal_ks_use_w) == 1 then
 				if GetWDmg(target) > target.health then
 					if Ready(SLOT_W) then
@@ -485,7 +493,7 @@ local function AutoKill()
 			end
 		end
 
-		if target.object_id ~= 0 and myHero:distance_to(target.origin) <= R.range and IsValid(target) then
+		if target.object_id ~= 0 and myHero:distance_to(target.origin) <= R.range and IsValid(target) and IsKillable(target) then
 			if menu:get_value(ezreal_ks_use_r) == 1 and GetRDmg(target) > target.health then
 				if target.object_id ~= 0 then
 					if Ready(SLOT_R) and IsValid(target) and myHero:distance_to(target.origin) > menu:get_value(ezreal_ks_use_range) then
@@ -568,7 +576,7 @@ local function ManualRCast()
 	target = selector:find_target(R.range, mode_cursor)
 
 	if target.object_id ~= 0 then
-		if Ready(SLOT_R) and IsValid(target) then
+		if Ready(SLOT_R) and IsValid(target) and IsKillable(target) then
 			CastR(target)
 		end
 	end
