@@ -5,18 +5,19 @@ end
 -- AutoUpdate
 do
     local function AutoUpdate()
-		local Version = 1.6
+		local Version = 1.7
 		local file_name = "YoneToTheYone.lua"
 		local url = "http://raw.githubusercontent.com/TheShaunyboi/BruhWalkerEncrypted/main/YoneToTheYone.lua"
         local web_version = http:get("https://raw.githubusercontent.com/TheShaunyboi/BruhWalkerEncrypted/main/YoneToTheYone.lua.version.txt")
         console:log("YoneToTheYone.Lua Vers: "..Version)
 		console:log("YoneToTheYone.Web Vers: "..tonumber(web_version))
 		if tonumber(web_version) == Version then
-            console:log("Sexy Yone v1.6 successfully loaded.....")
+            console:log("Sexy Yone v1.7 successfully loaded.....")
 						console:log("---------------------------------------")
 						console:log("Increased Speed, Auto R 'X' Number Targets Function")
 						console:log("Added Blacklist R For Kill Steal + Combo")
 						console:log("Updated For Bruh Latest Patch")
+						console:log("Fixed Freeze Between AA")
 						console:log("---------------------------------------")
         else
 			http:download_file(url, file_name)
@@ -800,14 +801,6 @@ local function AutoQLastHit(target)
 end
 
 local function on_active_spell(obj, active_spell)
-
-	if IsYoneQ() then
-		orbwalker:reset_aa()
-	end
-
-	if IsYoneQ3() then
-		orbwalker:reset_aa()
-	end
 
 	if Is_Me(obj) then
 		if active_spell.spell_name == "YoneBasicAttack"
