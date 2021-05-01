@@ -4,7 +4,7 @@ end
 
 do
     local function AutoUpdate()
-		local Version = 1.2
+		local Version = 1.3
 		local file_name = "VladToTheImir.lua"
 		local url = "https://raw.githubusercontent.com/TheShaunyboi/BruhWalkerEncrypted/main/VladToTheImir.lua"
         local web_version = http:get("https://raw.githubusercontent.com/TheShaunyboi/BruhWalkerEncrypted/main/VladToTheImir.lua.version.txt")
@@ -12,9 +12,10 @@ do
 		console:log("VladToTheImir.Web Vers: "..tonumber(web_version))
 		if tonumber(web_version) == Version then
 						console:log("-------------------------------------------------")
-            console:log("Shaun's Sexy Vladimir v1.2 successfully loaded.....")
+            console:log("Shaun's Sexy Vladimir v1.3 successfully loaded.....")
             console:log("Added Q last Hit")
 						console:log("Updated For lastest BruhWalker Patch")
+						console:log("Added IsKillable Check (Sion R etc..)")
 						console:log("-------------------------------------------------")
 
         else
@@ -376,6 +377,13 @@ local function IsUnderTurret(unit)
     return false
 end
 
+function IsKillable(unit)
+	if unit:has_buff_type(15) or unit:has_buff_type(17) or unit:has_buff("sionpassivezombie") then
+		return false
+	end
+	return true
+end
+
 -- Menu Config
 
 vlad_category = menu:add_category("Shaun's Sexy Vladimir")
@@ -490,7 +498,6 @@ end
 
 local function CastQ(unit)
 	spellbook:cast_spell_targetted(SLOT_Q, unit, Q.delay)
-	orbwalker:reset_aa()
 end
 
 local function CastE(unit)
@@ -532,7 +539,7 @@ local function Combo()
 	target = selector:find_target(R.range, mode_health)
 
 	if menu:get_value(vlad_combo_use_r) == 1 then
-		if myHero:distance_to(target.origin) <= R.range and IsValid(target) then
+		if myHero:distance_to(target.origin) <= R.range and IsValid(target) and IsKillable(target) then
 			if Ready(SLOT_R) then
 				if target:health_percentage() <= menu:get_value(vlad_combo_r_enemy_hp) then
 					if menu:get_value_string("Use R Combo On: "..tostring(target.champ_name)) == 1 then
@@ -544,7 +551,7 @@ local function Combo()
 	end
 
 	if menu:get_value(vlad_combo_use_q) == 1 then
-		if myHero:distance_to(target.origin) <= Q.range and IsValid(target) and not HasEMark(myHero) then
+		if myHero:distance_to(target.origin) <= Q.range and IsValid(target) and IsKillable(target) and not HasEMark(myHero) then
 			if Ready(SLOT_Q) then
 				CastQ(target)
 			end
@@ -552,13 +559,13 @@ local function Combo()
 	end
 
 	if menu:get_value(vlad_combo_use_e) == 1 then
-		if myHero:distance_to(target.origin) <= E.range and IsValid(target) and not Ready(SLOT_Q) then
+		if myHero:distance_to(target.origin) <= E.range and IsValid(target) and IsKillable(target) and not Ready(SLOT_Q) then
 			CastE(target)
 		end
 	end
 
 	if menu:get_value(vlad_combo_use_w) == 1 then
-		if myHero:distance_to(target.origin) <= E.range and IsValid(target) and HasEMark(myHero) and not Ready(SLOT_Q) and not Ready(SLOT_E) then
+		if myHero:distance_to(target.origin) <= E.range and IsValid(target) and IsKillable(target) and HasEMark(myHero) and not Ready(SLOT_Q) and not Ready(SLOT_E) then
 			if Ready(SLOT_W) then
 				CastW()
 			end
@@ -574,7 +581,7 @@ local function Harass()
 	target = selector:find_target(R.range, mode_health)
 
 	if menu:get_value(vlad_harass_use_q) == 1 then
-		if myHero:distance_to(target.origin) <= Q.range and IsValid(target) then
+		if myHero:distance_to(target.origin) <= Q.range and IsValid(target) and IsKillable(target) then
 			if Ready(SLOT_Q) and not menu:get_toggle_state(vlad_harass_use_auto_q) then
 				CastQ(target)
 			end
@@ -583,7 +590,7 @@ local function Harass()
 
 
 	if menu:get_value(vlad_harass_use_e) == 1 then
-		if myHero:distance_to(target.origin) <= E.range and IsValid(target) then
+		if myHero:distance_to(target.origin) <= E.range and IsValid(target) and IsKillable(target) and not Ready(SLOT_Q) then
 			CastE(target)
 		end
 	end
@@ -596,7 +603,7 @@ local function AutoQHarass()
 	target = selector:find_target(Q.range, mode_health)
 
 	if menu:get_toggle_state(vlad_harass_use_auto_q) and menu:get_value(vlad_harass_use_q) == 1 then
-		if myHero:distance_to(target.origin) <= Q.range and IsValid(target) then
+		if myHero:distance_to(target.origin) <= Q.range and IsValid(target) and IsKillable(target) then
 			if Ready(SLOT_Q) and not IsUnderTurret(myHero) then
 				CastQ(target)
 			end
@@ -610,7 +617,7 @@ local function AutoKill()
 
 	for i, target in ipairs(GetEnemyHeroes()) do
 
-		if target.object_id ~= 0 and myHero:distance_to(target.origin) <= Q.range and IsValid(target) then
+		if target.object_id ~= 0 and myHero:distance_to(target.origin) <= Q.range and IsValid(target) and IsKillable(target) then
 			if menu:get_value(vlad_ks_use_q) == 1 then
 				if GetQDmg(target) > target.health then
 					if Ready(SLOT_Q) then
@@ -620,7 +627,7 @@ local function AutoKill()
 			end
 		end
 
-		if target.object_id ~= 0 and myHero:distance_to(target.origin) <= E.range and IsValid(target) then
+		if target.object_id ~= 0 and myHero:distance_to(target.origin) <= E.range and IsValid(target) and IsKillable(target) then
 			if menu:get_value(vlad_ks_use_e) == 1 then
 				if GetEDmg(target) > target.health then
 					CastE(target)
@@ -628,7 +635,7 @@ local function AutoKill()
 			end
 		end
 
-		if target.object_id ~= 0 and myHero:distance_to(target.origin) <= R.range and IsValid(target) then
+		if target.object_id ~= 0 and myHero:distance_to(target.origin) <= R.range and IsValid(target) and IsKillable(target) then
 			if menu:get_value(vlad_ks_use_r) == 1 and GetRDmg(target) > target.health then
 				if Ready(SLOT_R) and IsValid(target) then
 					if menu:get_value_string("Use R Kill Steal On: "..tostring(target.champ_name)) == 1 then
@@ -651,7 +658,6 @@ local function Clear()
 				if GetMinionCount(Q.range, target) and GetQDmg(target) > target.health then
 					if Ready(SLOT_Q) then
 						spellbook:cast_spell_targetted(SLOT_Q, target, Q.delay)
-						orbwalker:reset_aa()
 					end
 				end
 			end
@@ -695,7 +701,6 @@ local function JungleClear()
 			if IsValid(target) then
 				if Ready(SLOT_Q) then
 					spellbook:cast_spell_targetted(SLOT_Q, target, Q.delay)
-					orbwalker:reset_aa()
 				end
 			end
 		end
@@ -714,7 +719,7 @@ local function JungleClear()
 					end
 				else
 					if target.object_id ~= 0 then
-						if Ready(SLOT_E) then
+						if Ready(SLOT_E) and not Ready(SLOT_Q) then
 							spellbook:start_charged_spell(SLOT_E)
 						end
 					end
@@ -730,7 +735,7 @@ local function ManualRCast()
 	target = selector:find_target(R.range, mode_cursor)
 
 	if target.object_id ~= 0 then
-		if Ready(SLOT_R) and IsValid(target) then
+		if Ready(SLOT_R) and IsValid(target) and IsKillable(target) then
 			CastR(target)
 		end
 	end
