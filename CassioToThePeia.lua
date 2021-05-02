@@ -5,16 +5,17 @@ end
 -- AutoUpdate
 do
     local function AutoUpdate()
-		local Version = 6.9
+		local Version = 7.0
 		local file_name = "CassioToThePeia.lua"
 		local url = "http://raw.githubusercontent.com/TheShaunyboi/BruhWalkerEncrypted/main/CassioToThePeia.lua"
         local web_version = http:get("https://raw.githubusercontent.com/TheShaunyboi/BruhWalkerEncrypted/main/CassioToThePeia.lua.version.txt")
         console:log("Cassiopeia.Lua Vers: "..Version)
 		console:log("Cassiopeia.Web Vers: "..tonumber(web_version))
 		if tonumber(web_version) == Version then
-            console:log("Sexy Cassiopeia v6.9 successfully loaded.....")
+            console:log("Sexy Cassiopeia v7.0 successfully loaded.....")
 						console:log("------------------------------------------------------------------------------------------------------------")
 						console:log("Added Blacklist Ulitmate To Combo + Kill Steal")
+						console:log("Changed Minor Targeting Logic + Updated E last Hit")
 						console:log("------------------------------------------------------------------------------------------------------------")
         else
 			http:download_file(url, file_name)
@@ -275,13 +276,12 @@ end
 -- Casting
 
 local function CastQ(unit)
-	target = selector:find_target(850, mode_health)
 
-	if target.object_id ~= 0 then
+	if unit.object_id ~= 0 then
 		if Ready(SLOT_Q) then
-			origin = target.origin
+			origin = unit.origin
 			x, y, z = origin.x, origin.y, origin.z
-			pred_output = pred:predict(0, 0.25, 850, 75, target, false, false)
+			pred_output = pred:predict(0, 0.25, 850, 75, unit, false, false)
 
 			if pred_output.can_cast then
         castPos = pred_output.cast_pos
@@ -293,13 +293,12 @@ end
 
 
 local function CastW(unit)
-	target = selector:find_target(700, mode_health)
 
-	if target.object_id ~= 0 then
+	if unit.object_id ~= 0 then
 		if Ready(SLOT_W) then
-			origin = target.origin
+			origin = unit.origin
 			x, y, z = origin.x, origin.y, origin.z
-			pred_output = pred:predict(0, 0.25, 700, 160, target, false, false)
+			pred_output = pred:predict(0, 0.25, 700, 160, unit, false, false)
 
 			if pred_output.can_cast then
         castPos = pred_output.cast_pos
@@ -310,23 +309,21 @@ local function CastW(unit)
 end
 
 local function CastE(unit)
-	target = selector:find_target(700, mode_health)
 
-	if target.object_id ~= 0 then
+	if unit.object_id ~= 0 then
 		if Ready(SLOT_E) then
-			spellbook:cast_spell_targetted(SLOT_E, target, 0.125)
+			spellbook:cast_spell_targetted(SLOT_E, unit, 0.125)
 		end
 	end
 end
 
 local function CastR(unit)
-	target = selector:find_target(800, mode_health)
 
-	if target.object_id ~= 0 then
+	if unit.object_id ~= 0 then
 		if Ready(SLOT_R) then
-			origin = target.origin
+			origin = unit.origin
 			x, y, z = origin.x, origin.y, origin.z
-			pred_output = pred:predict(0, 0.25, 825, 10, target, false, true)
+			pred_output = pred:predict(0, 0.25, 825, 10, unit, false, true)
 
 			if pred_output.can_cast then
         castPos = pred_output.cast_pos
@@ -663,7 +660,7 @@ local function AutoELastHit(target)
 	minions = game.minions
 	for i, target in ipairs(minions) do
 		if target.object_id ~= 0 and target.is_enemy and myHero:distance_to(target.origin) < 700 and IsValid(target) then
-			if GetMinionCount(700, target) >= 1 then
+			--if GetMinionCount(700, target) >= 1 then
 				if GetEDmgLastHit(target) > target.health then
 					if combo:get_mode() ~= MODE_COMBO and not game:is_key_down(menu:get_value(Cass_combokey)) and not game:is_key_down(menu:get_value(Cass_killkey)) then
 						if Ready(SLOT_E) then
@@ -671,7 +668,7 @@ local function AutoELastHit(target)
 						end
 					end
 				end
-			end
+			--end
 		end
 	end
 end
@@ -723,7 +720,7 @@ local function on_draw()
 	if menu:get_value(Cass_lasthit_draw) == 1 then
 		if menu:get_value(Cass_lasthit_auto) == 1 then
 			if menu:get_value(Cass_lasthit_use) == 1 then
-				renderer:draw_text_big_centered(screen_size.width / 2, 0, "Auto E Only Last Hit Enabled")
+				renderer:draw_text_centered(screen_size.width / 2, 0, "Auto E Only Last Hit Enabled")
 			end
 		end
 	end
@@ -734,7 +731,7 @@ local function on_draw()
 			if target.object_id ~= 0 and myHero:distance_to(target.origin) <= 1000 then
 				if menu:get_value(Cass_draw_kill) == 1 then
 					if fulldmg > target.health and IsValid(target) then
-						renderer:draw_text_big_centered(screen_size.width / 2, screen_size.height / 20 + 30, "Unleash Full Can Kill Combo On Target - Hold KILL key")
+						renderer:draw_text_big_centered(screen_size.width / 2, screen_size.height / 20 + 50, "Unleash Full Can Kill Combo On Target - Hold KILL key")
 					end
 				end
 			end
