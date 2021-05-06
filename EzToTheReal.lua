@@ -4,20 +4,17 @@ end
 
 do
     local function AutoUpdate()
-		local Version = 1.8
+		local Version = 1.9
 		local file_name = "EzToTheReal.lua"
 		local url = "https://raw.githubusercontent.com/TheShaunyboi/BruhWalkerEncrypted/main/EzToTheReal.lua"
         local web_version = http:get("https://raw.githubusercontent.com/TheShaunyboi/BruhWalkerEncrypted/main/EzToTheReal.lua.version.txt")
         console:log("EzToTheReal.Lua Vers: "..Version)
 		console:log("EzToTheReal.Web Vers: "..tonumber(web_version))
 		if tonumber(web_version) == Version then
-            console:log("Sexy Ezreal v1.8 successfully loaded.....")
+            console:log("Sexy Ezreal v1.9 successfully loaded.....")
 						console:log("----------------------------------------------------------------")
-						console:log("Added - Adjusted R Prediction To Fix Backwards R Usage")
-						console:log("Changed - Toggle W Turret Only Fire Inside Turret Range ")
-						console:log("Changed - Adjusted Combo Order To Allow For Max W Damage Output")
-						console:log("Updated For latest BruhWalker Patch")
 						console:log("Added IsKillable Check (Sion R etc..)")
+						console:log("Added Auto R - Using Best AoE Prediction")
 						console:log("----------------------------------------------------------------")
         else
 			http:download_file(url, file_name)
@@ -139,13 +136,12 @@ local function GetDistanceSqr(unit, p2)
 	return dx*dx + dz*dz
 end
 
-local function GetDistanceSqr2(unit, p2)
-	p2x, p2y, p2z = p2.x, p2.y, p2.z
-	p1 = unit.origin
-	p1x, p1y, p1z = p1.x, p1.y, p1.z
-	local dx = p1x - p2x
-	local dz = (p1z or p1y) - (p2z or p2y)
-	return dx*dx + dz*dz
+local function GetDistanceSqr2(p1, p2)
+    p2x, p2y, p2z = p2.x, p2.y, p2.z
+    p1x, p1y, p1z = p1.x, p1.y, p1.z
+    local dx = p1x - p2x
+    local dz = (p1z or p1y) - (p2z or p2y)
+    return dx*dx + dz*dz
 end
 
 local function GetEnemyCount(range, unit)
@@ -170,6 +166,119 @@ local function GetMinionCount(range, unit)
 	end
 	return count
 end
+
+-- Best Prediction Start
+
+local function GetCenter(points)
+	local sum_x = 0
+	local sum_z = 0
+
+	for i = 1, #points do
+		sum_x = sum_x + points[i].origin.x
+		sum_z = sum_z + points[i].origin.z
+	end
+
+	local center = {x = sum_x / #points, y = 0, z = sum_z / #points}
+	return center
+end
+
+local function ContainsThemAll(circle, points)
+	local radius_sqr = circle.radi*circle.radi
+	local contains_them_all = true
+	local i = 1
+
+	while contains_them_all and i <= #points do
+		contains_them_all = GetDistanceSqr2(points[i].origin, circle.center) <= radius_sqr
+		i = i + 1
+	end
+	return contains_them_all
+end
+
+local function FarthestFromPositionIndex(points, position)
+	local index = 2
+	local actual_dist_sqr
+	local max_dist_sqr = GetDistanceSqr2(points[index].origin, position)
+
+	for i = 3, #points do
+		actual_dist_sqr = GetDistanceSqr2(points[i].origin, position)
+		if actual_dist_sqr > max_dist_sqr then
+			index = i
+			max_dist_sqr = actual_dist_sqr
+		end
+	end
+	return index
+end
+
+local function RemoveWorst(targets, position)
+	local worst_target = FarthestFromPositionIndex(targets, position)
+	table.remove(targets, worst_target)
+	return targets
+end
+
+local function GetInitialTargets(radius, main_target)
+	local targets = {main_target}
+	local diameter_sqr = 4 * radius * radius
+
+	for i, target in ipairs(GetEnemyHeroes()) do
+		if target.object_id ~= 0 and target.object_id ~= main_target.object_id and IsValid(target) and GetDistanceSqr(main_target, target) < diameter_sqr then
+			table.insert(targets, target)
+		end
+	end
+	return targets
+end
+
+local function GetPredictedInitialTargets(speed ,delay, range, radius, main_target, ColWindwall, ColMinion)
+	local predicted_main_target = pred:predict(speed ,delay, range, radius, main_target, ColWindwall, ColMinion)
+	if predicted_main_target.can_cast then
+		local predicted_targets = {main_target}
+		local diameter_sqr = 4 * radius * radius
+
+		for i, target in ipairs(GetEnemyHeroes()) do
+			if target.object_id ~= 0 and IsValid(target) then
+				predicted_target = pred:predict(math.huge, 1.5, R.range, R.width, target, false, false)
+				if predicted_target.can_cast and target.object_id ~= main_target.object_id and GetDistanceSqr2(predicted_main_target.cast_pos, predicted_target.cast_pos) < diameter_sqr then
+					table.insert(predicted_targets, target)
+				end
+			end
+		end
+	return predicted_targets
+	end
+end
+
+local function GetBestAoEPosition(speed ,delay, range, radius, main_target, ColWindwall, ColMinion)
+	local targets = GetPredictedInitialTargets(speed ,delay, range, radius, main_target, ColWindwall, ColMinion) or GetInitialTargets(radius, main_target)
+	local position = GetCenter(targets)
+	local best_pos_found = true
+	local circle = {pos = position, radi = radius}
+	circle.center = position
+
+	if #targets >= 2 then best_pos_found = ContainsThemAll(circle, targets) end
+
+	while not best_pos_found do
+		targets = RemoveWorst(targets, position)
+		position = GetCenter(targets)
+		circle.center = position
+		best_pos_found = ContainsThemAll(circle, targets)
+	end
+	return vec3.new(position.x, position.y, position.z), #targets
+end
+
+local function AoEDraw()
+	for i, unit in ipairs(GetEnemyHeroes()) do
+		local Dist = myHero:distance_to(unit.origin)
+		if unit.object_id ~= 0 and IsValid(unit) and Dist < 1500 then
+			local CastPos, targets = GetBestAoEPosition(math.huge, 1.5, R.range, R.width, unit, false, false)
+			if CastPos then
+				renderer:draw_circle(CastPos.x, CastPos.y, CastPos.z, 50, 0, 137, 255, 255)
+				screen_pos = game:world_to_screen(CastPos.x, CastPos.y, CastPos.z)
+				x, y = screen_pos.x, screen_pos.y
+				renderer:draw_text_big(x, y, "Count = "..tostring(targets), 220, 20, 60, 255)
+			end
+		end
+	end
+end
+
+-- Best Prediction End
 
 local function HasPoison(unit)
     if unit:has_buff_type(23) then
@@ -305,13 +414,20 @@ ezreal_misc_options = menu:add_subcategory("Misc Settings", ezreal_category)
 ezreal_combo_r_set_key = menu:add_keybinder("Semi Manual R Key", ezreal_misc_options, 65)
 ezreal_misc_w_turret = menu:add_toggle("Toggle Auto W Turret", 1, ezreal_misc_options, 85, true)
 
+ezreal_auto_r = menu:add_subcategory("Auto R - Using Best AoE Position", ezreal_category)
+ezreal_use_auto_r = menu:add_checkbox("Use Auto R", ezreal_auto_r, 1)
+ezreal_auto_r_range = menu:add_slider("Greater Than Range To Use Auto R", ezreal_auto_r, 1, 5000, 2500)
+ezreal_auto_r_x = menu:add_slider("Minimum Targets To Use Auto R", ezreal_auto_r, 1, 5, 3)
+
 ezreal_draw = menu:add_subcategory("Drawing Features", ezreal_category)
 ezreal_draw_q = menu:add_checkbox("Draw Q", ezreal_draw, 1)
 ezreal_draw_e = menu:add_checkbox("Draw E", ezreal_draw, 1)
 ezreal_auto_q_draw = menu:add_checkbox("Toggle Auto Q Harass Draw", ezreal_draw, 1)
 ezreal_auto_turret_draw = menu:add_checkbox("Toggle Auto W Turret Draw", ezreal_draw, 1)
+ezreal_r_best_draw = menu:add_checkbox("Draw Auto R Best Position Circle + Count", ezreal_draw, 1)
 ezreal_draw_kill = menu:add_checkbox("Draw Full Combo Can Kill", ezreal_draw, 1)
 ezreal_draw_kill_healthbar = menu:add_checkbox("Draw Full Combo On Target Health Bar", ezreal_draw, 1, "Health Bar Damage Is Computed From R, Q, W")
+
 
 local function GetQDmg(unit)
   local Damage = 0
@@ -598,6 +714,20 @@ local function ManualWCast()
 	end
 end
 
+local function AutoRx()
+	if Ready(SLOT_R) and menu:get_value(ezreal_use_auto_r) == 1 then
+		for i, unit in ipairs(GetEnemyHeroes()) do
+			local Dist = myHero:distance_to(unit.origin)
+			if unit.object_id ~= 0 and IsValid(unit) and Dist <= menu:get_value(ezreal_auto_r_range) then
+				local CastPos, targets = GetBestAoEPosition(math.huge, 1.5, R.range, R.width, unit, false, false)
+				if CastPos and targets >= menu:get_value(ezreal_auto_r_x) then
+					spellbook:cast_spell(SLOT_R, R.delay, CastPos.x, CastPos.y, CastPos.z)
+				end
+			end
+		end
+	end
+end
+
 -- object returns, draw and tick usage
 
 screen_size = game.screen_size
@@ -682,6 +812,12 @@ local function on_tick()
 	if menu:get_toggle_state(ezreal_misc_w_turret) and not game:is_key_down(menu:get_value(ezreal_combokey)) then
 		ManualWCast()
 	end
+
+	if menu:get_value(ezreal_r_best_draw) == 1 then
+		AoEDraw()
+	end
+
+	AutoRx()
 
 	AutoKill()
 end
