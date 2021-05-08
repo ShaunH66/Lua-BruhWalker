@@ -2,14 +2,14 @@ if game.local_player.champ_name ~= "Lulu" then
 	return
 end
 
---[[do
+do
     local function AutoUpdate()
 		local Version = 1
 		local file_name = "LuluTheDon.lua"
 		local url = "https://raw.githubusercontent.com/TheShaunyboi/BruhWalkerEncrypted/main/LuluTheDon.lua"
         local web_version = http:get("https://raw.githubusercontent.com/TheShaunyboi/BruhWalkerEncrypted/main/LuluTheDon.lua.version.txt")
-        console:log("lulululululu.lua Vers: "..Version)
-		console:log("lulululululu.Web Vers: "..tonumber(web_version))
+        console:log("LuluTheDon.lua Vers: "..Version)
+		console:log("LuluTheDon.Web Vers: "..tonumber(web_version))
 		if tonumber(web_version) == Version then
 						console:log("-------------------------------------------------")
             console:log("Shaun's Sexy Lulu v1 Successfully loaded.....")
@@ -29,7 +29,7 @@ end
     end
 
     AutoUpdate()
-end]]
+end
 
 pred:use_prediction()
 
@@ -48,7 +48,7 @@ local Q = { range = 925, delay = .25, width = 60, speed = 1600 }
 local Q2 = { range = 1600, delay = .5, width = 60, speed = 1600 }
 local W = { range = 650, delay = .25, width = 0, speed = math.huge }
 local E = { range = 650, delay = .1, width = 0, speed = math.huge }
-local R = { range = 900, delay = .1, width = 150, speed = math.huge }
+local R = { range = 900, delay = .1, width = 400, speed = math.huge }
 
 
 -- Return game data and maths
@@ -130,12 +130,22 @@ end
 
 -- GetLineTargetCount Start --
 
+local function GetDistanceSqr(unit, p2)
+	p2 = p2.origin or myHero.origin
+	p2x, p2y, p2z = p2.x, p2.y, p2.z
+	p1 = unit.origin
+	p1x, p1y, p1z = p1.x, p1.y, p1.z
+	local dx = p1x - p2x
+	local dz = (p1z or p1y) - (p2z or p2y)
+	return dx*dx + dz*dz
+end
+
 local function GetDistanceSqr2(p1, p2)
-    p2x, p2y, p2z = p2.x, p2.y, p2.z
-    p1x, p1y, p1z = p1.x, p1.y, p1.z
-    local dx = p1x - p2x
-    local dz = (p1z or p1y) - (p2z or p2y)
-    return dx*dx + dz*dz
+	p2x, p2y, p2z = p2.x, p2.y, p2.z
+	p1x, p1y, p1z = p1.x, p1.y, p1.z
+	local dx = p1x - p2x
+	local dz = (p1z or p1y) - (p2z or p2y)
+	return dx*dx + dz*dz
 end
 
 local function VectorPointProjectionOnLineSegment(v1, v2, v)
@@ -177,12 +187,12 @@ local function GetEnemyCount(range, unit)
 	return count
 end
 
-local function GetEnemyCountCicular(range, p1)
+local function GetEnemyCountCicular(range, target)
     count = 0
     players = game.players
     for _, unit in ipairs(players) do
     Range = range * range
-        if unit.is_enemy and GetDistanceSqr2(p1, unit.origin) < Range and IsValid(unit) then
+        if unit.is_enemy and GetDistanceSqr2(target.origin, unit.origin) < Range and IsValid(unit) then
         count = count + 1
         end
     end
@@ -300,6 +310,7 @@ lulu_combo = menu:add_subcategory("Combo", lulu_category)
 lulu_combo_q = menu:add_subcategory("Q Settings", lulu_combo, 1)
 lulu_combo_use_q = menu:add_checkbox("Use Q", lulu_combo_q, 1)
 lulu_combo_use_q_ext = menu:add_checkbox("Use Q Extended", lulu_combo_q, 1)
+
 lulu_combo_w = menu:add_subcategory("W Settings", lulu_combo, 1)
 lulu_combo_use_w = menu:add_checkbox("Use W", lulu_combo_w, 1)
 lulu_w_allyblacklist = menu:add_subcategory("Ally W Blacklist", lulu_combo_w)
@@ -312,7 +323,7 @@ end
 lulu_combo_e = menu:add_subcategory("E Settings", lulu_combo, 1)
 lulu_combo_use_e = menu:add_checkbox("Use E", lulu_combo_e, 1)
 lulu_combo_e_ally_hp = menu:add_slider("E Ally HP is lower than [%]", lulu_combo_e, 1, 100, 40)
-lulu_combo_e_me_hp = menu:add_slider("E Myself HP is lower than [%]", lulu_combo_self_e, 1, 100, 10)
+lulu_combo_e_me_hp = menu:add_slider("E Myself HP is lower than [%]", lulu_combo_e, 1, 100, 10)
 lulu_e_allyblacklist = menu:add_subcategory("Ally E Blacklist", lulu_combo_e)
 players = game.players
 for _, v in ipairs(players) do
@@ -323,7 +334,7 @@ end
 lulu_combo_r = menu:add_subcategory("R Settings", lulu_combo)
 lulu_combo_use_r = menu:add_checkbox("Use R", lulu_combo_r, 1)
 lulu_combo_r_ally_hp = menu:add_slider("R Ally HP is lower than [%]", lulu_combo_r, 1, 100, 30)
-lulu_combo_r_me_hp = menu:add_slider("R Myself HP is lower than [%]", lulu_combo_self_r, 1, 100, 5)
+lulu_combo_r_me_hp = menu:add_slider("R Myself HP is lower than [%]", lulu_combo_r, 1, 100, 10)
 lulu_r_allyblacklist = menu:add_subcategory("R Ally Blacklist", lulu_combo_r)
 players = game.players
 for _, v in ipairs(players) do
@@ -339,14 +350,13 @@ lulu_harass_use_w = menu:add_checkbox("Use W", lulu_harass, 1)
 
 lulu_ks = menu:add_subcategory("Kill Steal", lulu_category)
 lulu_ks_use_q = menu:add_checkbox("Use Q", lulu_ks , 1)
-lulu_ks_use_e = menu:add_checkbox("Use Q", lulu_ks , 1)
+lulu_ks_use_e = menu:add_checkbox("Use E", lulu_ks , 1)
 
 lulu_extra = menu:add_subcategory("Automated Features", lulu_category)
-lulu_level = menu:add_checkbox("Auto Level Up Selector", lulu_extra, 1)
-lulu_manual_r_use = menu:add_subcategory("Semi Manual R Settings", lulu_combo)
-lulu_manual_r_key = menu:add_keybinder("Semi Manual R Key", lulu_manual_r_use, 90)
+lulu_manual_r_use = menu:add_subcategory("Semi Manual R Settings", lulu_extra)
+lulu_manual_r_key = menu:add_keybinder("Semi Manual R Key - Myself When Ally > R Range", lulu_manual_r_use, 90)
 lulu_manual_r_ally_hp = menu:add_slider("Semi Manual R - Ally HP is lower than [%]", lulu_manual_r_use, 1, 100, 30)
-lulu_r_knockup_use = menu:add_checkbox("Auto R Knockup", lulu_extra, 1)
+lulu_r_knockup_use = menu:add_subcategory("Auto R Knockup", lulu_extra, 1)
 lulu_r_knockup = menu:add_checkbox("Use Auto R Knockup", lulu_r_knockup_use, 1)
 lulu_r_knockup_min = menu:add_slider("Minimum Number Of Targets To Knock Up", lulu_r_knockup_use, 1, 5, 3)
 --lulu_aoe_q = menu:add_checkbox("Auto AoE Q", lulu_extra, 1)
@@ -364,6 +374,7 @@ lulu_draw_q = menu:add_checkbox("Draw Q Range", lulu_draw, 1)
 lulu_draw_q_ext = menu:add_checkbox("Draw Q Extended Range", lulu_draw, 1)
 lulu_draw_w = menu:add_checkbox("Draw W/E Range", lulu_draw, 1)
 lulu_draw_r = menu:add_checkbox("Draw R Range", lulu_draw, 1)
+lulu_draw_r_knockup = menu:add_checkbox("Draw R Knockup Range", lulu_draw, 1)
 
 
 local function GetQDmg(unit)
@@ -395,17 +406,15 @@ end
 -- Casting
 
 local function CastQ(unit)
-	pred_output = pred:predict(Q.speed, Q.delay, Q.range, Q.width, unit, true, true)
+	pred_output = pred:predict(Q.speed, Q.delay, Q.range, Q.width, unit, false, false)
 	if pred_output.can_cast then
 		castPos = pred_output.cast_pos
 		spellbook:cast_spell(SLOT_Q, Q.delay, castPos.x, castPos.y, castPos.z)
-		PixyOnline = false
 	end
 end
 
 local function CastW(unit)
-		spellbook:cast_spell_targetted(SLOT_W, unit, W.delay)
-	end
+	spellbook:cast_spell_targetted(SLOT_W, unit, W.delay)
 end
 
 local function CastE(unit)
@@ -413,7 +422,9 @@ local function CastE(unit)
 end
 
 local function CastR(unit)
-	spellbook:cast_spell_targetted(SLOT_R, unit, R.delay)
+	origin = unit.origin
+	x, y, z = origin.x, origin.y, origin.z
+	spellbook:cast_spell(SLOT_R, R.delay, x, y, z)
 end
 
 -- Combo
@@ -428,9 +439,9 @@ local function Combo()
 		if menu:get_value(lulu_combo_use_r) == 1 then
 			if not ally.is_enemy and ally.object_id ~= myHero.object_id then
 				if ally:health_percentage() <= menu:get_value(lulu_combo_r_ally_hp) then
-					if menu:get_value_string("Use R On : "..tostring(v.champ_name)) == 1 then
-						if ally:distance_to(target.origin) <= R.range and IsValid(target) and IsValid(ally) then
-							if Ready(SLOT_R) then
+					if menu:get_value_string("Use R On : "..tostring(ally.champ_name)) == 1 then
+						if ally:distance_to(target.origin) <= Q.range and IsValid(target) and IsValid(ally) then
+							if Ready(SLOT_R) and ally:distance_to(myHero.origin) <= R.range then
 								CastR(ally)
 							end
 						end
@@ -440,19 +451,16 @@ local function Combo()
 		end
 
 		if menu:get_value(lulu_combo_use_r) == 1 then
-			if target:health_percentage() <= menu:get_value(lulu_combo_r_me_hp) then
-					if myHero:distance_to(target.origin) <= R.range and IsValid(target) then
-						if Ready(SLOT_R) then
-							CastR(myHero)
-						end
-					end
+			if myHero:health_percentage() <= menu:get_value(lulu_combo_r_me_hp) then
+				if Ready(SLOT_R) and target:distance_to(myHero.origin) <= Q.range then
+					CastR(myHero)
 				end
 			end
 		end
 
 		if menu:get_value(lulu_combo_use_q) == 1 then
 			if myHero:distance_to(target.origin) <= Q.range and IsValid(target) and IsKillable(target) then
-				if Ready(SLOT_Q) then
+				if Ready(SLOT_Q) and not Ready(SLOT_E) and not PixyOnline then
 					CastQ(target)
 				end
 			end
@@ -461,8 +469,8 @@ local function Combo()
 		if menu:get_value(lulu_combo_use_w) == 1 then
 			if not ally.is_enemy and ally.object_id ~= myHero.object_id then
 				if ally:distance_to(target.origin) <= ally.attack_range and IsValid(target) and IsKillable(target) and IsValid(ally) then
-					if menu:get_value_string("Use W On : "..tostring(v.champ_name)) == 1 then
-						if Ready(SLOT_W) then
+					if menu:get_value_string("Use W On : "..tostring(ally.champ_name)) == 1 then
+						if Ready(SLOT_W) and ally:distance_to(target.origin) <= ally.attack_range then
 							CastW(ally)
 						end
 					end
@@ -471,8 +479,8 @@ local function Combo()
 		end
 
 		if menu:get_value(lulu_combo_use_w) == 1 then
-			if ally:distance_to(myHero.origin) > W.range and myHero:distance_to(target.origin) <= myHero.attack_range and IsValid(target) and IsKillable(target) then
-				if Ready(SLOT_W) then
+			if ally:distance_to(myHero.origin) > Q.range and myHero:distance_to(target.origin) <= W.range and IsValid(target) and IsKillable(target) then
+				if Ready(SLOT_W) and ally:distance_to(target.origin) > ally.attack_range then
 					CastW(myHero)
 				end
 			end
@@ -481,9 +489,9 @@ local function Combo()
 		if menu:get_value(lulu_combo_use_e) == 1 then
 			if not ally.is_enemy and ally.object_id ~= myHero.object_id then
 				if ally:health_percentage() <= menu:get_value(lulu_combo_e_ally_hp) then
-					if menu:get_value_string("Use E On : "..tostring(v.champ_name)) == 1 then
+					if menu:get_value_string("Use E On : "..tostring(ally.champ_name)) == 1 then
 						if ally:distance_to(target.origin) <= E.range and IsValid(target) and IsValid(ally) then
-							if Ready(SLOT_E) then
+							if Ready(SLOT_E) and ally:distance_to(myHero.origin) <= E.range then
 								CastE(ally)
 							end
 						end
@@ -493,8 +501,8 @@ local function Combo()
 		end
 
 		if menu:get_value(lulu_combo_use_e) == 1 then
-			if target:health_percentage() <= menu:get_value(lulu_combo_e_me_hp) then
-				if myHero:distance_to(target.origin) <= E.range and myHero:distance_to(ally.orgin) > E.range and IsValid(target) then
+			if myHero:health_percentage() <= menu:get_value(lulu_combo_e_me_hp) then
+				if ally:distance_to(myHero.origin) > E.range and myHero:distance_to(target.origin) <= E.range and IsValid(target) and IsKillable(target) then
 					if Ready(SLOT_E) then
 						CastE(myHero)
 					end
@@ -511,34 +519,48 @@ local function QExtended()
 	minions = game.minions
 	for i, minion in ipairs(minions) do
 
-		if menu:get_value(lulu_combo_use_q) == 1 and menu:get_value(lulu_combo_use_q_ext) == 1 and Ready(SLOT_E) then
+		if menu:get_value(lulu_combo_use_q) == 1 and menu:get_value(lulu_combo_use_q_ext) == 1 then
 			if IsValid(minion) and minion.object_id ~= 0 and minion.is_enemy and myHero:distance_to(minion.origin) < E.range then
-				if minion:distance_to(target.origin) < Q2.range then
+				if minion:distance_to(target.origin) < Q2.range and myHero:distance_to(target.origin) > Q.range and Ready(SLOT_E) then
 					CastE(minion)
 					PixyOnline = true
-				end
-
-				if PixyOnline and Pix:distance_to(target.origin) < Q.range then
-					if Ready(SLOT_Q) then
-						CastQ(target)
-					end
 				end
 			end
 		end
 
-		if menu:get_value(lulu_combo_use_q) == 1 and menu:get_value(lulu_combo_use_q_ext) == 1 and Ready(SLOT_E) then
-			if myHero:distance_to(target.origin) <= E.range and IsValid(target) and IsKillable(target) then
-				if GetEnemyCount(Q2.range, target.origin) >= 2 then
-					CastE(target)
-					PixyOnline = true
+		if PixyOnline and minion:distance_to(target.origin) < Q.range then
+			if Ready(SLOT_Q) and not Ready(SLOT_E) then
+				pred_output = pred:predict(Q.speed, Q.delay, Q.range, Q.width, target, false, false)
+				if pred_output.can_cast then
+					castPos = pred_output.cast_pos
+					spellbook:cast_spell(SLOT_Q, Q.delay, castPos.x, castPos.y, castPos.z)
 				end
 
-        if PixyOnline then
-					local Count = GetLineTargetCount(myHero, output, Q.delay, Q.range, Q.width / 2)
-	      	if Count >= 2 then
-						castPos = pred_output.cast_pos
-						spellbook:cast_spell(SLOT_Q, Q.delay, castPos.x, castPos.y, castPos.z)
-					end
+				if not Ready(SLOT_E) and not Ready(SLOT_Q) then
+					PixyOnline = false
+				end
+			end
+		end
+
+		if menu:get_value(lulu_combo_use_q) == 1 and menu:get_value(lulu_combo_use_q_ext) == 1 then
+			if myHero:distance_to(target.origin) <= E.range and IsValid(target) and IsKillable(target) then
+				if Ready(SLOT_E) then
+				CastE(target)
+				PixyOnline = true
+				end
+			end
+		end
+
+		if PixyOnline and myHero:distance_to(target.origin) < Q.range then
+			if Ready(SLOT_Q) and not Ready(SLOT_E) then
+				pred_output = pred:predict(Q.speed, Q.delay, Q.range, Q.width, target, false, false)
+				if pred_output.can_cast then
+					castPos = pred_output.cast_pos
+					spellbook:cast_spell(SLOT_Q, Q.delay, castPos.x, castPos.y, castPos.z)
+				end
+
+				if not Ready(SLOT_E) and not Ready(SLOT_Q) then
+					PixyOnline = false
 				end
 			end
 		end
@@ -562,11 +584,10 @@ local function Harass()
 			end
 		end
 
-
 		if menu:get_value(lulu_harass_use_w) == 1 then
 			if not ally.is_enemy and ally.object_id ~= myHero.object_id then
 				if ally:distance_to(target.origin) <= ally.attack_range and IsValid(target) and IsKillable(target) and IsValid(ally) then
-					if Ready(SLOT_W) then
+					if Ready(SLOT_W) and ally:distance_to(target.origin) <= ally.attack_range then
 						CastW(ally)
 					end
 				end
@@ -574,10 +595,9 @@ local function Harass()
 		end
 
 		if menu:get_value(lulu_harass_use_w) == 1 then
-			if ally:distance_to(myHero.origin) > W.range and myHero:distance_to(target.origin) <= myHero.attack_range and IsValid(target) and IsKillable(target) then
-				if Ready(SLOT_W) then
+			if ally:distance_to(myHero.origin) > Q.range and myHero:distance_to(target.origin) <= W.range and IsValid(target) and IsKillable(target) then
+				if Ready(SLOT_W) and ally:distance_to(target.origin) >= ally.attack_range then
 					CastW(myHero)
-					end
 				end
 			end
 		end
@@ -590,44 +610,45 @@ local function Clear()
 
 	minions = game.minions
 	for i, target in ipairs(minions) do
-		players = game.players
-		for _, ally in ipairs(players) do
 
-			if menu:get_value(lulu_laneclear_use_q) == 1 then
-				if IsValid(target) and target.object_id ~= 0 and target.is_enemy and myHero:distance_to(target.origin) < Q.range then
-					if GetMinionCount(Q.range, target) >= menu:get_value(lulu_laneclear_q_min) then
-						if Ready(SLOT_Q) then
 
-							origin = target.origin
-							x, y, z = origin.x, origin.y, origin.z
-							pred_output = pred:predict(Q.speed, Q.delay, Q.range, Q.width, target, false, false)
+		if menu:get_value(lulu_laneclear_use_q) == 1 then
+			if IsValid(target) and target.object_id ~= 0 and target.is_enemy and myHero:distance_to(target.origin) < Q.range then
+				if GetMinionCount(Q.range, myHero) >= menu:get_value(lulu_laneclear_q_min) then
+					if Ready(SLOT_Q) then
 
-							if pred_output.can_cast then
-								castPos = pred_output.cast_pos
-								spellbook:cast_spell(SLOT_Q, Q.delay, castPos.x, castPos.y, castPos.z)
-							end
+						origin = target.origin
+						x, y, z = origin.x, origin.y, origin.z
+						pred_output = pred:predict(Q.speed, Q.delay, Q.range, Q.width, target, false, false)
+
+						if pred_output.can_cast then
+							castPos = pred_output.cast_pos
+							spellbook:cast_spell(SLOT_Q, Q.delay, castPos.x, castPos.y, castPos.z)
 						end
 					end
 				end
 			end
 		end
 
-		if menu:get_value(lulu_laneclear_use_w) == 1 then
-			if not ally.is_enemy and ally.object_id ~= myHero.object_id then
-				if GetMinionCount(W.range, target) >= menu:get_value(lulu_laneclear_q_min) then
-					if ally:distance_to(target.origin) <= ally.attack_range and IsValid(target) and IsKillable(target) and IsValid(ally) then
-						if Ready(SLOT_W) then
-						CastW(ally)
+		players = game.players
+		for _, ally in ipairs(players) do
+
+			if menu:get_value(lulu_laneclear_use_w) == 1 then
+				if not ally.is_enemy and ally.object_id ~= myHero.object_id then
+					if ally:distance_to(target.origin) <= W.range and IsValid(target) and IsKillable(target) and IsValid(ally) then
+						if Ready(SLOT_W) and ally:distance_to(myHero.origin) <= W.range then
+							CastW(ally)
+						end
 					end
 				end
 			end
-		end
 
-		if menu:get_value(lulu_laneclear_use_w) == 1 then
-			if GetMinionCount(W.range, target) >= menu:get_value(lulu_laneclear_q_min) then
-				if ally:distance_to(myHero.origin) > W.range and myHero:distance_to(target.origin) <= myHero.attack_range and IsValid(target) and IsKillable(target) then
-					if Ready(SLOT_W) then
-						CastW(myHero)
+			if menu:get_value(lulu_laneclear_use_w) == 1 then
+				if not ally.is_enemy and ally.object_id ~= myHero.object_id then
+					if myHero:distance_to(ally.origin) > W.range and target:distance_to(myHero.origin) < W.range and IsValid(target) and IsKillable(target) then
+						if Ready(SLOT_W) then
+							CastW(myHero)
+						end
 					end
 				end
 			end
@@ -670,7 +691,7 @@ local function AutoR()
 	players = game.players
 	for _, ally in ipairs(players) do
 
-		if Ready(SLOT_R) menu:get_value(lulu_r_knockup) == 1 then
+		if Ready(SLOT_R) and menu:get_value(lulu_r_knockup) == 1 then
 			if not ally.is_enemy and ally.object_id ~= myHero.object_id then
 				if GetEnemyCountCicular(R.width, ally) >= menu:get_value(lulu_r_knockup_min) then
 					CastR(ally)
@@ -678,7 +699,7 @@ local function AutoR()
 			end
 		end
 
-		if Ready(SLOT_R) menu:get_value(lulu_r_knockup) == 1 then
+		if Ready(SLOT_R) and menu:get_value(lulu_r_knockup) == 1 then
 			if GetEnemyCountCicular(R.width, myHero) >= menu:get_value(lulu_r_knockup_min) then
 				CastR(myHero)
 			end
@@ -692,12 +713,19 @@ local function ManualRCast()
 	players = game.players
 	for _, ally in ipairs(players) do
 
-	if game:is_key_down(menu:get_value(lulu_manual_r_key)) then
-		if not ally.is_enemy and ally.object_id ~= myHero.object_id then
-			if ally:health_percentage() <= menu:get_value(lulu_manual_r_ally_hp) then
-				if Ready(SLOT_R) then
-					CastR(ally)
+		if game:is_key_down(menu:get_value(lulu_manual_r_key)) then
+			if not ally.is_enemy and ally.object_id ~= myHero.object_id then
+				if ally:health_percentage() <= menu:get_value(lulu_manual_r_ally_hp) then
+					if Ready(SLOT_R) and ally:distance_to(myHero.origin) <= R.range then
+						CastR(ally)
+					end
 				end
+			end
+		end
+
+		if game:is_key_down(menu:get_value(lulu_manual_r_key)) then
+			if Ready(SLOT_R) and ally:distance_to(myHero.origin) >= R.range then
+				CastR(myHero)
 			end
 		end
 	end
@@ -754,16 +782,15 @@ local function on_possible_interrupt(obj, spell_name)
 	end
 end
 
-local function on_level(level)
-  if menu:get_value(lulu_level) == 1 and level < 19 then
-    spell_order = {0, 1, 2, 3, 3, 4, 3, 2, 3, 2, 4, 2, 2, 1, 1, 4, 1, 1}
-    spellbook:level_spell_slot(spell_order[level])
-  end
-end
-
-local function on_object_created(object, obj_name)
-	if obj_name == "lulu_faerie_idle" then
+--[[local function on_object_created(object, obj_name)
+	if obj_name == ("lulufaerieburn") then
 		Pix = object
+	end
+end]]
+
+local function on_buff_active(obj, buff_name)
+	if obj:has_buff("lulufaerieburn") then
+		Pix = obj
 	end
 end
 
@@ -774,28 +801,26 @@ screen_size = game.screen_size
 local function on_draw()
 	local_player = game.local_player
 
-	local target = selector:find_target(1000, mode_health)
-
 	if local_player.object_id ~= 0 then
 		origin = local_player.origin
 		x, y, z = origin.x, origin.y, origin.z
 	end
 
 	if menu:get_value(lulu_draw_q) == 1 then
-		if  Ready(SLOT_Q) then
+		if Ready(SLOT_Q) then
 			renderer:draw_circle(x, y, z, Q.range, 255, 255, 255, 255)
 		end
 	end
 
 	if menu:get_value(lulu_draw_q_ext) == 1 then
-		if  Ready(SLOT_Q) then
+		if Ready(SLOT_Q) then
 			renderer:draw_circle(x, y, z, Q2.range, 255, 0, 255, 255)
 		end
 	end
 
 	if menu:get_value(lulu_draw_r) == 1 then
 		if Ready(SLOT_R) then
-			renderer:draw_circle(x, y, z, R.range, 255, 255, 0, 255)
+			renderer:draw_circle(x, y, z, R.range, 0, 255, 255, 255)
 		end
 	end
 
@@ -803,8 +828,15 @@ local function on_draw()
 		if Ready(SLOT_W) then
 			renderer:draw_circle(x, y, z, W.range, 255, 255, 0, 255)
 		end
-	end
 
+		if menu:get_value(lulu_draw_r_knockup) == 1 then
+			if Ready(SLOT_R) then
+				renderer:draw_circle(x, y, z, R.width, 255, 255, 0, 255)
+			end
+		end
+
+	end
+end
 
 local function on_tick()
 
@@ -834,6 +866,6 @@ end
 client:set_event_callback("on_tick", on_tick)
 client:set_event_callback("on_draw", on_draw)
 client:set_event_callback("on_gap_close", on_gap_close)
-client:set_event_callback("on_object_created", on_object_created)
+--client:set_event_callback("on_object_created", on_object_created)
+client:set_event_callback("on_buff_active", on_buff_active)
 client:set_event_callback("on_possible_interrupt", on_possible_interrupt)
-client:set_event_callback("on_level", on_level)
