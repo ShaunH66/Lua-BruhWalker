@@ -4,7 +4,7 @@ end
 
 do
     local function AutoUpdate()
-		local Version = 1
+		local Version = 1.1
 		local file_name = "LuluTheDon.lua"
 		local url = "https://raw.githubusercontent.com/TheShaunyboi/BruhWalkerEncrypted/main/LuluTheDon.lua"
         local web_version = http:get("https://raw.githubusercontent.com/TheShaunyboi/BruhWalkerEncrypted/main/LuluTheDon.lua.version.txt")
@@ -12,7 +12,8 @@ do
 		console:log("LuluTheDon.Web Vers: "..tonumber(web_version))
 		if tonumber(web_version) == Version then
 						console:log("-------------------------------------------------")
-            console:log("Shaun's Sexy Lulu v1 Successfully loaded.....")
+						console:log("-------------------------------------------------")
+            console:log("....Shaun's Sexy Lulu v1.1 Successfully loaded...")
 						console:log("-------------------------------------------------")
 						console:log("-------------------------------------------------")
 
@@ -309,7 +310,6 @@ lulu_combokey = menu:add_keybinder("Combo Mode Key", lulu_category, 32)
 lulu_combo = menu:add_subcategory("Combo", lulu_category)
 lulu_combo_q = menu:add_subcategory("Q Settings", lulu_combo, 1)
 lulu_combo_use_q = menu:add_checkbox("Use Q", lulu_combo_q, 1)
-lulu_combo_use_q_ext = menu:add_checkbox("Use Q Extended", lulu_combo_q, 1)
 
 lulu_combo_w = menu:add_subcategory("W Settings", lulu_combo, 1)
 lulu_combo_use_w = menu:add_checkbox("Use W", lulu_combo_w, 1)
@@ -460,7 +460,7 @@ local function Combo()
 
 		if menu:get_value(lulu_combo_use_q) == 1 then
 			if myHero:distance_to(target.origin) <= Q.range and IsValid(target) and IsKillable(target) then
-				if Ready(SLOT_Q) and not Ready(SLOT_E) and not PixyOnline then
+				if Ready(SLOT_Q) then
 					CastQ(target)
 				end
 			end
@@ -470,7 +470,7 @@ local function Combo()
 			if not ally.is_enemy and ally.object_id ~= myHero.object_id then
 				if ally:distance_to(target.origin) <= ally.attack_range and IsValid(target) and IsKillable(target) and IsValid(ally) then
 					if menu:get_value_string("Use W On : "..tostring(ally.champ_name)) == 1 then
-						if Ready(SLOT_W) and ally:distance_to(target.origin) <= ally.attack_range then
+						if Ready(SLOT_W) and myHero:distance_to(ally.origin) <= W.range then
 							CastW(ally)
 						end
 					end
@@ -479,8 +479,8 @@ local function Combo()
 		end
 
 		if menu:get_value(lulu_combo_use_w) == 1 then
-			if ally:distance_to(myHero.origin) > Q.range and myHero:distance_to(target.origin) <= W.range and IsValid(target) and IsKillable(target) then
-				if Ready(SLOT_W) and ally:distance_to(target.origin) > ally.attack_range then
+			if myHero:distance_to(ally.origin) > Q.range and myHero:distance_to(target.origin) <= myHero.attack_range and IsValid(target) and IsKillable(target) then
+				if Ready(SLOT_W) then
 					CastW(myHero)
 				end
 			end
@@ -519,18 +519,18 @@ local function QExtended()
 	minions = game.minions
 	for i, minion in ipairs(minions) do
 
-		if menu:get_value(lulu_combo_use_q) == 1 and menu:get_value(lulu_combo_use_q_ext) == 1 then
+		if menu:get_value(lulu_harass_use_q) == 1 and menu:get_value(lulu_harass_use_q_ext) == 1 then
 			if IsValid(minion) and minion.object_id ~= 0 and minion.is_enemy and myHero:distance_to(minion.origin) < E.range then
-				if minion:distance_to(target.origin) < Q2.range and myHero:distance_to(target.origin) > Q.range and Ready(SLOT_E) then
+				if myHero:distance_to(target.origin) < Q2.range and myHero:distance_to(target.origin) > Q.range and Ready(SLOT_E) and Ready(SLOT_Q) then
 					CastE(minion)
 					PixyOnline = true
 				end
 			end
 		end
 
-		if PixyOnline and minion:distance_to(target.origin) < Q.range then
+		if PixyOnline and minion:distance_to(target.origin) < Q2.range then
 			if Ready(SLOT_Q) and not Ready(SLOT_E) then
-				pred_output = pred:predict(Q.speed, Q.delay, Q.range, Q.width, target, false, false)
+				pred_output = pred:predict(Q.speed, Q.delay, Q2.range, Q.width, target, false, false)
 				if pred_output.can_cast then
 					castPos = pred_output.cast_pos
 					spellbook:cast_spell(SLOT_Q, Q.delay, castPos.x, castPos.y, castPos.z)
@@ -542,7 +542,7 @@ local function QExtended()
 			end
 		end
 
-		if menu:get_value(lulu_combo_use_q) == 1 and menu:get_value(lulu_combo_use_q_ext) == 1 then
+		if menu:get_value(lulu_harass_use_q) == 1 and menu:get_value(lulu_harass_use_q_ext) == 1 then
 			if myHero:distance_to(target.origin) <= E.range and IsValid(target) and IsKillable(target) then
 				if Ready(SLOT_E) then
 				CastE(target)
@@ -578,7 +578,7 @@ local function Harass()
 
 		if menu:get_value(lulu_harass_use_q) == 1 then
 			if myHero:distance_to(target.origin) <= Q.range and IsValid(target) and IsKillable(target) then
-				if Ready(SLOT_Q) then
+				if Ready(SLOT_Q) and not Ready(SLOT_E) and not PixyOnline then
 					CastQ(target)
 				end
 			end
@@ -842,14 +842,11 @@ local function on_tick()
 
 	if game:is_key_down(menu:get_value(lulu_combokey)) and menu:get_value(lulu_enabled) == 1 then
 		Combo()
-		QExtended()
 	end
 
 	if combo:get_mode() == MODE_HARASS then
 		Harass()
-		if menu:get_value(lulu_harass_use_q_ext) == 1 then
-			QExtended()
-		end
+		QExtended()
 	end
 
 	if combo:get_mode() == MODE_LANECLEAR then
