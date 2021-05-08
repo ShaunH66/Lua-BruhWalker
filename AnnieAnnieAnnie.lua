@@ -4,7 +4,7 @@ end
 
 do
     local function AutoUpdate()
-		local Version = 1.1
+		local Version = 1.2
 		local file_name = "AnnieAnnieAnnie.lua"
 		local url = "https://raw.githubusercontent.com/TheShaunyboi/BruhWalkerEncrypted/main/AnnieAnnieAnnie.lua"
         local web_version = http:get("https://raw.githubusercontent.com/TheShaunyboi/BruhWalkerEncrypted/main/AnnieAnnieAnnie.lua.version.txt")
@@ -12,11 +12,10 @@ do
 		console:log("AnnieAnnieAnnie.Web Vers: "..tonumber(web_version))
 		if tonumber(web_version) == Version then
 						console:log("-------------------------------------------------")
-            console:log("Shaun's Sexy Annie v1.1 successfully loaded.....")
+            console:log("Shaun's Sexy Annie v1.2 successfully loaded.....")
 						console:log("-------------------------------------------------")
-						console:log("Added - Check For Recall When Charging Stun")
-						console:log("Added - Option To Stop Last Hit IF Stun Is Ready")
 						console:log("Improved - Flash > R > Combo Is Faster")
+						console:log("Added - Auto Stun Gap Close + Auto Stun Major Channel Spells")
 						console:log("-------------------------------------------------")
 
         else
@@ -35,7 +34,6 @@ do
 end
 
 pred:use_prediction()
-require "PKDamageLib"
 
 local myHero = game.local_player
 local local_player = game.local_player
@@ -248,7 +246,7 @@ local function AoEDraw()
 	for i, unit in ipairs(GetEnemyHeroes()) do
 		local Dist = myHero:distance_to(unit.origin)
 		if unit.object_id ~= 0 and IsValid(unit) and Dist < 1500 then
-			local CastPos, targets = GetBestAoEPosition(math.huge, 1.15, 1800, 240, unit, false, false)
+			local CastPos, targets = GetBestAoEPosition(R.speed, R.delay, R.range, R.width, unit, false, false)
 			if CastPos then
 				renderer:draw_circle(CastPos.x, CastPos.y, CastPos.z, 50, 0, 137, 255, 255)
 				screen_pos = game:world_to_screen(CastPos.x, CastPos.y, CastPos.z)
@@ -475,6 +473,11 @@ annie_combo_r_auto_x = menu:add_slider("Minimum Of Targets To Perform Auto R", a
 annie_combo_flash_r_auto = menu:add_keybinder("Flash R Key - Using Best AoE Prediction", annie_r_misc_options, 88)
 annie_combo_flash_r_auto_x = menu:add_slider("Minimum Of Targets To Perform Flash R", annie_r_misc_options, 1, 5, 3)
 
+annie_r_extra = menu:add_subcategory("SPLENDID Extra Features", annie_category)
+annie_gapclose = menu:add_checkbox("Auto Stun Gap Close", annie_r_extra, 1)
+annie_interrupt = menu:add_checkbox("Auto Stun Major Channel Spells", annie_r_extra, 1)
+
+
 annie_draw = menu:add_subcategory("The Drawing Features", annie_category)
 annie_draw_q = menu:add_checkbox("Draw Q Range", annie_draw, 1)
 annie_draw_r = menu:add_checkbox("Draw R Range", annie_draw, 1)
@@ -557,10 +560,10 @@ local function Combo()
 
 	target = selector:find_target(Q.range, mode_health)
 
-	if menu:get_value(annie_combo_use_r) == 1 then
+	if menu:get_value(annie_combo_use_r) == 1 and IsValid(target) then
 		if target:health_percentage() <= menu:get_value(annie_combo_r_enemy_hp) then
 			if menu:get_value_string("Use R Combo On: "..tostring(target.champ_name)) == 1 and not TiddersUP(myHero) then
-				if myHero:distance_to(target.origin) <= R.range and IsValid(target) and IsKillable(target) then
+				if myHero:distance_to(target.origin) <= R.range and IsKillable(target) then
 					if Ready(SLOT_R) and HasStunPassive(myHero) then
 						CastR(target)
 					end
@@ -569,16 +572,16 @@ local function Combo()
 		end
 	end
 
-	if menu:get_value(annie_combo_use_q) == 1 then
-		if myHero:distance_to(target.origin) <= Q.range and IsValid(target) and IsKillable(target) then
+	if menu:get_value(annie_combo_use_q) == 1 and IsValid(target) then
+		if myHero:distance_to(target.origin) <= Q.range and IsKillable(target) then
 			if Ready(SLOT_Q) then
 				CastQ(target)
 			end
 		end
 	end
 
-	if menu:get_value(annie_combo_use_w) == 1 then
-		if myHero:distance_to(target.origin) <= W.range and IsValid(target) and IsKillable(target) then
+	if menu:get_value(annie_combo_use_w) == 1 and IsValid(target) then
+		if myHero:distance_to(target.origin) <= W.range and IsKillable(target) then
 			if Ready(SLOT_W) then
 				CastW(target)
 			end
@@ -593,8 +596,8 @@ local function Harass()
 
 	target = selector:find_target(Q.range, mode_health)
 
-	if menu:get_value(annie_harass_use_q) == 1 then
-		if myHero:distance_to(target.origin) <= Q.range and IsValid(target) and IsKillable(target) then
+	if menu:get_value(annie_harass_use_q) == 1 and IsValid(target) then
+		if myHero:distance_to(target.origin) <= Q.range and IsKillable(target) then
 			if Ready(SLOT_Q) then
 				CastQ(target)
 			end
@@ -602,8 +605,8 @@ local function Harass()
 	end
 
 
-	if menu:get_value(annie_harass_use_w) == 1 then
-		if myHero:distance_to(target.origin) <= W.range and IsValid(target) and IsKillable(target) then
+	if menu:get_value(annie_harass_use_w) == 1 and IsValid(target) then
+		if myHero:distance_to(target.origin) <= W.range and IsKillable(target) then
 			if Ready(SLOT_W) then
 				CastW(target)
 			end
@@ -823,17 +826,6 @@ local function AutoE()
 	end
 end
 
--- Anti E Gap
-
---[[local function on_gap_close(obj, data)
-
-	if IsValid(obj) and menu:get_value(annie_misc_anti_w) == 1 then
-		if myHero:distance_to(obj.origin) <= E.range and Ready(SLOT_E) then
-			CastE()
-		end
-	end
-end]]
-
 local function QLastHit()
 
 	minions = game.minions
@@ -869,6 +861,31 @@ local function AutoQLastHit()
 						end
 					end
 				end
+			end
+		end
+	end
+end
+
+-- Auto R Interrupt
+
+local function on_possible_interrupt(obj, spell_name)
+	if IsValid(obj) then
+    if menu:get_value(annie_interrupt) == 1 then
+      if myHero:distance_to(obj.origin) < Q.range and HasStunPassive(myHero) and Ready(SLOT_Q) then
+        CastQ(obj)
+			end
+		end
+	end
+end
+
+-- Gap Close
+
+local function on_gap_close(obj, data)
+
+	if IsValid(obj) then
+    if menu:get_value(annie_gapclose) == 1 then
+      if myHero:distance_to(obj.origin) < Q.range and HasStunPassive(myHero) and Ready(SLOT_Q) then
+        CastQ(obj)
 			end
 		end
 	end
@@ -983,3 +1000,4 @@ end
 client:set_event_callback("on_tick", on_tick)
 client:set_event_callback("on_draw", on_draw)
 client:set_event_callback("on_gap_close", on_gap_close)
+client:set_event_callback("on_possible_interrupt", on_possible_interrupt)
