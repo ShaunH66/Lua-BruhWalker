@@ -2,7 +2,7 @@ if game.local_player.champ_name ~= "Kaisa" then
 	return
 end
 
---[[do
+do
     local function AutoUpdate()
 		local Version = 1
 		local file_name = "OhAyKaisa.lua"
@@ -13,7 +13,7 @@ end
 		if tonumber(web_version) == Version then
 						console:log("-------------------------------------------------")
 						console:log("-------------------------------------------------")
-            console:log("...Shaun's Sexy OhAyKaisa v1 Successfully Loaded.....")
+            console:log("....Shaun's Sexy Kaisa v1.0 Successfully Loaded....")
 						console:log("-------------------------------------------------")
 						console:log("-------------------------------------------------")
 
@@ -30,7 +30,7 @@ end
     end
 
     AutoUpdate()
-end]]
+end
 
 pred:use_prediction()
 require "PKDamageLib"
@@ -41,6 +41,15 @@ local local_player = game.local_player
 local function Ready(spell)
   return spellbook:can_cast(spell)
 end
+
+-- Ranges
+
+local AA = { range = 600 }
+local Q = { range = 600, delay = .1, width = 0, speed = 0 }
+local W = { range = 3000, delay = .4, width = 200, speed = 1750 }
+local E = { range = 0, delay = .1, width = 0, speed = 0 }
+local R = { delay = .1, width = 0, speed = 0 }
+local rRange = { 1500, 2250, 3000 }
 
 -- Return game data and maths
 
@@ -283,6 +292,18 @@ local function GetEnemyCountCicular(range, p1)
     return count
 end
 
+local function GetMinionCountCicular(range, p1)
+		count = 0
+		minions = game.minions
+		for i, minion in ipairs(minions) do
+				Range = range * range
+        if minion.is_enemy and IsValid(minion) and minion.object_id ~= minion.object_id and GetDistanceSqr(p1, minion.origin) < Range then
+        	count = count + 1
+        end
+    end
+    return count
+end
+
 local function GetMinionCount(range, unit)
 	count = 0
 	minions = game.minions
@@ -343,11 +364,16 @@ local function CheckQ()
 end
 
 
-local function TargetIsIsolated()
-	if GetMinionCount(Q.range, myHero) >= 1 then
-		return false
+local function TargetIsIsolated(range, unit)
+	count = 0
+	minions = game.minions
+	for i, minion in ipairs(minions) do
+	Range = range * range
+		if minion.is_enemy and IsValid(minion) and unit.object_id ~= minion.object_id and GetDistanceSqr(unit, minion) < Range then
+			count = count + 1
+		end
 	end
-	return true
+	return count
 end
 
 local function GetGameTime()
@@ -415,100 +441,6 @@ end
 return false
 end
 
-local function RLevel()
-	R = spellbook:get_spell_slot(SLOT_R)
-	RLevel = R.spell_data
-	level = RLevel.level
-	if level >= 0
-  	return level
-	end
-end
-
--- Ranges
-
-local AArange = 525
-local Q = { range = 600, delay = .1, width = 0, speed = 0 }
-local W = { range = 3000, delay = .4, width = 200, speed = 1750 }
-local E = { range = 0, delay = .1, width = 0, speed = 0 }
-
-if level <= 1 then
-	local R = { range = 1500, delay = .1, width = 525, speed = 0 }
-elseif level == 2 then
-	local R = { range = 2250, delay = .1, width = 525, speed = 0 }
-elseif level == 3 then
-	local R = { range = 3000, delay = .1, width = 525, speed = 0 }
-end
-
--- Menu Config
-
-Kai_category = menu:add_category("Shaun's Sexy Kaisa")
-Kai_enabled = menu:add_checkbox("Enabled", Kai_category, 1)
-Kai_combokey = menu:add_keybinder("Combo Mode Key", Kai_category, 32)
-
-Kai_ks_function = menu:add_subcategory("Kill Steal", Kai_category)
-Kai_ks_q = menu:add_subcategory("[Q] Settings", Kai_ks_function, 1)
-Kai_ks_use_q = menu:add_subcategory("Use [Q]", Kai_ks_q, 1)
-Kai_ks_w = menu:add_subcategory("[W] Settings", Kai_ks_function, 1)
-Kai_ks_use_w = menu:add_subcategory("Use [W]", Kai_ks_w, 1)
-Kai_ks_w_range = menu:add_slider("Max Range [W]", Kai_ks_w, 1, 3000, 2000)
-Kai_ks_r = menu:add_subcategory("[R] Settings", Kai_category)
-Kai_ks_use_r = menu:add_checkbox("Smart [R] Kill Steal", Kai_ks_r, 1)
-Kai_ks_r_blacklist = menu:add_subcategory("[R] 1v1 Kill Steal Blacklist", Kai_ks_r)
-local players = game.players
-for _, t in pairs(players) do
-    if t and t.is_enemy then
-        menu:add_checkbox("Use [R] 1v1 Kill Steal On: "..tostring(t.champ_name), Kai_ks_r_blacklist, 1)
-    end
-end
-
-Kai_combo = menu:add_subcategory("Combo", Kai_category)
-Kai_combo_q = menu:add_subcategory("[Q] Settings", Kai_combo)
-Kai_combo_use_q = menu:add_checkbox("Use [Q]", Kai_combo_q, 1)
-Kai_combo_q_iso = menu:add_checkbox("[Q] Isolated Target Only", Kai_combo_q, 1)
-Kai_combo_w = menu:add_subcategory("[W] Settings", Kai_combo)
-Kai_combo_use_w = menu:add_checkbox("Use [W]", Kai_combo_w, 1)
-Kai_combo_use_w_aa = menu:add_checkbox("Only Use [W] Outside AA Range", Kai_combo_w, 1)
-Kai_combo_use_w_range = menu:add_slider("Max Range [W]", Kai_combo_w, 1, 3000, 2000)
-Kai_combo_use_w_stack = menu:add_slider("Minimum Passive Stacks To Use [W]", Kai_combo_w, 0, 4, 2)
-Kai_combo_e = menu:add_subcategory("[E] Settings", Kai_combo)
-Kai_combo_use_e = menu:add_checkbox("Use [E]", Kai_combo_e, 1)
-Kai_combo_e_aa = menu:add_checkbox("Only Use [E] Outside AA Range", Kai_combo_e, 1)
-
-Kai_harass = menu:add_subcategory("Harass", Kai_category)
-Kai_harass_q = menu:add_subcategory("[Q] Settings", Kai_harass)
-Kai_harass_use_q = menu:add_checkbox("Use [Q]", Kai_harass_q, 1)
-Kai_harass_q_iso = menu:add_checkbox("[Q] Isolated Target Only", Kai_harass_q, 1)
-Kai_harass_w = menu:add_subcategory("[W] Settings", Kai_combo)
-Kai_harass_use_w = menu:add_checkbox("Use [W]", Kai_harass_w, 1)
-Kai_harass_use_w_aa = menu:add_checkbox("Only Use [W] Outside AA Range", Kai_harass_w, 1)
-Kai_harass_use_w_range = menu:add_slider("Max Range [W]", Kai_harass_w, 1, 3000, 2000)
-Kai_harass_min_mana = menu:add_slider("Minimum Mana [%] To Harass", Kai_harass, 1, 100, 20)
-
-Kai_extra = menu:add_subcategory("Sexy Automated Features", Kai_category)
-Kai_auto_e_gap = menu:add_checkbox("Auto [E] Gap Close", Kai_extra, 1)
-Kai_auto_e_toclose = menu:add_subcategory("Auto [E] IF Melee Target Is In Range", Kai_extra, 1)
-Kai_auto_w = menu:add_checkbox("Auto [W] Immobilised Target", Kai_extra, 1)
-
-Kai_laneclear = menu:add_subcategory("Lane Clear", Kai_category)
-Kai_laneclear_use_q = menu:add_checkbox("Use [Q]", Kai_laneclear, 1)
-Kai_laneclear_use_q = menu:add_checkbox("Use [E]", Kai_laneclear, 1)
-Kai_laneclear_min_mana = menu:add_slider("Minimum Mana [%] To Lane Clear", Kai_laneclear, 1, 100, 20)
-Kai_laneclear_q_min = menu:add_slider("Number Of Minions To Use [Q]", Kai_laneclear, 1, 10, 3)
-Kai_laneclear_e_min = menu:add_slider("Number Of Minions To Use [E]", Kai_laneclear, 1, 10, 3)
-
-Kai_jungleclear = menu:add_subcategory("Jungle Clear", Kai_category)
-Kai_jungleclear_use_q = menu:add_checkbox("Use [Q]", Kai_jungleclear, 1)
-Kai_jungleclear_use_e = menu:add_checkbox("Use [E]", Kai_jungleclear, 1)
-Kai_jungleclear_min_mana = menu:add_slider("Minimum Mana [%] To Jungle", Kai_jungleclear, 1, 100, 20)
-
-Kai_draw = menu:add_subcategory("The Drawing Features", Kai_category)
-Kai_draw_q = menu:add_checkbox("Draw [Q] Range", Kai_draw, 1)
-Kai_draw_w = menu:add_checkbox("Draw [W] Range", Kai_draw, 1)
-Kai_draw_r = menu:add_checkbox("Draw [R] Range", Kai_draw, 1)
-Kai_draw_kill = menu:add_checkbox("Draw Full Combo Can Kill Text", Kai_draw, 1)
-Kai_draw_kill_healthbar = menu:add_checkbox("Draw Full Combo On Target Health Bar", Kai_draw, 1, "Health Bar Damage Is Computed From R > E > Q > W")
-
-
 local function GetWDmg(unit)
 	local Wdmg = getdmg("W", unit, myHero, 1)
 	local W2dmg = getdmg("W", unit, myHero, 2)
@@ -531,15 +463,85 @@ local function GetQDmg(unit)
 	end
 end
 
+-- Menu Config
+
+Kai_category = menu:add_category("Shaun's Sexy Kaisa")
+Kai_enabled = menu:add_checkbox("Enabled", Kai_category, 1)
+Kai_combokey = menu:add_keybinder("Combo Mode Key", Kai_category, 32)
+
+Kai_ks_function = menu:add_subcategory("Kill Steal", Kai_category)
+Kai_ks_q = menu:add_subcategory("[Q] Settings", Kai_ks_function, 1)
+Kai_ks_use_q = menu:add_checkbox("Use [Q]", Kai_ks_q, 1)
+Kai_ks_w = menu:add_subcategory("[W] Settings", Kai_ks_function, 1)
+Kai_ks_use_w = menu:add_checkbox("Use [W]", Kai_ks_w, 1)
+Kai_ks_w_range = menu:add_slider("Max Range [W]", Kai_ks_w, 1, 3000, 2000)
+Kai_ks_r = menu:add_subcategory("[R] Smart Settings", Kai_ks_function)
+Kai_ks_use_r = menu:add_checkbox("[R] Smart Kill Steal", Kai_ks_r, 1)
+Kai_ks_r_blacklist = menu:add_subcategory("[R] Smart Kill Steal Blacklist", Kai_ks_r)
+local players = game.players
+for _, t in pairs(players) do
+    if t and t.is_enemy then
+        menu:add_checkbox("Use [R] Kill Steal On: "..tostring(t.champ_name), Kai_ks_r_blacklist, 1)
+    end
+end
+
+Kai_combo = menu:add_subcategory("Combo", Kai_category)
+Kai_combo_q = menu:add_subcategory("[Q] Settings", Kai_combo)
+Kai_combo_use_q = menu:add_checkbox("Use [Q]", Kai_combo_q, 1)
+Kai_combo_q_iso = menu:add_checkbox("[Q] Isolated Target Only", Kai_combo_q, 1)
+Kai_combo_w = menu:add_subcategory("[W] Settings", Kai_combo)
+Kai_combo_use_w = menu:add_checkbox("Use [W]", Kai_combo_w, 1)
+Kai_combo_use_w_aa = menu:add_checkbox("Only Use [W] Outside AA Range", Kai_combo_w, 1)
+Kai_combo_use_w_range = menu:add_slider("Max Range [W]", Kai_combo_w, 1, 3000, 2000)
+Kai_combo_use_w_stack = menu:add_slider("Minimum Passive Stacks To Use [W]", Kai_combo_w, 0, 4, 2)
+Kai_combo_e = menu:add_subcategory("[E] Settings", Kai_combo)
+Kai_combo_use_e = menu:add_checkbox("Use [E]", Kai_combo_e, 1)
+Kai_combo_e_aa = menu:add_checkbox("Only Use [E] Outside AA Range", Kai_combo_e, 1)
+
+Kai_harass = menu:add_subcategory("Harass", Kai_category)
+Kai_harass_q = menu:add_subcategory("[Q] Settings", Kai_harass)
+Kai_harass_use_q = menu:add_checkbox("Use [Q]", Kai_harass_q, 1)
+Kai_harass_q_iso = menu:add_checkbox("[Q] Isolated Target Only", Kai_harass_q, 1)
+Kai_harass_w = menu:add_subcategory("[W] Settings", Kai_harass)
+Kai_harass_use_w = menu:add_checkbox("Use [W]", Kai_harass_w, 1)
+Kai_harass_use_w_aa = menu:add_checkbox("Only Use [W] Outside AA Range", Kai_harass_w, 1)
+Kai_harass_use_w_range = menu:add_slider("Max Range [W]", Kai_harass_w, 1, 3000, 2000)
+Kai_harass_min_mana = menu:add_slider("Minimum Mana [%] To Harass", Kai_harass, 1, 100, 20)
+
+Kai_extra = menu:add_subcategory("Sexy Automated Features", Kai_category)
+Kai_auto_e_gap = menu:add_checkbox("Auto [E] Gap Close", Kai_extra, 1)
+Kai_auto_e_toclose = menu:add_checkbox("Auto [E] Escape Short Ranged Targets", Kai_extra, 1)
+Kai_auto_w = menu:add_checkbox("Auto [W] Immobilised Target", Kai_extra, 1)
+
+Kai_laneclear = menu:add_subcategory("Lane Clear", Kai_category)
+Kai_laneclear_use_q = menu:add_checkbox("Use [Q]", Kai_laneclear, 1)
+Kai_laneclear_use_e = menu:add_checkbox("Use [E]", Kai_laneclear, 1)
+Kai_laneclear_min_mana = menu:add_slider("Minimum Mana [%] To Lane Clear", Kai_laneclear, 1, 100, 20)
+Kai_laneclear_q_min = menu:add_slider("Number Of Minions To Use [Q]", Kai_laneclear, 1, 10, 3)
+Kai_laneclear_e_min = menu:add_slider("Number Of Minions To Use [E]", Kai_laneclear, 1, 10, 3)
+
+Kai_jungleclear = menu:add_subcategory("Jungle Clear", Kai_category)
+Kai_jungleclear_use_q = menu:add_checkbox("Use [Q]", Kai_jungleclear, 1)
+Kai_jungleclear_use_e = menu:add_checkbox("Use [E]", Kai_jungleclear, 1)
+Kai_jungleclear_use_w = menu:add_checkbox("Use [W]", Kai_jungleclear, 1)
+Kai_jungleclear_min_mana = menu:add_slider("Minimum Mana [%] To Jungle", Kai_jungleclear, 1, 100, 20)
+
+Kai_draw = menu:add_subcategory("The Drawing Features", Kai_category)
+Kai_draw_q = menu:add_checkbox("Draw [Q] Range", Kai_draw, 1)
+Kai_draw_w = menu:add_checkbox("Draw [W] Range", Kai_draw, 1)
+Kai_draw_r = menu:add_checkbox("Draw [R] Range", Kai_draw, 1)
+Kai_draw_kill = menu:add_checkbox("Draw Full Combo Can Kill Text", Kai_draw, 1)
+Kai_draw_kill_healthbar = menu:add_checkbox("Draw Full Combo On Target Health Bar", Kai_draw, 1, "Health Bar Damage Is Computed From R > Q > W")
+
 
 -- Casting
 
 local function CastQ()
-	spellbook:cast_spell_targetted(SLOT_Q, Q.delay)
+	spellbook:cast_spell(SLOT_Q, Q.delay, x, y, z)
 end
 
 local function CastW(unit)
-	pred_output = pred:predict(W.speed, W.delay, W.range, W.width, unit, false, false)
+	pred_output = pred:predict(W.speed, W.delay, W.range, W.width, unit, true, true)
 	if pred_output.can_cast then
 		castPos = pred_output.cast_pos
 		spellbook:cast_spell(SLOT_W, W.delay, castPos.x, castPos.y, castPos.z)
@@ -547,14 +549,15 @@ local function CastW(unit)
 end
 
 local function CastE()
-	spellbook:cast_spell_targetted(SLOT_E, E.delay)
+	spellbook:cast_spell(SLOT_E, E.delay, x, y, z)
 end
 
 local function CastR(unit)
-	pred_output = pred:predict(R.speed, R.delay, R.range, R.width, unit, false, false)
+	pred_output = pred:predict(R.speed, R.delay, rRange[spellbook:get_spell_slot(SLOT_R).level], R.width, unit, false, false)
 	if pred_output.can_cast then
 		castPos = pred_output.cast_pos
-		spellbook:cast_spell(SLOT_R, R.delay, castPos.x, castPos.y, castPos.z)
+		spellbook:cast_spell(SLOT_R, R.delay, castPos.x - 300, castPos.y, castPos.z)
+	end
 end
 
 -- Combo
@@ -569,7 +572,7 @@ local function Combo()
 
 	if menu:get_value(Kai_combo_use_q) == 1 and menu:get_value(Kai_combo_q_iso) == 1 then
 		if myHero:distance_to(target.origin) <= Q.range and IsValid(target) and IsKillable(target) then
-			if Ready(SLOT_Q) and TargetIsIsolated() then
+			if Ready(SLOT_Q) and TargetIsIsolated(Q.range, myHero) == 0 then
 				CastQ()
 			end
 		end
@@ -585,7 +588,7 @@ local function Combo()
 
 	if menu:get_value(Kai_combo_use_w) == 1 and menu:get_value(Kai_combo_use_w_aa) == 1 then
 		if myHero:distance_to(target.origin) <= menu:get_value(Kai_combo_use_w_range) and IsValid(target) and IsKillable(target) then
-			if myHero:distance_to(target.origin) >= AArange then
+			if myHero:distance_to(target.origin) >= AA.range then
 	     	if buff and buff.count >= menu:get_value(Kai_combo_use_w_stack) and Ready(SLOT_W) then
 					CastW(target)
 				end
@@ -602,7 +605,7 @@ local function Combo()
 	end
 
 	 if menu:get_value(Kai_combo_use_e) == 1 and menu:get_value(Kai_combo_e_aa) == 1 then
-		if myHero:distance_to(target.origin) > AARange and myHero:distance_to(target.origin) < 1500 and IsKillable(target) and IsValid(target) then
+		if myHero:distance_to(target.origin) > Q.range and myHero:distance_to(target.origin) < 1500 and IsKillable(target) and IsValid(target) then
 			if Ready(SLOT_E) then
 				CastE()
 			end
@@ -628,7 +631,7 @@ local function Harass()
 
 	if menu:get_value(Kai_harass_use_q) == 1 and menu:get_value(Kai_harass_q_iso) == 1 and GrabHarassMana then
 		if myHero:distance_to(target.origin) <= Q.range and IsValid(target) and IsKillable(target) then
-			if Ready(SLOT_Q) and TargetIsIsolated() then
+			if Ready(SLOT_Q) and TargetIsIsolated(Q.range, myHero) == 0 then
 				CastQ()
 			end
 		end
@@ -644,7 +647,7 @@ local function Harass()
 
 	if menu:get_value(Kai_harass_use_w) == 1 and menu:get_value(Kai_harass_use_w_aa) == 1 and GrabHarassMana then
 		if myHero:distance_to(target.origin) <= menu:get_value(Kai_harass_use_w_range) and IsValid(target) and IsKillable(target) then
-			if myHero:distance_to(target.origin) >= AArange then
+			if myHero:distance_to(target.origin) >= AA.range then
 	     	if Ready(SLOT_W) then
 					CastW(target)
 				end
@@ -689,13 +692,13 @@ local function AutoKill()
 
 		local QWDmg = GetQDmg(target) + GetWDmg(target)
 
-		if target.object_id ~= 0 and myHero:distance_to(target.origin) <= R.range and IsValid(target) and IsKillable(target) then
+		if target.object_id ~= 0 and myHero:distance_to(target.origin) <= rRange[spellbook:get_spell_slot(SLOT_R).level] and IsValid(target) and IsKillable(target) then
 			if menu:get_value(Kai_ks_use_r) == 1 then
-				if myHero:distance_to(target.origin) > AARange then
+				if myHero:distance_to(target.origin) > Q.range then
 					if not IsUnderTurret(target) and HasPassiveBuff(target) then
-        		if QWDmg > target.health and GetEnemyCount(1500, target) <= 2 then
-				  		if menu:get_value_string("Use [R] 1v1 Kill Steal On: "..tostring(target.champ_name)) == 1 then
-								if Ready(SLOT_Q) and Ready(SLOT_W) and Ready(SLOT_R) then
+        		if QWDmg > target.health and GetEnemyCountCicular(1500, target.origin) <= 2 then
+				  		if menu:get_value_string("Use [R] Kill Steal On: "..tostring(target.champ_name)) == 1 then
+								if Ready(SLOT_R) then
 					  			CastR(target)
 								end
 							end
@@ -718,7 +721,7 @@ local function Clear()
 
 		if menu:get_value(Kai_laneclear_use_q) == 1 then
 			if IsValid(target) and target.object_id ~= 0 and target.is_enemy and myHero:distance_to(target.origin) < Q.range then
-				if GetMinionCount(Q.range, target) >= menu:get_value(Kai_laneclear_q_min) then
+				if GetMinionCount(Q.range, myHero) >= menu:get_value(Kai_laneclear_q_min) then
 					if GrabLaneClearMana and Ready(SLOT_Q) then
 						CastQ()
 					end
@@ -727,8 +730,8 @@ local function Clear()
 		end
 
 		if menu:get_value(Kai_laneclear_use_e) == 1 then
-			if IsValid(target) and target.object_id ~= 0 and target.is_enemy and myHero:distance_to(target.origin) < AARange then
-				if GetMinionCount(AARange, target) >= menu:get_value(Kai_laneclear_e_min) then
+			if IsValid(target) and target.object_id ~= 0 and target.is_enemy and myHero:distance_to(target.origin) < AA.range then
+				if GetMinionCount(AA.range, myHero) >= menu:get_value(Kai_laneclear_e_min) then
 					if GrabLaneClearMana and Ready(SLOT_E) then
             CastE()
 					end
@@ -743,7 +746,7 @@ end
 
 local function JungleClear()
 
-	local GrabJungleClearMana = myHero.mana/myHero.max_mana >= menu:get_value(Kai_laneclear_min_mana) / 100
+	local GrabJungleClearMana = myHero.mana/myHero.max_mana >= menu:get_value(Kai_jungleclear_min_mana) / 100
 
 	minions = game.jungle_minions
 	for i, target in ipairs(minions) do
@@ -756,10 +759,22 @@ local function JungleClear()
 			end
 		end
 
-		if target.object_id ~= 0 and menu:get_value(Kai_jungleclear_use_e) == 1 and myHero:distance_to(target.origin) < AARange then
+		if target.object_id ~= 0 and menu:get_value(Kai_jungleclear_use_e) == 1 and myHero:distance_to(target.origin) < AA.range then
 			if IsValid(target) then
 				if GrabJungleClearMana and Ready(SLOT_E) then
           CastE()
+				end
+			end
+		end
+
+		if target.object_id ~= 0 and menu:get_value(Kai_jungleclear_use_w) == 1 and myHero:distance_to(target.origin) < W.range then
+			if IsValid(target) then
+				if GrabJungleClearMana and Ready(SLOT_W) then
+					pred_output = pred:predict(W.speed, W.delay, W.range, W.width, target, false, false)
+					if pred_output.can_cast then
+						castPos = pred_output.cast_pos
+						spellbook:cast_spell(SLOT_W, W.delay, castPos.x, castPos.y, castPos.z)
+					end
 				end
 			end
 		end
@@ -772,7 +787,7 @@ local function AutoW()
   target = selector:find_target(W.range, mode_health)
 
   if Ready(SLOT_W) and menu:get_value(Kai_auto_w) == 1 then
-    if IsImmobileTarget(target) and myHero:distance_to(target.origin) < W.range then
+    if IsImmobileTarget(target) and myHero:distance_to(target.origin) < 2000 then
       CastW(target)
     end
   end
@@ -828,9 +843,16 @@ local function on_draw()
 		end
 	end
 
+	if menu:get_value(Kai_draw_w) == 1 then
+		if Ready(SLOT_W) then
+			renderer:draw_circle(x, y, z, 1000, 255, 0, 255, 255)
+		end
+	end
+
 	if menu:get_value(Kai_draw_r) == 1 then
 		if Ready(SLOT_R) then
-			renderer:draw_circle(x, y, z, R.range, 255, 0, 0, 255)
+			renderer:draw_circle(x, y, z, rRange[spellbook:get_spell_slot(SLOT_R).level], 255, 0, 0, 255)
+			minimap:draw_circle(x, y, z, rRange[spellbook:get_spell_slot(SLOT_R).level], 255, 0, 0, 255)
 		end
 	end
 
@@ -869,7 +891,6 @@ local function on_tick()
 	AutoW()
   AutoE()
 	AutoKill()
-	RLevel()
 
 end
 
