@@ -13,8 +13,8 @@ do
 		if tonumber(web_version) == Version then
 						console:log("-------------------------------------------------")
 						console:log("-------------------------------------------------")
-            console:log("....Shaun's Sexy Kaisa v2.0 Successfully Loaded....")
-						console:log("-------------------------------------------------")
+            console:log("...Shaun's Sexy Kaisa v2.0 Successfully Loaded...")
+						console:log("....Added - Toggle Auto Isolated [Q] Harass......")
 						console:log("-------------------------------------------------")
 
         else
@@ -488,7 +488,7 @@ end
 Kai_combo = menu:add_subcategory("Combo", Kai_category)
 Kai_combo_q = menu:add_subcategory("[Q] Settings", Kai_combo)
 Kai_combo_use_q = menu:add_checkbox("Use [Q]", Kai_combo_q, 1)
-Kai_combo_q_iso = menu:add_checkbox("[Q] Isolated Target Only", Kai_combo_q, 1)
+Kai_combo_q_iso = menu:add_checkbox("[Q] Isolated Target Only", Kai_combo_q, 0)
 Kai_combo_w = menu:add_subcategory("[W] Settings", Kai_combo)
 Kai_combo_use_w = menu:add_checkbox("Use [W]", Kai_combo_w, 1)
 Kai_combo_use_w_aa = menu:add_checkbox("Only Use [W] Outside AA Range", Kai_combo_w, 1)
@@ -502,6 +502,7 @@ Kai_harass = menu:add_subcategory("Harass", Kai_category)
 Kai_harass_q = menu:add_subcategory("[Q] Settings", Kai_harass)
 Kai_harass_use_q = menu:add_checkbox("Use [Q]", Kai_harass_q, 1)
 Kai_harass_q_iso = menu:add_checkbox("[Q] Isolated Target Only", Kai_harass_q, 1)
+Kai_harass_use_auto_q = menu:add_toggle("Toggle Auto Isolated [Q] Harass", 1, Kai_harass_q, 90, true)
 Kai_harass_w = menu:add_subcategory("[W] Settings", Kai_harass)
 Kai_harass_use_w = menu:add_checkbox("Use [W]", Kai_harass_w, 1)
 Kai_harass_use_w_aa = menu:add_checkbox("Only Use [W] Outside AA Range", Kai_harass_w, 1)
@@ -530,6 +531,7 @@ Kai_draw = menu:add_subcategory("The Drawing Features", Kai_category)
 Kai_draw_q = menu:add_checkbox("Draw [Q] Range", Kai_draw, 1)
 Kai_draw_w = menu:add_checkbox("Draw [W] Range", Kai_draw, 1)
 Kai_draw_r = menu:add_checkbox("Draw [R] Range", Kai_draw, 1)
+Kai_auto_q_draw = menu:add_checkbox("Draw Toggle Auto [Q] Harass", Kai_draw, 1)
 Kai_draw_kill = menu:add_checkbox("Draw Full Combo Can Kill Text", Kai_draw, 1)
 Kai_draw_kill_healthbar = menu:add_checkbox("Draw Full Combo On Target Health Bar", Kai_draw, 1, "Health Bar Damage Is Computed From R > Q > W")
 
@@ -629,7 +631,7 @@ local function Harass()
 	local GrabHarassMana = myHero.mana/myHero.max_mana >= menu:get_value(Kai_harass_min_mana) / 100
 
 
-	if menu:get_value(Kai_harass_use_q) == 1 and menu:get_value(Kai_harass_q_iso) == 1 and GrabHarassMana then
+	if menu:get_value(Kai_harass_use_q) == 1 and menu:get_value(Kai_harass_q_iso) == 1 and not menu:get_toggle_state(Kai_harass_use_auto_q) and GrabHarassMana then
 		if myHero:distance_to(target.origin) <= Q.range and IsValid(target) and IsKillable(target) then
 			if Ready(SLOT_Q) and TargetIsIsolated(Q.range, myHero) == 0 then
 				CastQ()
@@ -637,7 +639,7 @@ local function Harass()
 		end
 	end
 
-	if menu:get_value(Kai_harass_use_q) == 1 and menu:get_value(Kai_harass_q_iso) == 0 and GrabHarassMana then
+	if menu:get_value(Kai_harass_use_q) == 1 and menu:get_value(Kai_harass_q_iso) == 0 and not menu:get_toggle_state(Kai_harass_use_auto_q) and GrabHarassMana then
 		if myHero:distance_to(target.origin) <= Q.range and IsValid(target) and IsKillable(target) then
 			if Ready(SLOT_Q) then
 				CastQ()
@@ -659,6 +661,21 @@ local function Harass()
 		if myHero:distance_to(target.origin) <= menu:get_value(Kai_harass_use_w_range) and IsValid(target) and IsKillable(target) then
 	     if Ready(SLOT_W) then
 				CastW(target)
+			end
+		end
+	end
+end
+
+-- Auto Q Harass
+
+local function AutoQHarass()
+
+	target = selector:find_target(W.range, mode_health)
+
+	if menu:get_toggle_state(Kai_harass_use_auto_q) and menu:get_value(Kai_harass_use_q) == 1 then
+		if myHero:distance_to(target.origin) <= Q.range and IsValid(target) and IsKillable(target) then
+			if Ready(SLOT_Q) and not IsUnderTurret(myHero) and TargetIsIsolated(Q.range, myHero) == 0 then
+				CastQ(target)
 			end
 		end
 	end
@@ -698,7 +715,7 @@ local function AutoKill()
 					if not IsUnderTurret(target) and HasPassiveBuff(target) then
         		if QWDmg > target.health and GetEnemyCountCicular(1500, target.origin) <= 2 then
 				  		if menu:get_value_string("Use [R] Kill Steal On: "..tostring(target.champ_name)) == 1 then
-								if Ready(SLOT_R) then
+								if Ready(SLOT_R) and spellbook:get_spell_slot(SLOT_Q).can_cast then
 					  			CastR(target)
 								end
 							end
@@ -805,8 +822,6 @@ local function AutoE()
   end
 end
 
-
-
 -- Gap Close
 
 local function on_gap_close(obj, data)
@@ -821,10 +836,10 @@ local function on_gap_close(obj, data)
 end
 
 -- object returns, draw and tick usage
+screen_size = game.screen_size
 
 local function on_draw()
 	local_player = game.local_player
-	screen_size = game.screen_size
 
 	if local_player.object_id ~= 0 then
 		origin = local_player.origin
@@ -853,6 +868,14 @@ local function on_draw()
 		if Ready(SLOT_R) then
 			renderer:draw_circle(x, y, z, rRange[spellbook:get_spell_slot(SLOT_R).level], 255, 0, 0, 255)
 			minimap:draw_circle(x, y, z, rRange[spellbook:get_spell_slot(SLOT_R).level], 255, 0, 0, 255)
+		end
+	end
+
+	if menu:get_value(Kai_auto_q_draw) == 1 then
+		if menu:get_value(Kai_harass_use_q) == 1 then
+			if menu:get_toggle_state(Kai_harass_use_auto_q) then
+				renderer:draw_text_centered(screen_size.width / 2, 0, "Toggle Auto Isolated [Q] Harass Enabled")
+			end
 		end
 	end
 
@@ -891,6 +914,8 @@ local function on_tick()
 	AutoW()
   AutoE()
 	AutoKill()
+	AutoQHarass()
+
 
 end
 
