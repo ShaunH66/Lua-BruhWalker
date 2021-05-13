@@ -4,7 +4,7 @@ end
 
 do
     local function AutoUpdate()
-		local Version = 2
+		local Version = 2.1
 		local file_name = "OhAyKaisa.lua"
 		local url = "https://raw.githubusercontent.com/TheShaunyboi/BruhWalkerEncrypted/main/OhAyKaisa.lua"
         local web_version = http:get("https://raw.githubusercontent.com/TheShaunyboi/BruhWalkerEncrypted/main/OhAyKaisa.lua.version.txt")
@@ -13,7 +13,7 @@ do
 		if tonumber(web_version) == Version then
 						console:log("-------------------------------------------------")
 						console:log("-------------------------------------------------")
-            console:log("...Shaun's Sexy Kaisa v2.0 Successfully Loaded...")
+            console:log("...Shaun's Sexy Kaisa v2.1 Successfully Loaded...")
 						console:log("....Added - Toggle Auto Isolated [Q] Harass......")
 						console:log("-------------------------------------------------")
 
