@@ -11,11 +11,12 @@ do
         console:log("BLMLucian.lua Vers: "..Version)
 		console:log("BLMLucian.Web Vers: "..tonumber(web_version))
 		if tonumber(web_version) == Version then
-						console:log(".......................................................")
-						console:log(".......................................................")
-            console:log("...Shaun's Sexy Lucian v1 Successfully Loaded...")
-						console:log(".......................................................")
-						console:log(".......................................................")
+						console:log(".......................................................................................")
+						console:log(".......................................................................................")
+            console:log("Shaun's Sexy Lucian v1.0 Successfully Loaded")
+						console:log("#BLM #BlackLivesMatter #LucianBLMSaviour")
+						console:log(".......................................................................................")
+						console:log(".......................................................................................")
 
         else
 			http:download_file(url, file_name)
@@ -45,12 +46,12 @@ end
 -- Ranges
 
 local AA = { range = 500 }
-local Q = { range = 600, delay = .25, width = 120, speed = math.huge }
+local Q = { range = 650, delay = .25, width = 120, speed = math.huge }
 local Q2 = { range = 900, delay = .25, width = 120, speed = math.huge }
 local W = { range = 1000, delay = .25, width = 110, speed = math.huge }
-local E = { range = 425 delay = .25, width = 100, speed = 1350 }
-local ES = { range = 200 delay = .25, width = 100, speed = 1350 }
-local R = { range = 1200 delay = .1, width = 225, speed = math.huge }
+local E = { range = 425, delay = .25, width = 100, speed = 1350 }
+local ES = { range = 200, delay = .25, width = 100, speed = 1350 }
+local R = { range = 1200, delay = .1, width = 225, speed = math.huge }
 
 -- Return game data and maths
 
@@ -375,7 +376,14 @@ end
 
 
 local function HasPassiveShotsReady(unit)
-	if unit:has_buff("LucianPassive") then
+	if unit:has_buff("LucianPassiveBuff") then
+		return true
+	end
+	return false
+end
+
+local function HasRActive(unit)
+	if unit:has_buff("LucianR") then
 		return true
 	end
 	return false
@@ -466,6 +474,11 @@ local function GetWDmg(unit)
 	return WDmg
 end
 
+local function GetQDmg(unit)
+	local RDmg = getdmg("R", unit, myHero, 1)
+	return RDmg
+end
+
 -- Menu Config
 
 lucian_category = menu:add_category("Shaun's Sexy BLM Lucian")
@@ -479,17 +492,19 @@ lucian_ks_w = menu:add_subcategory("[W] Settings", lucian_ks_function, 1)
 lucian_ks_use_w = menu:add_checkbox("Use [W]", lucian_ks_w, 1)
 
 lucian_combo = menu:add_subcategory("Combo", lucian_category)
-lucian_combo_prioity = menu:add_combobox("Combo Rotation Priority", lucian_combo, c_table, 1)
-c_table = {}
-c_table[1] = "Q - W - E"
-c_table[2] = "E - Q - W"
+
+lucian_combo_prioity = menu:add_combobox("Spell Rotation Priority", lucian_combo, s_table, 1)
+s_table = {}
+s_table[1] = "Q W E"
+s_table[2] = "E Q W"
+
 lucian_combo_q = menu:add_subcategory("[Q] Settings", lucian_combo)
 lucian_combo_use_q = menu:add_checkbox("Use [Q]", lucian_combo_q, 1)
 lucian_combo_w = menu:add_subcategory("[W] Settings", lucian_combo)
 lucian_combo_use_w = menu:add_checkbox("Use [W]", lucian_combo_w, 1)
 lucian_combo_e = menu:add_subcategory("[E] Settings", lucian_combo)
 lucian_combo_use_e = menu:add_checkbox("Use [E]", lucian_combo_e, 1)
-lucian_combo_use_e_smart = menu:add_checkbox("Use Smart [E] Dash Distance", lucian_combo_e, 1)
+
 lucian_combo_e_useage = menu:add_combobox("Combo [E] Dash Direction", lucian_combo_e, e_table, 1)
 e_table = {}
 e_table[1] = "To Mouse"
@@ -511,6 +526,7 @@ lucian_laneclear_use_w = menu:add_checkbox("Use [W]", lucian_laneclear, 1)
 lucian_laneclear_use_e = menu:add_checkbox("Use [E]", lucian_laneclear, 1)
 lucian_laneclear_min_mana = menu:add_slider("Minimum Mana [%] To Lane Clear", lucian_laneclear, 1, 100, 20)
 lucian_laneclear_q_min = menu:add_slider("Number Of Minions To Use [Q]", lucian_laneclear, 1, 10, 3)
+lucian_laneclear_w_min = menu:add_slider("Number Of Minions To Use [W]", lucian_laneclear, 1, 10, 3)
 lucian_laneclear_e_min = menu:add_slider("Number Of Minions To Use [E]", lucian_laneclear, 1, 10, 3)
 
 lucian_jungleclear = menu:add_subcategory("Jungle Clear", lucian_category)
@@ -547,33 +563,24 @@ local function CastW(unit)
 	end
 end
 
-local function CastELong()
-	pred_output = pred:predict(E.speed, E.delay, E.range, E.width, unit, false, false)
-	if pred_output.can_cast then
-		castPos = pred_output.cast_pos
-		spellbook:cast_spell(SLOT_E, E.delay, castPos.x, castPos.y, castPos.z)
-	end
-end
-
-local function CastEShort()
-	pred_output = pred:predict(E.speed, E.delay, ES.range, E.width, unit, false, false)
-	if pred_output.can_cast then
-		castPos = pred_output.cast_pos
-		spellbook:cast_spell(SLOT_E, E.delay, castPos.x, castPos.y, castPos.z)
-	end
+local function CastE(unit)
+	origin = target.origin
+	x, y, z = origin.x, origin.y, origin.z
+	spellbook:cast_spell(SLOT_E, E.delay, x, y, z)
+	orbwalker:reset_aa()
 end
 
 local function CastEMouse()
 	local mouse = game.mouse_pos
 	spellbook:cast_spell(SLOT_E, E.delay, mouse.x, mouse.y, mouse.z)
+	orbwalker:reset_aa()
 end
 
-local function CastESideShort()
-	spellbook:cast_spell(SLOT_E, E.delay, myHero.x - 200, myHero.y, myHero.z)
-end
-
-local function CastESideLong()
-	spellbook:cast_spell(SLOT_E, E.delay, myHero.x - 425, myHero.y, myHero.z)
+local function CastESide()
+	origin = myHero.origin
+	x, y, z = origin.x + 425, origin.y, origin.z
+	spellbook:cast_spell(SLOT_E, E.delay, x, y, z)
+	orbwalker:reset_aa()
 end
 
 local function CastR(unit)
@@ -591,19 +598,18 @@ local function Combo()
 	target = selector:find_target(W.range, mode_health)
 	local AAQRange = Q.range + AA.range
 
-	if menu:get_value(lucian_combo_prioity) == 1 then
+	if menu:get_value(lucian_combo_prioity) == 0 then
 
 		if menu:get_value(lucian_combo_use_q) == 1 then
 			if myHero:distance_to(target.origin) <= Q.range and IsValid(target) and IsKillable(target) then
 				if Ready(SLOT_Q) and not HasPassiveShotsReady(myHero) then
-				elseif Ready(SLOT_Q) and HasPassiveShotsReady(myHero) and myHero:distance_to(target.origin) > AA.Range then
 					CastQ(target)
 				end
 			end
 		end
 
 		if menu:get_value(lucian_combo_use_w) == 1 then
-			if myHero:distance_to(target.origin) IsValid(target) and IsKillable(target) then
+			if myHero:distance_to(target.origin) and IsValid(target) and IsKillable(target) then
 				if myHero:distance_to(target.origin) <= W.range then
 		     	if Ready(SLOT_W) and not Ready(SLOT_Q) and not HasPassiveShotsReady(myHero) then
 						CastW(target)
@@ -612,29 +618,19 @@ local function Combo()
 			end
 		end
 
-		-- smart E on
-
-		if menu:get_value(lucian_combo_use_e) == 1 and menu:get_value(lucian_combo_e_useage) == 2 and menu:get_value(lucian_combo_use_e_smart) == 1 then
-			if myHero:distance_to(target.origin) <= AA.range and IsValid(target) and IsKillable(target) then
-				if not Ready(SLOT_W) and not Ready(SLOT_Q) and not HasPassiveShotsReady(myHero) then
-					if Ready(SLOT_E) then
-						CastEShort()
-					end
-				end
-			end
-		end
-
-		if menu:get_value(lucian_combo_use_e) == 1 and menu:get_value(lucian_combo_e_useage) == 2 and menu:get_value(lucian_combo_use_e_smart) == 1 then
-			if myHero:distance_to(target.origin) > AA.range and IsValid(target) and IsKillable(target) then
-				if not Ready(SLOT_W) and not Ready(SLOT_Q) and not HasPassiveShotsReady(myHero) then
-					if Ready(SLOT_E) then
-						CastELong()
-					end
-				end
-			end
-		end
+		-- E
 
 		if menu:get_value(lucian_combo_use_e) == 1 and menu:get_value(lucian_combo_e_useage) == 1 then
+			if myHero:distance_to(target.origin) < AAQRange and IsValid(target) and IsKillable(target) then
+				if not Ready(SLOT_W) and not Ready(SLOT_Q) and not HasPassiveShotsReady(myHero) then
+					if Ready(SLOT_E) then
+						CastE(target)
+					end
+				end
+			end
+		end
+
+		if menu:get_value(lucian_combo_use_e) == 1 and menu:get_value(lucian_combo_e_useage) == 0 then
 			if myHero:distance_to(target.origin) < AAQRange and IsValid(target) and IsKillable(target) then
 				if not Ready(SLOT_W) and not Ready(SLOT_Q) and not HasPassiveShotsReady(myHero) then
 					if Ready(SLOT_E) then
@@ -644,40 +640,18 @@ local function Combo()
 			end
 		end
 
-		if menu:get_value(lucian_combo_use_e) == 1 and menu:get_value(lucian_combo_e_useage) == 3 and menu:get_value(lucian_combo_use_e_smart) == 1 then
-			if myHero:distance_to(target.origin) <= AA.Range and IsValid(target) and IsKillable(target) then
-				if not Ready(SLOT_W) and not Ready(SLOT_Q) and not HasPassiveShotsReady(myHero) then
-					if Ready(SLOT_E) then
-						CastESideShort()
-					end
-				end
-			end
-		end
-
-		-- Smart E Off
-
-		if menu:get_value(lucian_combo_use_e) == 1 and menu:get_value(lucian_combo_e_useage) == 2 and menu:get_value(lucian_combo_use_e_smart) == 0 then
+		if menu:get_value(lucian_combo_use_e) == 1 and menu:get_value(lucian_combo_e_useage) == 2 then
 			if myHero:distance_to(target.origin) < AAQRange and IsValid(target) and IsKillable(target) then
 				if not Ready(SLOT_W) and not Ready(SLOT_Q) and not HasPassiveShotsReady(myHero) then
 					if Ready(SLOT_E) then
-						CastELong()
-					end
-				end
-			end
-		end
-
-		if menu:get_value(lucian_combo_use_e) == 1 and menu:get_value(lucian_combo_e_useage) == 3 and menu:get_value(lucian_combo_use_e_smart) == 0 then
-			if myHero:distance_to(target.origin) < AAQRange and IsValid(target) and IsKillable(target) then
-				if not Ready(SLOT_W) and not Ready(SLOT_Q) and not HasPassiveShotsReady(myHero) then
-					if Ready(SLOT_E) then
-						CastESideLong()
+						CastESide()
 					end
 				end
 			end
 		end
 	end
 
-	if menu:get_value(lucian_combo_prioity) == 2 then
+	if menu:get_value(lucian_combo_prioity) == 1 then
 
 		if menu:get_value(lucian_combo_use_q) == 1 then
 			if myHero:distance_to(target.origin) <= Q.range and IsValid(target) and IsKillable(target) then
@@ -688,7 +662,7 @@ local function Combo()
 		end
 
 		if menu:get_value(lucian_combo_use_w) == 1 then
-			if myHero:distance_to(target.origin) IsValid(target) and IsKillable(target) then
+			if myHero:distance_to(target.origin) and IsValid(target) and IsKillable(target) then
 				if myHero:distance_to(target.origin) <= W.range then
 		     	if Ready(SLOT_W) and not Ready(SLOT_Q) and not Ready(SLOT_E) and HasPassiveShotsReady(myHero) then
 						CastW(target)
@@ -697,29 +671,19 @@ local function Combo()
 			end
 		end
 
-		-- smart E on
-
-		if menu:get_value(lucian_combo_use_e) == 1 and menu:get_value(lucian_combo_e_useage) == 2 and menu:get_value(lucian_combo_use_e_smart) == 1 then
-			if myHero:distance_to(target.origin) <= AA.range and IsValid(target) and IsKillable(target) then
-				if not HasPassiveShotsReady(myHero) then
-					if Ready(SLOT_E) then
-						CastEShort()
-					end
-				end
-			end
-		end
-
-		if menu:get_value(lucian_combo_use_e) == 1 and menu:get_value(lucian_combo_e_useage) == 2 and menu:get_value(lucian_combo_use_e_smart) == 1 then
-			if myHero:distance_to(target.origin) > AA.range and IsValid(target) and IsKillable(target) then
-				if not HasPassiveShotsReady(myHero) then
-					if Ready(SLOT_E) then
-						CastELong()
-					end
-				end
-			end
-		end
+		-- E
 
 		if menu:get_value(lucian_combo_use_e) == 1 and menu:get_value(lucian_combo_e_useage) == 1 then
+			if myHero:distance_to(target.origin) < AAQRange and IsValid(target) and IsKillable(target) then
+				if not HasPassiveShotsReady(myHero) then
+					if Ready(SLOT_E) then
+						CastE(target)
+					end
+				end
+			end
+		end
+
+		if menu:get_value(lucian_combo_use_e) == 1 and menu:get_value(lucian_combo_e_useage) == 0 then
 			if myHero:distance_to(target.origin) < AAQRange and IsValid(target) and IsKillable(target) then
 				if not HasPassiveShotsReady(myHero) then
 					if Ready(SLOT_E) then
@@ -729,33 +693,11 @@ local function Combo()
 			end
 		end
 
-		if menu:get_value(lucian_combo_use_e) == 1 and menu:get_value(lucian_combo_e_useage) == 3 and menu:get_value(lucian_combo_use_e_smart) == 1 then
-			if myHero:distance_to(target.origin) <= AA.Range and IsValid(target) and IsKillable(target) then
-				if not Ready(SLOT_W) and not Ready(SLOT_Q) and not HasPassiveShotsReady(myHero) then
-					if Ready(SLOT_E) then
-						CastESideShort()
-					end
-				end
-			end
-		end
-
-		-- Smart E Off
-
-		if menu:get_value(lucian_combo_use_e) == 1 and menu:get_value(lucian_combo_e_useage) == 2 and menu:get_value(lucian_combo_use_e_smart) == 0 then
+		if menu:get_value(lucian_combo_use_e) == 1 and menu:get_value(lucian_combo_e_useage) == 2 then
 			if myHero:distance_to(target.origin) < AAQRange and IsValid(target) and IsKillable(target) then
 				if not HasPassiveShotsReady(myHero) then
 					if Ready(SLOT_E) then
-						CastELong()
-					end
-				end
-			end
-		end
-
-		if menu:get_value(lucian_combo_use_e) == 1 and menu:get_value(lucian_combo_e_useage) == 3 and menu:get_value(lucian_combo_use_e_smart) == 0 then
-			if myHero:distance_to(target.origin) < AAQRange and IsValid(target) and IsKillable(target) then
-				if not Ready(SLOT_W) and not Ready(SLOT_Q) and not HasPassiveShotsReady(myHero) then
-					if Ready(SLOT_E) then
-						CastESideLong()
+						CastESide()
 					end
 				end
 			end
@@ -773,14 +715,15 @@ local function Harass()
 	if menu:get_value(lucian_harass_use_q) == 1 then
 		if myHero:distance_to(target.origin) <= Q.range and IsValid(target) and IsKillable(target) then
 			if Ready(SLOT_Q) and not HasPassiveShotsReady(myHero) then
-			elseif Ready(SLOT_Q) and HasPassiveShotsReady(myHero) and myHero:distance_to(target.origin) > AA.Range and GrabHarassMana then
-				CastQ(target)
+				if GrabHarassMana then
+					CastQ(target)
+				end
 			end
 		end
 	end
 
 	if menu:get_value(lucian_harass_use_w) == 1 then
-		if myHero:distance_to(target.origin) IsValid(target) and IsKillable(target) then
+		if myHero:distance_to(target.origin) and IsValid(target) and IsKillable(target) then
 			if myHero:distance_to(target.origin) <= W.range then
 				if Ready(SLOT_W) and not Ready(SLOT_Q) and not HasPassiveShotsReady(myHero) and GrabHarassMana then
 					CastW(target)
@@ -799,8 +742,8 @@ local function AutoQHarass()
 	local GrabAutoHarassMana = myHero.mana/myHero.max_mana >= menu:get_value(lucian_harass_min_mana) / 100
 	target = selector:find_target(Q.range, mode_health)
 
-	if menu:get_toggle_state(lucian_harass_use_auto_q) and menu:get_value(lucian_harass_use_q) == 1 and not game:is_key_down(menu:get_value(lucian_combokey) then
-		if myHero:distance_to(target.origin) <= Q.range and IsValid(target) and IsKillable(target) then
+	if menu:get_toggle_state(lucian_harass_use_auto_q) and menu:get_value(lucian_harass_use_q) == 1 and not game:is_key_down(menu:get_value(lucian_combokey)) then
+		if myHero:distance_to(target.origin) <= Q.range and IsValid(target) and IsKillable(target) and not HasRActive(myHero) and not HasPassiveShotsReady(myHero) then
 			if Ready(SLOT_Q) and not IsUnderTurret(myHero) and GrabAutoHarassMana then
 				CastQ(target)
 			end
@@ -816,7 +759,7 @@ local function AutoKill()
 
 		if target.object_id ~= 0 and myHero:distance_to(target.origin) <= Q.range and IsValid(target) and IsKillable(target) then
 			if menu:get_value(lucian_ks_use_q) == 1 then
-				if GetQDmg(target) > target.health then
+				if GetQDmg(target) > target.health and not HasPassiveShotsReady(myHero) then
 					if Ready(SLOT_Q) then
 						CastQ(target)
 					end
@@ -826,7 +769,7 @@ local function AutoKill()
 
 		if target.object_id ~= 0 and myHero:distance_to(target.origin) <= W.range and IsValid(target) and IsKillable(target) then
 			if menu:get_value(lucian_ks_use_w) == 1 then
-				if GetWDmg(target) > target.health then
+				if GetWDmg(target) > target.health and not HasPassiveShotsReady(myHero) then
 					if Ready(SLOT_W)then
 						CastW(target)
 					end
@@ -848,7 +791,7 @@ local function Clear()
 		if menu:get_value(lucian_laneclear_use_q) == 1 then
 			if IsValid(target) and target.object_id ~= 0 and target.is_enemy and myHero:distance_to(target.origin) < Q.range then
 				if GetMinionCount(Q.range, myHero) >= menu:get_value(lucian_laneclear_q_min) then
-					if GrabLaneClearMana and Ready(SLOT_Q) then
+					if GrabLaneClearMana and not HasPassiveShotsReady(myHero) and Ready(SLOT_Q) then
 						CastQ(target)
 					end
 				end
@@ -858,8 +801,8 @@ local function Clear()
 		if menu:get_value(lucian_laneclear_use_e) == 1 then
 			if IsValid(target) and target.object_id ~= 0 and target.is_enemy and myHero:distance_to(target.origin) < AA.range then
 				if GetMinionCount(AA.range, myHero) >= menu:get_value(lucian_laneclear_e_min) then
-					if GrabLaneClearMana and Ready(SLOT_E) then
-            CastEShort()
+					if GrabLaneClearMana and not HasPassiveShotsReady(myHero) and Ready(SLOT_E) then
+            CastEMouse()
 					end
 				end
 			end
@@ -867,8 +810,8 @@ local function Clear()
 
 		if menu:get_value(lucian_laneclear_use_w) == 1 then
 			if IsValid(target) and target.object_id ~= 0 and target.is_enemy and myHero:distance_to(target.origin) < AA.range then
-				if GetMinionCount(AA.range, myHero) >= menu:get_value(lucian_laneclear_e_min) then
-					if GrabLaneClearMana and Ready(SLOT_W) then
+				if GetMinionCount(AA.range, myHero) >= menu:get_value(lucian_laneclear_w_min) then
+					if GrabLaneClearMana and not HasPassiveShotsReady(myHero) and Ready(SLOT_W) then
             CastW(target)
 					end
 				end
@@ -889,7 +832,7 @@ local function JungleClear()
 
 		if target.object_id ~= 0 and menu:get_value(lucian_jungleclear_use_q) == 1 and myHero:distance_to(target.origin) < Q.range then
 			if IsValid(target) then
-				if GrabJungleClearMana and Ready(SLOT_Q) then
+				if GrabJungleClearMana and not HasPassiveShotsReady(myHero) and Ready(SLOT_Q) then
 					CastQ(target)
 				end
 			end
@@ -897,15 +840,15 @@ local function JungleClear()
 
 		if target.object_id ~= 0 and menu:get_value(lucian_jungleclear_use_e) == 1 and myHero:distance_to(target.origin) < AA.range then
 			if IsValid(target) then
-				if GrabJungleClearMana and Ready(SLOT_E) then
-          CastEShort()
+				if GrabJungleClearMana and not HasPassiveShotsReady(myHero) and Ready(SLOT_E) then
+          CastEMouse()
 				end
 			end
 		end
 
 		if target.object_id ~= 0 and menu:get_value(lucian_jungleclear_use_w) == 1 and myHero:distance_to(target.origin) < AA.range then
 			if IsValid(target) then
-				if GrabJungleClearMana and Ready(SLOT_W) then
+				if GrabJungleClearMana and not HasPassiveShotsReady(myHero) and Ready(SLOT_W) then
 					CastW(target)
 				end
 			end
@@ -915,8 +858,8 @@ end
 
 -- Extend Q
 
-local function QExtend()
-	
+--[[local function QExtend()
+
 	target = selector:find_target(Q2.range, mode_health)
 
 	if menu:get_value(lucian_harass_use_q_ext) == 1 then
@@ -930,18 +873,29 @@ local function QExtend()
 				if IsValid(target) and target.object_id ~= 0 and target.is_enemy then
 					if IsValid(minion) and minion.object_id ~= 0 and minion.is_enemy then
 
-						local Count = GetLineMinionCount(myHero, output, Q2.delay, Q2.speed, Q.width / 2)
+						local Count = GetLineTargetCount(myHero, output, Q2.delay, Q2.speed, Q.width / 2)
 						if Count >= 1 then
+							console:log("HERE")
+							targetorigin = target.origin
+							x, y, z = origin.x, origin.y, origin.z
 
-							local Count2 = GetLineTargetCount(myHero, output, Q2.delay, Q2.speed, Q.width / 2)
+							local Count2 = GetLineMinionCount(minion, output, Q.delay, Q.speed, Q.width / 2)
+							console:log("HERE2")
 							if Count2 >= 1 then
 								if Count >= 1 and Count2 >= 1 then
+									console:log("HERE3")
 
-									if myHero:distance_to(minion.origin) < Q.range then
-										if GetDistanceSqr(target, minion) <= 300 and myHero:distance_to(target.origin) > Q.range then
-		        					CastQ(minion)
+									--if myHero:distance_to(minion.origin) < Q.range then
+										console:log("HERE4")
+										if GetDistanceSqr2(minion, target) <= 300 and myHero:distance_to(target.origin) > Q.range then
+											console:log("HERE5")
+											if Ready(SLOT_Q) then
+												origin = minion.origin
+												x, y, z = origin.x, origin.y, origin.z
+												spellbook:cast_spell(SLOT_Q, Q.delay, x, y, z)
+											end
 										end
-									end
+									--end
 								end
 							end
 						end
@@ -950,7 +904,7 @@ local function QExtend()
 	  	end
 	  end
 	end
-end
+end]]
 
 -- Manual R
 
@@ -959,7 +913,7 @@ local function ManualR()
 
   if game:is_key_down(menu:get_value(lucian_extra_semi_r_key)) then
     if myHero:distance_to(target.origin) < R.range then
-			if IsValid(target) and IsKillable(target) then
+			if IsValid(target) and IsKillable(target) and Ready(SLOT_R) and not HasRActive(myHero) then
 				CastR(target)
 			end
     end
@@ -983,6 +937,9 @@ end
 
 local function on_draw()
 	screen_size = game.screen_size
+
+	target = selector:find_target(2000, mode_health)
+	targetvec = target.origin
 
 	if myHero.object_id ~= 0 then
 		origin = myHero.origin
@@ -1021,20 +978,24 @@ local function on_draw()
 		end
 	end
 
+
+	local enemydraw = game:world_to_screen(targetvec.x, targetvec.y, targetvec.z)
 	for i, target in ipairs(GetEnemyHeroes()) do
-		local fulldmg = GetQDmg(target) + GetWDmg(target)
-		if Ready(SLOT_Q) then
-			if target.object_id ~= 0 and myHero:distance_to(target.origin) <= 1000 then
-				if menu:get_value(lucian_draw_kill) == 1 then
-					if fulldmg > target.health and IsValid(target) then
-						renderer:draw_text_big_centered(screen_size.width / 2, screen_size.height / 20 + 50, "Full Spell Rotation Can Kill Target")
+		local fulldmg = GetQDmg(target) + (myHero.total_attack_damage * 6)
+		if target.object_id ~= 0 and myHero:distance_to(target.origin) <= 1000 then
+			if menu:get_value(lucian_draw_kill) == 1 then
+				if fulldmg > target.health and IsValid(target) then
+					if enemydraw.is_valid then
+						renderer:draw_text_big_centered(enemydraw.x, enemydraw.y, "Can Kill Target")
 					end
 				end
 			end
 		end
-		if menu:get_value(lucian_draw_kill_healthbar) == 1 then
+
+		if IsValid(target) and menu:get_value(lucian_draw_kill_healthbar) == 1 then
 			target:draw_damage_health_bar(fulldmg)
 		end
+
 	end
 end
 
@@ -1046,7 +1007,7 @@ local function on_tick()
 
 	if combo:get_mode() == MODE_HARASS then
 		Harass()
-		QExtend()
+		--QExtend()
 	end
 
 	if combo:get_mode() == MODE_LANECLEAR then
