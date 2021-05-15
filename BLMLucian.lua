@@ -4,7 +4,7 @@ end
 
 do
     local function AutoUpdate()
-		local Version = 1
+		local Version = 1.2
 		local file_name = "BLMLucian.lua"
 		local url = "https://raw.githubusercontent.com/TheShaunyboi/BruhWalkerEncrypted/main/BLMLucian.lua"
         local web_version = http:get("https://raw.githubusercontent.com/TheShaunyboi/BruhWalkerEncrypted/main/BLMLucian.lua.version.txt")
@@ -13,7 +13,8 @@ do
 		if tonumber(web_version) == Version then
 						console:log(".......................................................................................")
 						console:log(".......................................................................................")
-            console:log("Shaun's Sexy Lucian v1.0 Successfully Loaded")
+            console:log("Shaun's Sexy Lucian v1.2 Successfully Loaded")
+						console:log("Added - Don't [E] Under Turret Option")
 						console:log("#BLM #BlackLivesMatter #LucianBLMSaviour")
 						console:log(".......................................................................................")
 						console:log(".......................................................................................")
@@ -21,6 +22,10 @@ do
         else
 			http:download_file(url, file_name)
 			      console:log("Sexy Lucian Update available.....")
+						console:log("Please Reload via F5!............")
+						console:log("---------------------------------")
+						console:log("Please Reload via F5!............")
+						console:log("---------------------------------")
 						console:log("Please Reload via F5!............")
 						console:log("---------------------------------")
 						console:log("Please Reload via F5!............")
@@ -46,12 +51,13 @@ end
 -- Ranges
 
 local AA = { range = 500 }
-local Q = { range = 650, delay = .25, width = 120, speed = math.huge }
-local Q2 = { range = 900, delay = .25, width = 120, speed = math.huge }
+local Q = { range = 650, delay = .25, width = 90, speed = math.huge }
+local Q2 = { range = 1000, delay = .25, width = 90, speed = math.huge }
 local W = { range = 1000, delay = .25, width = 110, speed = math.huge }
 local E = { range = 425, delay = .25, width = 100, speed = 1350 }
 local ES = { range = 200, delay = .25, width = 100, speed = 1350 }
 local R = { range = 1200, delay = .1, width = 225, speed = math.huge }
+local QDelay = { .4, .39, .38, .37, .36, .36, .35, .34, .33, .32, .31, .3, .29, .29, .28, .27, .26, .25 }
 
 -- Return game data and maths
 
@@ -141,11 +147,17 @@ local function GetDistanceSqr(unit, p2)
 end
 
 local function GetDistanceSqr2(p1, p2)
-    p2x, p2y, p2z = p2.x, p2.y, p2.z
-    p1x, p1y, p1z = p1.x, p1.y, p1.z
-    local dx = p1x - p2x
-    local dz = (p1z or p1y) - (p2z or p2y)
-    return dx*dx + dz*dz
+	p2x, p2y, p2z = p2.x, p2.y, p2.z
+	p1x, p1y, p1z = p1.x, p1.y, p1.z
+	local dx = p1x - p2x
+	local dz = (p1z or p1y) - (p2z or p2y)
+	return dx*dx + dz*dz
+end
+
+function Extend(vec, distance)
+    ratio = (Magnitude(vec) + distance) / (Magnitude(vec))
+    output = VectorMag(vec, ratio)
+    return output
 end
 
 -- Best Prediction Start
@@ -262,46 +274,31 @@ end
 -- Best Prediction End
 
 local function VectorPointProjectionOnLineSegment(v1, v2, v)
-    local cx, cy, ax, ay, bx, by = v.x, (v.z or v.y), v1.x, (v1.z or v1.y), v2.x, (v2.z or v2.y)
-    local rL = ((cx - ax) * (bx - ax) + (cy - ay) * (by - ay)) / ((bx - ax) * (bx - ax) + (by - ay) * (by - ay))
-    local pointLine = { x = ax + rL * (bx - ax), y = ay + rL * (by - ay) }
-    local rS = rL < 0 and 0 or (rL > 1 and 1 or rL)
-    local isOnSegment = rS == rL
-    local pointSegment = isOnSegment and pointLine or { x = ax + rS * (bx - ax), y = ay + rS * (by - ay) }
-    return pointSegment, pointLine, isOnSegment
+	local cx, cy, ax, ay, bx, by = v.x, (v.z or v.y), v1.x, (v1.z or v1.y), v2.x, (v2.z or v2.y)
+	local rL = ((cx - ax) * (bx - ax) + (cy - ay) * (by - ay)) / ((bx - ax) * (bx - ax) + (by - ay) * (by - ay))
+	local pointLine = { x = ax + rL * (bx - ax), y = ay + rL * (by - ay) }
+	local rS = rL < 0 and 0 or (rL > 1 and 1 or rL)
+	local isOnSegment = rS == rL
+	local pointSegment = isOnSegment and pointLine or { x = ax + rS * (bx - ax), y = ay + rS * (by - ay) }
+	return pointSegment, pointLine, isOnSegment
 end
 
-local function GetLineTargetCount(source, aimPos, delay, speed, width)
-    local Count = 0
-    players = game.players
-    for _, target in ipairs(players) do
-        local Range = 1100 * 1100
-        if target.object_id ~= 0 and IsValid(target) and target.is_enemy and GetDistanceSqr(myHero, target) < Range then
+local function GetLineTargetCount(StartPos, EndPos, delay, speed, width)
+	local castpos = nil
+	local minions = game.minions
+	for i, unit in ipairs(minions) do
+		if IsValid(unit) and unit.team ~= myHero.team and game.local_player:distance_to(unit.origin) < 650 then
 
-            local pointSegment, pointLine, isOnSegment = VectorPointProjectionOnLineSegment(source.origin, aimPos, target.origin)
-            if pointSegment and isOnSegment and (GetDistanceSqr2(target.origin, pointSegment) <= (target.bounding_radius + width) * (target.bounding_radius + width)) then
-                Count = Count + 1
-            end
-        end
-    end
-    return Count
+			local pointSegment, pointLine, isOnSegment = VectorPointProjectionOnLineSegment(StartPos, EndPos, unit.origin)
+
+			if pointSegment and isOnSegment and (GetDistanceSqr2(unit.origin, pointSegment) <= width * width) then
+				castpos = unit
+			end
+		end
+	end
+	return castpos
 end
 
-local function GetLineMinionCount(source, aimPos, delay, speed, width)
-    local Count = 0
-		minions = game.minions
-		for i, target in ipairs(minions) do
-        local Range = 1100 * 1100
-        if target.object_id ~= 0 and IsValid(target) and target.is_enemy and GetDistanceSqr(myHero, target) < Range then
-
-            local pointSegment, pointLine, isOnSegment = VectorPointProjectionOnLineSegment(source.origin, aimPos, target.origin)
-            if pointSegment and isOnSegment and (GetDistanceSqr2(target.origin, pointSegment) <= (target.bounding_radius + width) * (target.bounding_radius + width)) then
-                Count = Count + 1
-            end
-        end
-    end
-    return Count
-end
 
 local function GetEnemyCount(range, unit)
 	count = 0
@@ -434,7 +431,7 @@ local function IsUnderTurret(unit)
     turrets = game.turrets
     for i, v in ipairs(turrets) do
         if v and v.is_enemy then
-            local range = (v.bounding_radius / 2 + 775 + unit.bounding_radius / 2)
+            local range = (v.bounding_radius / 2 + 1000 + unit.bounding_radius / 2)
             if v.is_alive then
                 if v:distance_to(unit.origin) < range then
                     return true
@@ -481,9 +478,24 @@ end
 
 -- Menu Config
 
-lucian_category = menu:add_category("Shaun's Sexy BLM Lucian")
+if not file_manager:directory_exists("Shaun's Sexy Common") then
+  file_manager:create_directory("Shaun's Sexy Common")
+end
+
+if file_manager:directory_exists("Shaun's Sexy Common") then
+end
+
+if file_manager:file_exists("Shaun's Sexy Common//Logo.png") then
+	lucian_category = menu:add_category_sprite("Shaun's Sexy Lucian", "Shaun's Sexy Common//Logo.png")
+else
+	http:download_file("https://raw.githubusercontent.com/TheShaunyboi/BruhWalkerEncrypted/main/Common/Logo.png", "Shaun's Sexy Common//Logo.png")
+	lucian_category = menu:add_category("Shaun's Sexy Lucian")
+end
+
 lucian_enabled = menu:add_checkbox("Enabled", lucian_category, 1)
 lucian_combokey = menu:add_keybinder("Combo Mode Key", lucian_category, 32)
+menu:add_label("Welcome To Shaun's Sexy Lucian", lucian_category)
+menu:add_label("#BlackLivesMatter", lucian_category)
 
 lucian_ks_function = menu:add_subcategory("Kill Steal", lucian_category)
 lucian_ks_q = menu:add_subcategory("[Q] Settings", lucian_ks_function, 1)
@@ -493,10 +505,10 @@ lucian_ks_use_w = menu:add_checkbox("Use [W]", lucian_ks_w, 1)
 
 lucian_combo = menu:add_subcategory("Combo", lucian_category)
 
-lucian_combo_prioity = menu:add_combobox("Spell Rotation Priority", lucian_combo, s_table, 1)
 s_table = {}
 s_table[1] = "Q W E"
 s_table[2] = "E Q W"
+lucian_combo_prioity = menu:add_combobox("Spell Rotation Priority", lucian_combo, s_table, 0)
 
 lucian_combo_q = menu:add_subcategory("[Q] Settings", lucian_combo)
 lucian_combo_use_q = menu:add_checkbox("Use [Q]", lucian_combo_q, 1)
@@ -504,12 +516,13 @@ lucian_combo_w = menu:add_subcategory("[W] Settings", lucian_combo)
 lucian_combo_use_w = menu:add_checkbox("Use [W]", lucian_combo_w, 1)
 lucian_combo_e = menu:add_subcategory("[E] Settings", lucian_combo)
 lucian_combo_use_e = menu:add_checkbox("Use [E]", lucian_combo_e, 1)
+lucian_combo_e_turret = menu:add_checkbox("Don't Use [E] Under Turret", lucian_combo_e, 0)
 
-lucian_combo_e_useage = menu:add_combobox("Combo [E] Dash Direction", lucian_combo_e, e_table, 1)
 e_table = {}
 e_table[1] = "To Mouse"
 e_table[2] = "To Target"
 e_table[3] = "To Side"
+lucian_combo_e_useage = menu:add_combobox("Combo [E] Dash Direction", lucian_combo_e, e_table, 0)
 
 lucian_harass = menu:add_subcategory("Harass", lucian_category)
 lucian_harass_q = menu:add_subcategory("[Q] Settings", lucian_harass)
@@ -519,6 +532,14 @@ lucian_harass_use_auto_q = menu:add_toggle("Toggle Auto [Q] Harass", 1, lucian_h
 lucian_harass_w = menu:add_subcategory("[W] Settings", lucian_harass)
 lucian_harass_use_w = menu:add_checkbox("Use [W]", lucian_harass_w, 1)
 lucian_harass_min_mana = menu:add_slider("Minimum Mana [%] To Harass", lucian_harass, 1, 100, 20)
+lucian_harass_blacklist = menu:add_subcategory("Harass Target Blacklist", lucian_harass)
+local players = game.players
+for _, t in pairs(players) do
+    if t and t.is_enemy then
+        menu:add_checkbox("Harass Target Blacklist: "..tostring(t.champ_name), lucian_harass_blacklist, 1)
+    end
+end
+
 
 lucian_laneclear = menu:add_subcategory("Lane Clear", lucian_category)
 lucian_laneclear_use_q = menu:add_checkbox("Use [Q]", lucian_laneclear, 1)
@@ -535,24 +556,25 @@ lucian_jungleclear_use_w = menu:add_checkbox("Use [W]", lucian_jungleclear, 1)
 lucian_jungleclear_use_e = menu:add_checkbox("Use [E]", lucian_jungleclear, 1)
 lucian_jungleclear_min_mana = menu:add_slider("Minimum Mana [%] To Jungle", lucian_jungleclear, 1, 100, 20)
 
-lucian_extra = menu:add_subcategory("BLM Extra Feature", lucian_category)
-lucian_extra_gapclose = menu:add_checkbox("Use [E] Evade Enemy Gap Close", lucian_extra, 1)
-lucian_extra_semi_r_key = menu:add_keybinder("[R] Semi Manual Key", lucian_extra, 65)
+lucian_extra = menu:add_subcategory("Extra Features", lucian_category)
+lucian_extra_gapclose = menu:add_checkbox("Use [E] On Anti Gap Close - Mouse Position", lucian_extra, 1)
+lucian_extra_semi_r_key = menu:add_keybinder("[R] Manual Key - Hold Key To Orbwalk During Cast", lucian_extra, 65)
 
 lucian_draw = menu:add_subcategory("The Drawing Features", lucian_category)
 lucian_draw_q = menu:add_checkbox("Draw [Q] Range", lucian_draw, 1)
 lucian_draw_e = menu:add_checkbox("Draw [E] Range", lucian_draw, 1)
 lucian_draw_w = menu:add_checkbox("Draw [W] Range", lucian_draw, 1)
 lucian_draw_r = menu:add_checkbox("Draw [R] Range", lucian_draw, 1)
-lucian_auto_q_draw = menu:add_checkbox("Draw Toggle Auto [Q] Harass", lucian_draw, 1)
+lucian_draw_q2 = menu:add_checkbox("Draw [Q] Extended Range", lucian_draw, 1)
+lucian_auto_q_draw = menu:add_checkbox("Draw Toggle Auto [Q] Harass Text", lucian_draw, 1)
 lucian_draw_kill = menu:add_checkbox("Draw Full Combo Can Kill Text", lucian_draw, 1)
-lucian_draw_kill_healthbar = menu:add_checkbox("Draw Full Combo On Target Health Bar", lucian_draw, 1, "Health Bar Damage Is Computed From R > Q > W")
+lucian_draw_kill_healthbar = menu:add_checkbox("Draw Full Combo Colours On Target Health Bar", lucian_draw, 1, "Health Bar Damage Is Computed From R > Q > W")
 
 
 -- Casting
 
 local function CastQ(unit)
-	spellbook:cast_spell_targetted(SLOT_Q, unit, Q.delay)
+	spellbook:cast_spell_targetted(SLOT_Q, unit, QDelay[spellbook:get_spell_slot(SLOT_Q).level])
 end
 
 local function CastW(unit)
@@ -595,8 +617,8 @@ end
 
 local function Combo()
 
-	target = selector:find_target(W.range, mode_health)
 	local AAQRange = Q.range + AA.range
+	target = selector:find_target(AAQRange, mode_health)
 
 	if menu:get_value(lucian_combo_prioity) == 0 then
 
@@ -622,9 +644,13 @@ local function Combo()
 
 		if menu:get_value(lucian_combo_use_e) == 1 and menu:get_value(lucian_combo_e_useage) == 1 then
 			if myHero:distance_to(target.origin) < AAQRange and IsValid(target) and IsKillable(target) then
-				if not Ready(SLOT_W) and not Ready(SLOT_Q) and not HasPassiveShotsReady(myHero) then
+				if not HasPassiveShotsReady(myHero) and not Ready(SLOT_W) and not Ready(SLOT_Q) then
 					if Ready(SLOT_E) then
-						CastE(target)
+						if menu:get_value(lucian_combo_e_turret) == 1 and not IsUnderTurret(myHero) then
+							CastE(target)
+						elseif menu:get_value(lucian_combo_e_turret) == 0 then
+							CastE(target)
+						end
 					end
 				end
 			end
@@ -632,9 +658,13 @@ local function Combo()
 
 		if menu:get_value(lucian_combo_use_e) == 1 and menu:get_value(lucian_combo_e_useage) == 0 then
 			if myHero:distance_to(target.origin) < AAQRange and IsValid(target) and IsKillable(target) then
-				if not Ready(SLOT_W) and not Ready(SLOT_Q) and not HasPassiveShotsReady(myHero) then
+				if not HasPassiveShotsReady(myHero) and not Ready(SLOT_W) and not Ready(SLOT_Q) then
 					if Ready(SLOT_E) then
-						CastEMouse()
+						if menu:get_value(lucian_combo_e_turret) == 1 and not IsUnderTurret(myHero) then
+							CastEMouse()
+						elseif menu:get_value(lucian_combo_e_turret) == 0 then
+							CastEMouse()
+						end
 					end
 				end
 			end
@@ -642,9 +672,13 @@ local function Combo()
 
 		if menu:get_value(lucian_combo_use_e) == 1 and menu:get_value(lucian_combo_e_useage) == 2 then
 			if myHero:distance_to(target.origin) < AAQRange and IsValid(target) and IsKillable(target) then
-				if not Ready(SLOT_W) and not Ready(SLOT_Q) and not HasPassiveShotsReady(myHero) then
+				if not HasPassiveShotsReady(myHero) and not Ready(SLOT_W) and not Ready(SLOT_Q) then
 					if Ready(SLOT_E) then
-						CastESide()
+						if menu:get_value(lucian_combo_e_turret) == 1 and not IsUnderTurret(myHero) then
+							CastESide()
+						elseif menu:get_value(lucian_combo_e_turret) == 0 then
+							CastESide()
+						end
 					end
 				end
 			end
@@ -664,7 +698,7 @@ local function Combo()
 		if menu:get_value(lucian_combo_use_w) == 1 then
 			if myHero:distance_to(target.origin) and IsValid(target) and IsKillable(target) then
 				if myHero:distance_to(target.origin) <= W.range then
-		     	if Ready(SLOT_W) and not Ready(SLOT_Q) and not Ready(SLOT_E) and HasPassiveShotsReady(myHero) then
+		     	if Ready(SLOT_W) and not Ready(SLOT_Q) and not Ready(SLOT_E) and not HasPassiveShotsReady(myHero) then
 						CastW(target)
 					end
 				end
@@ -677,7 +711,11 @@ local function Combo()
 			if myHero:distance_to(target.origin) < AAQRange and IsValid(target) and IsKillable(target) then
 				if not HasPassiveShotsReady(myHero) then
 					if Ready(SLOT_E) then
-						CastE(target)
+						if menu:get_value(lucian_combo_e_turret) == 1 and not IsUnderTurret(myHero) then
+							CastE(target)
+						elseif menu:get_value(lucian_combo_e_turret) == 0 then
+							CastE(target)
+						end
 					end
 				end
 			end
@@ -687,7 +725,11 @@ local function Combo()
 			if myHero:distance_to(target.origin) < AAQRange and IsValid(target) and IsKillable(target) then
 				if not HasPassiveShotsReady(myHero) then
 					if Ready(SLOT_E) then
-						CastEMouse()
+						if menu:get_value(lucian_combo_e_turret) == 1 and not IsUnderTurret(myHero) then
+							CastEMouse()
+						elseif menu:get_value(lucian_combo_e_turret) == 0 then
+							CastEMouse()
+						end
 					end
 				end
 			end
@@ -697,7 +739,11 @@ local function Combo()
 			if myHero:distance_to(target.origin) < AAQRange and IsValid(target) and IsKillable(target) then
 				if not HasPassiveShotsReady(myHero) then
 					if Ready(SLOT_E) then
-						CastESide()
+						if menu:get_value(lucian_combo_e_turret) == 1 and not IsUnderTurret(myHero) then
+							CastESide()
+						elseif menu:get_value(lucian_combo_e_turret) == 0 then
+							CastESide()
+						end
 					end
 				end
 			end
@@ -712,11 +758,13 @@ local function Harass()
 	local GrabHarassMana = myHero.mana/myHero.max_mana >= menu:get_value(lucian_harass_min_mana) / 100
 	target = selector:find_target(W.range, mode_health)
 
-	if menu:get_value(lucian_harass_use_q) == 1 then
+	if menu:get_value(lucian_harass_use_q) == 1 and not menu:get_toggle_state(lucian_harass_use_auto_q) then
 		if myHero:distance_to(target.origin) <= Q.range and IsValid(target) and IsKillable(target) then
 			if Ready(SLOT_Q) and not HasPassiveShotsReady(myHero) then
 				if GrabHarassMana then
-					CastQ(target)
+					if menu:get_value_string("Harass Target Blacklist: "..tostring(target.champ_name)) == 1 then
+						CastQ(target)
+					end
 				end
 			end
 		end
@@ -726,7 +774,9 @@ local function Harass()
 		if myHero:distance_to(target.origin) and IsValid(target) and IsKillable(target) then
 			if myHero:distance_to(target.origin) <= W.range then
 				if Ready(SLOT_W) and not Ready(SLOT_Q) and not HasPassiveShotsReady(myHero) and GrabHarassMana then
-					CastW(target)
+					if menu:get_value_string("Harass Target Blacklist: "..tostring(target.champ_name)) == 1 then
+						CastW(target)
+					end
 				end
 			end
 		end
@@ -740,16 +790,31 @@ end
 local function AutoQHarass()
 
 	local GrabAutoHarassMana = myHero.mana/myHero.max_mana >= menu:get_value(lucian_harass_min_mana) / 100
-	target = selector:find_target(Q.range, mode_health)
+	target = selector:find_target(Q2.range, mode_health)
 
 	if menu:get_toggle_state(lucian_harass_use_auto_q) and menu:get_value(lucian_harass_use_q) == 1 and not game:is_key_down(menu:get_value(lucian_combokey)) then
 		if myHero:distance_to(target.origin) <= Q.range and IsValid(target) and IsKillable(target) and not HasRActive(myHero) and not HasPassiveShotsReady(myHero) then
 			if Ready(SLOT_Q) and not IsUnderTurret(myHero) and GrabAutoHarassMana then
-				CastQ(target)
+				if menu:get_value_string("Harass Target Blacklist: "..tostring(target.champ_name)) == 1 then
+					CastQ(target)
+				end
+			end
+		end
+	end
+
+	if menu:get_toggle_state(lucian_harass_use_auto_q) and menu:get_value(lucian_harass_use_q_ext) == 1 and not game:is_key_down(menu:get_value(lucian_combokey)) then
+		if IsValid(target) then
+			pred_output = pred:predict(Q2.speed, QDelay[spellbook:get_spell_slot(SLOT_Q).level], Q2.range, 45, target, false, false)
+			if pred_output.can_cast then
+				NewCastPos = GetLineTargetCount(myHero.origin, pred_output.cast_pos, QDelay[spellbook:get_spell_slot(SLOT_Q).level], Q2.speed, 45)
+				if NewCastPos and Ready(SLOT_Q) and GrabAutoHarassMana then
+					spellbook:cast_spell_targetted(SLOT_Q, NewCastPos, QDelay[spellbook:get_spell_slot(SLOT_Q).level])
+				end
 			end
 		end
 	end
 end
+
 
 -- KillSteal
 
@@ -858,53 +923,24 @@ end
 
 -- Extend Q
 
---[[local function QExtend()
-
+local function QExtend()
+	local GrabAutoExtMana = myHero.mana/myHero.max_mana >= menu:get_value(lucian_harass_min_mana) / 100
 	target = selector:find_target(Q2.range, mode_health)
 
 	if menu:get_value(lucian_harass_use_q_ext) == 1 then
-
-		pred_output = pred:predict(Q2.speed, Q2.delay, Q2.range, Q2.width, target, false, false)
-		if pred_output.can_cast then
-			local output = pred_output.cast_pos
-
-			minions = game.minions
-			for i, minion in ipairs(minions) do
-				if IsValid(target) and target.object_id ~= 0 and target.is_enemy then
-					if IsValid(minion) and minion.object_id ~= 0 and minion.is_enemy then
-
-						local Count = GetLineTargetCount(myHero, output, Q2.delay, Q2.speed, Q.width / 2)
-						if Count >= 1 then
-							console:log("HERE")
-							targetorigin = target.origin
-							x, y, z = origin.x, origin.y, origin.z
-
-							local Count2 = GetLineMinionCount(minion, output, Q.delay, Q.speed, Q.width / 2)
-							console:log("HERE2")
-							if Count2 >= 1 then
-								if Count >= 1 and Count2 >= 1 then
-									console:log("HERE3")
-
-									--if myHero:distance_to(minion.origin) < Q.range then
-										console:log("HERE4")
-										if GetDistanceSqr2(minion, target) <= 300 and myHero:distance_to(target.origin) > Q.range then
-											console:log("HERE5")
-											if Ready(SLOT_Q) then
-												origin = minion.origin
-												x, y, z = origin.x, origin.y, origin.z
-												spellbook:cast_spell(SLOT_Q, Q.delay, x, y, z)
-											end
-										end
-									--end
-								end
-							end
-						end
-	        end
-	      end
-	  	end
-	  end
+		if IsValid(target) then
+			pred_output = pred:predict(Q2.speed, QDelay[spellbook:get_spell_slot(SLOT_Q).level], Q2.range, 45, target, false, false)
+			if pred_output.can_cast then
+				NewCastPos = GetLineTargetCount(myHero.origin, pred_output.cast_pos, QDelay[spellbook:get_spell_slot(SLOT_Q).level], Q2.speed, 45)
+				if NewCastPos and Ready(SLOT_Q) and GrabAutoExtMana then
+					if menu:get_value_string("Harass Target Blacklist: "..tostring(target.champ_name)) == 1 then
+						spellbook:cast_spell_targetted(SLOT_Q, NewCastPos, QDelay[spellbook:get_spell_slot(SLOT_Q).level])
+					end
+				end
+			end
+		end
 	end
-end]]
+end
 
 -- Manual R
 
@@ -960,13 +996,19 @@ local function on_draw()
 
 	if menu:get_value(lucian_draw_e) == 1 then
 		if Ready(SLOT_W) then
-			renderer:draw_circle(x, y, z, E.range, 255, 0, 255, 255)
+			renderer:draw_circle(x, y, z, E.range, 255, 255, 0, 255)
 		end
 	end
 
 	if menu:get_value(lucian_draw_r) == 1 then
 		if Ready(SLOT_R) then
 			renderer:draw_circle(x, y, z, R.range, 255, 0, 0, 255)
+		end
+	end
+
+	if menu:get_value(lucian_draw_q2) == 1 then
+		if Ready(SLOT_Q) then
+			renderer:draw_circle(x, y, z, Q2.range, 255, 0, 255, 255)
 		end
 	end
 
@@ -1007,7 +1049,9 @@ local function on_tick()
 
 	if combo:get_mode() == MODE_HARASS then
 		Harass()
-		--QExtend()
+		if not menu:get_toggle_state(lucian_harass_use_auto_q) then
+			QExtend()
+		end
 	end
 
 	if combo:get_mode() == MODE_LANECLEAR then
