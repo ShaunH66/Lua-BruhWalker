@@ -4,7 +4,7 @@ end
 
 do
     local function AutoUpdate()
-		local Version = 1.3
+		local Version = 1.4
 		local file_name = "VladToTheImir.lua"
 		local url = "https://raw.githubusercontent.com/TheShaunyboi/BruhWalkerEncrypted/main/VladToTheImir.lua"
         local web_version = http:get("https://raw.githubusercontent.com/TheShaunyboi/BruhWalkerEncrypted/main/VladToTheImir.lua.version.txt")
@@ -12,10 +12,9 @@ do
 		console:log("VladToTheImir.Web Vers: "..tonumber(web_version))
 		if tonumber(web_version) == Version then
 						console:log("-------------------------------------------------")
-            console:log("Shaun's Sexy Vladimir v1.3 successfully loaded.....")
-            console:log("Added Q last Hit")
-						console:log("Updated For lastest BruhWalker Patch")
-						console:log("Added IsKillable Check (Sion R etc..)")
+						console:log("-------------------------------------------------")
+            console:log("Shaun's Sexy Vladimir v1.4 Successfully Loaded.....")
+						console:log("-------------------------------------------------")
 						console:log("-------------------------------------------------")
 
         else
@@ -34,7 +33,6 @@ do
 end
 
 pred:use_prediction()
-require "PKDamageLib"
 
 local myHero = game.local_player
 local local_player = game.local_player
@@ -348,14 +346,15 @@ local function Is_Me(unit)
 end
 
 
-local function EpicMonster(unit)
+local function EpicMonsterPlusSiegMinion(unit)
 	if unit.champ_name == "SRU_Baron"
 		or unit.champ_name == "SRU_RiftHerald"
 		or unit.champ_name == "SRU_Dragon_Water"
 		or unit.champ_name == "SRU_Dragon_Fire"
 		or unit.champ_name == "SRU_Dragon_Earth"
 		or unit.champ_name == "SRU_Dragon_Air"
-		or unit.champ_name == "SRU_Dragon_Elder" then
+		or unit.champ_name == "SRU_Dragon_Elder"
+		or unit.champ_name ==	"SRU_ChaosMinionSiege" then
 		return true
 	else
 		return false
@@ -386,14 +385,27 @@ end
 
 -- Menu Config
 
-vlad_category = menu:add_category("Shaun's Sexy Vladimir")
+if not file_manager:directory_exists("Shaun's Sexy Common") then
+  file_manager:create_directory("Shaun's Sexy Common")
+end
+
+if file_manager:directory_exists("Shaun's Sexy Common") then
+end
+
+if file_manager:file_exists("Shaun's Sexy Common//Logo.png") then
+	vlad_category = menu:add_category_sprite("Shaun's Sexy Vladimir", "Shaun's Sexy Common//Logo.png")
+else
+	http:download_file("https://raw.githubusercontent.com/TheShaunyboi/BruhWalkerEncrypted/main/Common/Logo.png", "Shaun's Sexy Common//Logo.png")
+	vlad_category = menu:add_category("Shaun's Sexy Vladimir")
+end
+
 vlad_enabled = menu:add_checkbox("Enabled", vlad_category, 1)
 vlad_combokey = menu:add_keybinder("Combo Mode Key", vlad_category, 32)
 
 vlad_ks_function = menu:add_subcategory("Kill Steal", vlad_category)
-vlad_ks_use_q = menu:add_checkbox("Use Q", vlad_ks_function, 1)
-vlad_ks_use_e = menu:add_checkbox("Use E", vlad_ks_function, 1)
-vlad_ks_use_r = menu:add_checkbox("Use R", vlad_ks_function, 1)
+vlad_ks_use_q = menu:add_checkbox("Use [Q]", vlad_ks_function, 1)
+vlad_ks_use_e = menu:add_checkbox("Use [E]", vlad_ks_function, 1)
+vlad_ks_use_r = menu:add_checkbox("Use [R]", vlad_ks_function, 1)
 vlad_ks_r_blacklist = menu:add_subcategory("Ultimate Kill Steal Blacklist", vlad_ks_function)
 local players = game.players
 for _, t in pairs(players) do
@@ -404,12 +416,12 @@ end
 
 
 vlad_combo = menu:add_subcategory("Combo", vlad_category)
-vlad_combo_use_q = menu:add_checkbox("Use Q", vlad_combo, 1)
-vlad_combo_use_w = menu:add_checkbox("Use W", vlad_combo, 1)
-vlad_combo_use_e = menu:add_checkbox("Use E", vlad_combo, 1)
-vlad_combo_r = menu:add_subcategory("R Combo Settings", vlad_combo)
-vlad_combo_use_r = menu:add_checkbox("Use R", vlad_combo_r, 1)
-vlad_combo_r_enemy_hp = menu:add_slider("Combo R if Enemy HP is lower than [%]", vlad_combo_r, 1, 100, 25)
+vlad_combo_use_q = menu:add_checkbox("Use [Q]", vlad_combo, 1)
+vlad_combo_use_w = menu:add_checkbox("Use [W]", vlad_combo, 1)
+vlad_combo_use_e = menu:add_checkbox("Use [E]", vlad_combo, 1)
+vlad_combo_r = menu:add_subcategory("[R] Combo Settings", vlad_combo)
+vlad_combo_use_r = menu:add_checkbox("Use [R]", vlad_combo_r, 1)
+vlad_combo_r_enemy_hp = menu:add_slider("Combo [R] if Enemy HP is lower than [%]", vlad_combo_r, 1, 100, 25)
 vlad_combo_r_blacklist = menu:add_subcategory("Ultimate Combo Blacklist", vlad_combo_r)
 local players = game.players
 for _, v in pairs(players) do
@@ -419,37 +431,37 @@ for _, v in pairs(players) do
 end
 
 vlad_harass = menu:add_subcategory("Harass", vlad_category)
-vlad_harass_use_q = menu:add_checkbox("Use Q", vlad_harass, 1)
-vlad_harass_use_e = menu:add_checkbox("Use E", vlad_harass, 1)
-vlad_harass_use_auto_q = menu:add_toggle("Toggle Auto Q Harass", 1, vlad_harass, 90, true)
+vlad_harass_use_q = menu:add_checkbox("Use [Q]", vlad_harass, 1)
+vlad_harass_use_e = menu:add_checkbox("Use [E]", vlad_harass, 1)
+vlad_harass_use_auto_q = menu:add_toggle("Toggle Auto [Q] Harass", 1, vlad_harass, 90, true)
 
 vlad_laneclear = menu:add_subcategory("Lane Clear", vlad_category)
-vlad_laneclear_use_q = menu:add_checkbox("Use Q", vlad_laneclear, 1)
-vlad_laneclear_use_e = menu:add_checkbox("Use E", vlad_laneclear, 1)
-vlad_laneclear_e_min = menu:add_slider("Number Of Minions To Use E", vlad_laneclear, 1, 10, 3)
+vlad_laneclear_use_q = menu:add_checkbox("Use [Q]", vlad_laneclear, 1)
+vlad_laneclear_use_e = menu:add_checkbox("Use [E]", vlad_laneclear, 1)
+vlad_laneclear_e_min = menu:add_slider("Number Of Minions To Use [E]", vlad_laneclear, 1, 10, 3)
 
 vlad_jungleclear = menu:add_subcategory("Jungle Clear", vlad_category)
-vlad_jungleclear_use_q = menu:add_checkbox("Use Q", vlad_jungleclear, 1)
-vlad_jungleclear_use_e = menu:add_checkbox("Use E", vlad_jungleclear, 1)
+vlad_jungleclear_use_q = menu:add_checkbox("Use [Q]", vlad_jungleclear, 1)
+vlad_jungleclear_use_e = menu:add_checkbox("Use [E]", vlad_jungleclear, 1)
 
 vlad_lasthit = menu:add_subcategory("Last Hit", vlad_category)
-vlad_lasthit_use_q = menu:add_checkbox("Use Q", vlad_lasthit, 1)
+vlad_lasthit_use_q = menu:add_checkbox("Use [Q]", vlad_lasthit, 1)
 
-vlad_auto_w = menu:add_subcategory("EPIC Pool Features", vlad_category)
-vlad_misc_anti_w = menu:add_checkbox("W Anti Gap Closer", vlad_auto_w, 1)
-vlad_misc_life = menu:add_checkbox("Enable W Life Saver", vlad_auto_w, 1)
+vlad_auto_w = menu:add_subcategory("[EPIC] Pool Features", vlad_category)
+vlad_misc_anti_w = menu:add_checkbox("[W] Anti Gap Closer", vlad_auto_w, 1)
+vlad_misc_life = menu:add_checkbox("Enable [W] Life Saver", vlad_auto_w, 1)
 vlad_misc_life_hp = menu:add_slider("Vlad Health [%] To use W Life Saver", vlad_auto_w, 1, 100, 15)
 
-vlad_r_misc_options = menu:add_subcategory("INSANE Ulitmate Features", vlad_category)
-vlad_combo_r_set_key = menu:add_keybinder("Semi Manual R Key - Closest To Cursor Target", vlad_r_misc_options, 65)
-vlad_combo_r_auto = menu:add_checkbox("Auto R - Using Best AoE Prediction", vlad_r_misc_options, 1)
-vlad_combo_r_auto_x = menu:add_slider("Minimum Of Targets To Perform Auto R", vlad_r_misc_options, 1, 5, 3)
+vlad_r_misc_options = menu:add_subcategory("[INSANE] Ulitmate Features", vlad_category)
+vlad_combo_r_set_key = menu:add_keybinder("Semi Manual [R] Key - Closest To Cursor Target", vlad_r_misc_options, 65)
+vlad_combo_r_auto = menu:add_checkbox("Auto [R] - Using Best AoE Prediction", vlad_r_misc_options, 1)
+vlad_combo_r_auto_x = menu:add_slider("Minimum Of Targets To Perform Auto [R]", vlad_r_misc_options, 1, 5, 3)
 
 vlad_draw = menu:add_subcategory("The Drawing Features", vlad_category)
-vlad_draw_q = menu:add_checkbox("Draw Q", vlad_draw, 1)
-vlad_draw_r = menu:add_checkbox("Draw R", vlad_draw, 1)
-vlad_r_best_draw = menu:add_checkbox("Draw Auto R Best Position Circle + Count", vlad_draw, 1)
-vlad_auto_q_draw = menu:add_checkbox("Toggle Auto Q Harass Draw", vlad_draw, 1)
+vlad_draw_q = menu:add_checkbox("Draw [Q]", vlad_draw, 1)
+vlad_draw_r = menu:add_checkbox("Draw [R]", vlad_draw, 1)
+vlad_r_best_draw = menu:add_checkbox("Draw Auto [R] Best Position Circle + Count", vlad_draw, 1)
+vlad_auto_q_draw = menu:add_checkbox("Toggle Auto [Q] Harass Draw", vlad_draw, 1)
 vlad_draw_kill = menu:add_checkbox("Draw Full Combo Can Kill", vlad_draw, 1)
 vlad_draw_kill_healthbar = menu:add_checkbox("Draw Full Combo On Target Health Bar", vlad_draw, 1, "Health Bar Damage Is Computed From R > Q > E")
 
@@ -655,9 +667,19 @@ local function Clear()
 
 		if menu:get_value(vlad_laneclear_use_q) == 1 then
 			if IsValid(target) and target.object_id ~= 0 and target.is_enemy and myHero:distance_to(target.origin) < Q.range then
-				if GetMinionCount(Q.range, target) and GetQDmg(target) > target.health then
+				if GetQDmg(target) > target.health then
 					if Ready(SLOT_Q) then
 						spellbook:cast_spell_targetted(SLOT_Q, target, Q.delay)
+					end
+				end
+			end
+		end
+
+		if menu:get_value(vlad_laneclear_use_q) == 1 and EpicMonsterPlusSiegMinion(target) then
+			if target.object_id ~= 0 and target.is_enemy and myHero:distance_to(target.origin) < Q.range and IsValid(target) then
+				if GetQDmg(target) > target.health then
+					if Ready(SLOT_Q) then
+						CastQ(target)
 					end
 				end
 			end
@@ -791,7 +813,15 @@ local function QLastHit()
 	for i, target in ipairs(minions) do
 		if menu:get_value(vlad_lasthit_use_q) == 1 then
 			if target.object_id ~= 0 and target.is_enemy and myHero:distance_to(target.origin) < Q.range and IsValid(target) then
-				if GetMinionCount(Q.range, target) >= 1 then
+				if GetQDmg(target) > target.health then
+					if Ready(SLOT_Q) then
+						CastQ(target)
+					end
+				end
+			end
+
+			if EpicMonsterPlusSiegMinion(target) then
+				if target.object_id ~= 0 and target.is_enemy and myHero:distance_to(target.origin) < Q.range and IsValid(target) then
 					if GetQDmg(target) > target.health then
 						if Ready(SLOT_Q) then
 							CastQ(target)
@@ -805,12 +835,13 @@ end
 
 -- object returns, draw and tick usage
 
-screen_size = game.screen_size
 
 local function on_draw()
 	local_player = game.local_player
+	screen_size = game.screen_size
 
-	local target = selector:find_target(2000, mode_health)
+	target = selector:find_target(2000, mode_health)
+	targetvec = target.origin
 
 	if local_player.object_id ~= 0 then
 		origin = local_player.origin
@@ -829,18 +860,21 @@ local function on_draw()
 		end
 	end
 
+	local enemydraw = game:world_to_screen(targetvec.x, targetvec.y, targetvec.z)
 	for i, target in ipairs(GetEnemyHeroes()) do
 		local fulldmg = GetQDmg(target) + GetEDmg(target) + GetRDmg(target)
 		if Ready(SLOT_R) then
 			if target.object_id ~= 0 and myHero:distance_to(target.origin) <= R.range then
 				if menu:get_value(vlad_draw_kill) == 1 then
 					if fulldmg > target.health and IsValid(target) then
-						renderer:draw_text_big_centered(screen_size.width / 2, screen_size.height / 20 + 50, "Current Ready Spell Rotation Can Kill Target")
+						if enemydraw.is_valid then
+						 renderer:draw_text_big_centered(enemydraw.x, enemydraw.y, "Full Combo Can Kill")
+					 	end
 					end
 				end
 			end
 		end
-		if menu:get_value(vlad_draw_kill_healthbar) == 1 then
+		if IsValid(target) and menu:get_value(vlad_draw_kill_healthbar) == 1 then
 			target:draw_damage_health_bar(fulldmg)
 		end
 	end
@@ -849,7 +883,7 @@ local function on_draw()
 	if menu:get_value(vlad_auto_q_draw) == 1 then
 		if menu:get_value(vlad_harass_use_q) == 1 then
 			if menu:get_toggle_state(vlad_harass_use_auto_q) then
-				renderer:draw_text_centered(screen_size.width / 2, 0, "Toggle Auto Q Harass Enabled")
+				renderer:draw_text_centered(screen_size.width / 2, 0, "Toggle Auto [Q] Harass Enabled")
 			end
 		end
 	end
