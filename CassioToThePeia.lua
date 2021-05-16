@@ -5,7 +5,7 @@ end
 -- AutoUpdate
 do
     local function AutoUpdate()
-		local Version = 7.2
+		local Version = 7.3
 		local file_name = "CassioToThePeia.lua"
 		local url = "http://raw.githubusercontent.com/TheShaunyboi/BruhWalkerEncrypted/main/CassioToThePeia.lua"
         local web_version = http:get("https://raw.githubusercontent.com/TheShaunyboi/BruhWalkerEncrypted/main/CassioToThePeia.lua.version.txt")
@@ -14,7 +14,7 @@ do
 		if tonumber(web_version) == Version then
 						console:log("------------------------------------------------------------------------------------------------------------")
 						console:log("------------------------------------------------------------------------------------------------------------")
-						console:log("Sexy Cassiopeia v7.2 Successfully Loaded.....")
+						console:log("Sexy Cassiopeia v7.3 Successfully Loaded.....")
 						console:log("------------------------------------------------------------------------------------------------------------")
 						console:log("------------------------------------------------------------------------------------------------------------")
         else
@@ -265,6 +265,8 @@ end
 
 Cass_enabled = menu:add_checkbox("Enabled", Cass_category, 1)
 Cass_combokey = menu:add_keybinder("Combo Mode Key", Cass_category, 32)
+menu:add_label("Welcome To Shaun's Sexy Cassiopeia", Cass_category)
+menu:add_label("#IPA-BeerIsMyPosion", Cass_category)
 --[[s_table = {}
 s_table[1] = "PKPrediction"
 s_table[2] = "Bruh Internal"
