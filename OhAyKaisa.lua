@@ -4,7 +4,7 @@ end
 
 do
     local function AutoUpdate()
-		local Version = 2.1
+		local Version = 2.2
 		local file_name = "OhAyKaisa.lua"
 		local url = "https://raw.githubusercontent.com/TheShaunyboi/BruhWalkerEncrypted/main/OhAyKaisa.lua"
         local web_version = http:get("https://raw.githubusercontent.com/TheShaunyboi/BruhWalkerEncrypted/main/OhAyKaisa.lua.version.txt")
@@ -13,8 +13,8 @@ do
 		if tonumber(web_version) == Version then
 						console:log("-------------------------------------------------")
 						console:log("-------------------------------------------------")
-            console:log("...Shaun's Sexy Kaisa v2.1 Successfully Loaded...")
-						console:log("....Added - Toggle Auto Isolated [Q] Harass......")
+            console:log("...Shaun's Sexy Kaisa v2.2 Successfully Loaded...")
+						console:log("-------------------------------------------------")
 						console:log("-------------------------------------------------")
 
         else
@@ -465,9 +465,24 @@ end
 
 -- Menu Config
 
-Kai_category = menu:add_category("Shaun's Sexy Kaisa")
+if not file_manager:directory_exists("Shaun's Sexy Common") then
+  file_manager:create_directory("Shaun's Sexy Common")
+end
+
+if file_manager:directory_exists("Shaun's Sexy Common") then
+end
+
+if file_manager:file_exists("Shaun's Sexy Common//Logo.png") then
+	Kai_category = menu:add_category_sprite("Shaun's Sexy Kaisa", "Shaun's Sexy Common//Logo.png")
+else
+	http:download_file("https://raw.githubusercontent.com/TheShaunyboi/BruhWalkerEncrypted/main/Common/Logo.png", "Shaun's Sexy Common//Logo.png")
+	Kai_category = menu:add_category("Shaun's Sexy Kaisa")
+end
+
 Kai_enabled = menu:add_checkbox("Enabled", Kai_category, 1)
 Kai_combokey = menu:add_keybinder("Combo Mode Key", Kai_category, 32)
+menu:add_label("Welcome To Shaun's Sexy Kaisa", Kai_category)
+menu:add_label("#TheVoidMakesMeTingle", Kai_category)
 
 Kai_ks_function = menu:add_subcategory("Kill Steal", Kai_category)
 Kai_ks_q = menu:add_subcategory("[Q] Settings", Kai_ks_function, 1)
@@ -836,10 +851,13 @@ local function on_gap_close(obj, data)
 end
 
 -- object returns, draw and tick usage
-screen_size = game.screen_size
 
 local function on_draw()
+
+	screen_size = game.screen_size
 	local_player = game.local_player
+	target = selector:find_target(2000, mode_health)
+	targetvec = target.origin
 
 	if local_player.object_id ~= 0 then
 		origin = local_player.origin
@@ -879,18 +897,21 @@ local function on_draw()
 		end
 	end
 
+	local enemydraw = game:world_to_screen(targetvec.x, targetvec.y, targetvec.z)
 	for i, target in ipairs(GetEnemyHeroes()) do
-		local fulldmg = GetQDmg(target) + GetWDmg(target)
+		local fulldmg = GetQDmg(target) + GetWDmg(target) + (myHero.total_attack_damage * 3)
 		if Ready(SLOT_W) then
 			if target.object_id ~= 0 and myHero:distance_to(target.origin) <= 1000 then
 				if menu:get_value(Kai_draw_kill) == 1 then
 					if fulldmg > target.health and IsValid(target) then
-						renderer:draw_text_big_centered(screen_size.width / 2, screen_size.height / 20 + 50, "Full Spell Rotation Can Kill Target")
+						if enemydraw.is_valid then
+							renderer:draw_text_big_centered(enemydraw.x, enemydraw.y, "Can Kill Target")
+						end
 					end
 				end
 			end
 		end
-		if menu:get_value(Kai_draw_kill_healthbar) == 1 then
+		if IsValid(target) and menu:get_value(Kai_draw_kill_healthbar) == 1 then
 			target:draw_damage_health_bar(fulldmg)
 		end
 	end
