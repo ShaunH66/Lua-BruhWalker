@@ -4,17 +4,17 @@ end
 
 do
     local function AutoUpdate()
-		local Version = 1.9
+		local Version = 2.0
 		local file_name = "EzToTheReal.lua"
 		local url = "https://raw.githubusercontent.com/TheShaunyboi/BruhWalkerEncrypted/main/EzToTheReal.lua"
         local web_version = http:get("https://raw.githubusercontent.com/TheShaunyboi/BruhWalkerEncrypted/main/EzToTheReal.lua.version.txt")
         console:log("EzToTheReal.Lua Vers: "..Version)
 		console:log("EzToTheReal.Web Vers: "..tonumber(web_version))
 		if tonumber(web_version) == Version then
-            console:log("Sexy Ezreal v1.9 successfully loaded.....")
 						console:log("----------------------------------------------------------------")
-						console:log("Added IsKillable Check (Sion R etc..)")
-						console:log("Added Auto R - Using Best AoE Prediction")
+						console:log("----------------------------------------------------------------")
+						console:log("Sexy Ezreal v2.0 successfully loaded.....")
+						console:log("----------------------------------------------------------------")
 						console:log("----------------------------------------------------------------")
         else
 			http:download_file(url, file_name)
@@ -361,15 +361,30 @@ end
 
 -- Menu Config
 
-ezreal_category = menu:add_category("Shaun's Sexy Ezreal")
+if not file_manager:directory_exists("Shaun's Sexy Common") then
+  file_manager:create_directory("Shaun's Sexy Common")
+end
+
+if file_manager:directory_exists("Shaun's Sexy Common") then
+end
+
+if file_manager:file_exists("Shaun's Sexy Common//Logo.png") then
+	ezreal_category = menu:add_category_sprite("Shaun's Sexy Ezreal", "Shaun's Sexy Common//Logo.png")
+else
+	http:download_file("https://raw.githubusercontent.com/TheShaunyboi/BruhWalkerEncrypted/main/Common/Logo.png", "Shaun's Sexy Common//Logo.png")
+	ezreal_category = menu:add_category("Shaun's Sexy Ezreal")
+end
+
 ezreal_enabled = menu:add_checkbox("Enabled", ezreal_category, 1)
 ezreal_combokey = menu:add_keybinder("Combo Mode Key", ezreal_category, 32)
+menu:add_label("Welcome To Shaun's Sexy Ezreal", ezreal_category)
+menu:add_label("#PrettyBoyEz", ezreal_category)
 
 ezreal_ks_function = menu:add_subcategory("Kill Steal", ezreal_category)
-ezreal_ks_use_q = menu:add_checkbox("Use Q", ezreal_ks_function, 1)
-ezreal_ks_use_w = menu:add_checkbox("Use W", ezreal_ks_function, 1)
-ezreal_ks_use_r = menu:add_checkbox("Use R", ezreal_ks_function, 1)
-ezreal_ks_use_range = menu:add_slider("Greater Than Range To Use R Kill Steal", ezreal_ks_function, 1, 5000, 1000)
+ezreal_ks_use_q = menu:add_checkbox("Use [Q]", ezreal_ks_function, 1)
+ezreal_ks_use_w = menu:add_checkbox("Use [W]", ezreal_ks_function, 1)
+ezreal_ks_use_r = menu:add_checkbox("Use [R]", ezreal_ks_function, 1)
+ezreal_ks_use_range = menu:add_slider("Greater Than Range To Use [R] Kill Steal", ezreal_ks_function, 1, 5000, 1000)
 ezreal_ks_r_blacklist = menu:add_subcategory("Ultimate Kill Steal Blacklist", ezreal_ks_function)
 local players = game.players
 for _, t in pairs(players) do
@@ -380,12 +395,12 @@ end
 
 
 ezreal_combo = menu:add_subcategory("Combo", ezreal_category)
-ezreal_combo_use_q = menu:add_checkbox("Use Q", ezreal_combo, 1)
-ezreal_combo_use_w = menu:add_checkbox("Use W", ezreal_combo, 1)
-ezreal_combo_r = menu:add_subcategory("R Combo Settings", ezreal_combo)
-ezreal_combo_use_r = menu:add_checkbox("Use R", ezreal_combo_r, 1)
-ezreal_combo_use_range = menu:add_slider("Greater Than Range To Use R Combo", ezreal_combo_r, 1, 5000, 1000)
-ezreal_combo_r_enemy_hp = menu:add_slider("Combo R if Enemy HP is lower than [%]", ezreal_combo_r, 1, 100, 40)
+ezreal_combo_use_q = menu:add_checkbox("Use [Q]", ezreal_combo, 1)
+ezreal_combo_use_w = menu:add_checkbox("Use [W]", ezreal_combo, 1)
+ezreal_combo_r = menu:add_subcategory("[R] Combo Settings", ezreal_combo)
+ezreal_combo_use_r = menu:add_checkbox("Use [R]", ezreal_combo_r, 1)
+ezreal_combo_use_range = menu:add_slider("Greater Than Range To Use [R] Combo", ezreal_combo_r, 1, 5000, 1000)
+ezreal_combo_r_enemy_hp = menu:add_slider("Combo [R] if Enemy HP is lower than [%]", ezreal_combo_r, 1, 100, 40)
 ezreal_combo_r_blacklist = menu:add_subcategory("Ultimate Combo Blacklist", ezreal_combo_r)
 local players = game.players
 for _, v in pairs(players) do
@@ -395,36 +410,36 @@ for _, v in pairs(players) do
 end
 
 ezreal_harass = menu:add_subcategory("Harass", ezreal_category)
-ezreal_harass_use_q = menu:add_checkbox("Use Q", ezreal_harass, 1)
-ezreal_harass_use_w = menu:add_checkbox("Use W", ezreal_harass, 1)
-ezreal_harass_use_auto_q = menu:add_toggle("Toggle Auto Q Harass", 1, ezreal_harass, 90, true)
+ezreal_harass_use_q = menu:add_checkbox("Use [Q]", ezreal_harass, 1)
+ezreal_harass_use_w = menu:add_checkbox("Use [W]", ezreal_harass, 1)
+ezreal_harass_use_auto_q = menu:add_toggle("Toggle Auto [Q] Harass", 1, ezreal_harass, 90, true)
 ezreal_harass_min_mana = menu:add_slider("Minimum Mana To Harass", ezreal_harass, 1, 500, 100)
 
 ezreal_laneclear = menu:add_subcategory("Lane Clear", ezreal_category)
-ezreal_laneclear_use_q = menu:add_checkbox("Use Q", ezreal_laneclear, 1)
+ezreal_laneclear_use_q = menu:add_checkbox("Use [Q]", ezreal_laneclear, 1)
 ezreal_laneclear_min_mana = menu:add_slider("Minimum Mana To Lane Clear", ezreal_laneclear, 1, 500, 200)
 
 ezreal_jungleclear = menu:add_subcategory("Jungle Clear", ezreal_category)
-ezreal_jungleclear_use_q = menu:add_checkbox("Use Q", ezreal_jungleclear, 1)
-ezreal_jungleclear_use_w = menu:add_checkbox("Use W", ezreal_jungleclear, 1)
+ezreal_jungleclear_use_q = menu:add_checkbox("Use [Q]", ezreal_jungleclear, 1)
+ezreal_jungleclear_use_w = menu:add_checkbox("Use [W]", ezreal_jungleclear, 1)
 ezreal_jungleclear_min_mana = menu:add_slider("Minimum Mana To jungle Clear", ezreal_jungleclear, 1, 500, 200)
 
 
-ezreal_misc_options = menu:add_subcategory("Misc Settings", ezreal_category)
-ezreal_combo_r_set_key = menu:add_keybinder("Semi Manual R Key", ezreal_misc_options, 65)
-ezreal_misc_w_turret = menu:add_toggle("Toggle Auto W Turret", 1, ezreal_misc_options, 85, true)
+ezreal_misc_options = menu:add_subcategory("Extra Features", ezreal_category)
+ezreal_combo_r_set_key = menu:add_keybinder("Semi Manual [R] Key", ezreal_misc_options, 65)
+ezreal_misc_w_turret = menu:add_toggle("Toggle Auto [W] Turret", 1, ezreal_misc_options, 85, true)
 
-ezreal_auto_r = menu:add_subcategory("Auto R - Using Best AoE Position", ezreal_category)
-ezreal_use_auto_r = menu:add_checkbox("Use Auto R", ezreal_auto_r, 1)
-ezreal_auto_r_range = menu:add_slider("Greater Than Range To Use Auto R", ezreal_auto_r, 1, 5000, 2500)
+ezreal_auto_r = menu:add_subcategory("Auto [R] - Using Best AoE Position", ezreal_category)
+ezreal_use_auto_r = menu:add_checkbox("Use Auto [R]", ezreal_auto_r, 1)
+ezreal_auto_r_range = menu:add_slider("Greater Than Range To Use Auto [R]", ezreal_auto_r, 1, 5000, 2500)
 ezreal_auto_r_x = menu:add_slider("Minimum Targets To Use Auto R", ezreal_auto_r, 1, 5, 3)
 
 ezreal_draw = menu:add_subcategory("Drawing Features", ezreal_category)
-ezreal_draw_q = menu:add_checkbox("Draw Q", ezreal_draw, 1)
-ezreal_draw_e = menu:add_checkbox("Draw E", ezreal_draw, 1)
-ezreal_auto_q_draw = menu:add_checkbox("Toggle Auto Q Harass Draw", ezreal_draw, 1)
-ezreal_auto_turret_draw = menu:add_checkbox("Toggle Auto W Turret Draw", ezreal_draw, 1)
-ezreal_r_best_draw = menu:add_checkbox("Draw Auto R Best Position Circle + Count", ezreal_draw, 1)
+ezreal_draw_q = menu:add_checkbox("Draw [Q]", ezreal_draw, 1)
+ezreal_draw_e = menu:add_checkbox("Draw [E]", ezreal_draw, 1)
+ezreal_auto_q_draw = menu:add_checkbox("Toggle Auto [Q] Harass Draw", ezreal_draw, 1)
+ezreal_auto_turret_draw = menu:add_checkbox("Toggle Auto [W] Turret Draw", ezreal_draw, 1)
+ezreal_r_best_draw = menu:add_checkbox("Draw Auto [R] Best Position Circle + Count", ezreal_draw, 1)
 ezreal_draw_kill = menu:add_checkbox("Draw Full Combo Can Kill", ezreal_draw, 1)
 ezreal_draw_kill_healthbar = menu:add_checkbox("Draw Full Combo On Target Health Bar", ezreal_draw, 1, "Health Bar Damage Is Computed From R, Q, W")
 
@@ -730,12 +745,11 @@ end
 
 -- object returns, draw and tick usage
 
-screen_size = game.screen_size
-
 local function on_draw()
-	local_player = game.local_player
+	screen_size = game.screen_size
 
-	local target = selector:find_target(R.range, mode_health)
+	target = selector:find_target(2000, mode_health)
+	targetvec = target.origin
 
 	if local_player.object_id ~= 0 then
 		origin = local_player.origin
@@ -754,18 +768,21 @@ local function on_draw()
 		end
 	end
 
+	local enemydraw = game:world_to_screen(targetvec.x, targetvec.y, targetvec.z)
 	for i, target in ipairs(GetEnemyHeroes()) do
 		local fulldmg = (GetQDmg(target) + GetWDmg(target) + GetRDmg(target))
 		if Ready(SLOT_R) then
 			if target.object_id ~= 0 and myHero:distance_to(target.origin) <= Q.range then
 				if menu:get_value(ezreal_draw_kill) == 1 then
 					if fulldmg > target.health and IsValid(target) then
-						renderer:draw_text_big_centered(screen_size.width / 2, screen_size.height / 20 + 50, "Full Combo Rotation Kill")
+						if enemydraw.is_valid then
+							renderer:draw_text_big_centered(enemydraw.x, enemydraw.y, "Can Kill Target")
+						end
 					end
 				end
 			end
 		end
-		if menu:get_value(ezreal_draw_kill_healthbar) == 1 then
+		if IsValid(target) and menu:get_value(ezreal_draw_kill_healthbar) == 1 then
 			target:draw_damage_health_bar(fulldmg)
 		end
 	end
@@ -773,14 +790,14 @@ local function on_draw()
 	if menu:get_value(ezreal_auto_q_draw) == 1 then
 		if menu:get_value(ezreal_harass_use_q) == 1 then
 			if menu:get_toggle_state(ezreal_harass_use_auto_q) then
-				renderer:draw_text_centered(screen_size.width / 2, 0, "Toggle Auto Q Harass Enabled")
+				renderer:draw_text_centered(screen_size.width / 2, 0, "Toggle Auto [Q] Harass Enabled")
 			end
 		end
 	end
 
 	if menu:get_value(ezreal_auto_turret_draw) == 1 then
 		if menu:get_toggle_state(ezreal_misc_w_turret) then
-			renderer:draw_text_centered(screen_size.width / 2, screen_size.height / 50, "Toggle Auto W Turret Enabled")
+			renderer:draw_text_centered(screen_size.width / 2, screen_size.height / 50, "Toggle Auto [W] Turret Enabled")
 		end
 	end
 
