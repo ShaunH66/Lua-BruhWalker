@@ -1067,7 +1067,6 @@ local function on_tick()
 	AutoKill()
 	AutoQHarass()
 
-
 end
 
 client:set_event_callback("on_tick", on_tick)
