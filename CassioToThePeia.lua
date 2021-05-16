@@ -5,22 +5,28 @@ end
 -- AutoUpdate
 do
     local function AutoUpdate()
-		local Version = 7.1
+		local Version = 7.2
 		local file_name = "CassioToThePeia.lua"
 		local url = "http://raw.githubusercontent.com/TheShaunyboi/BruhWalkerEncrypted/main/CassioToThePeia.lua"
         local web_version = http:get("https://raw.githubusercontent.com/TheShaunyboi/BruhWalkerEncrypted/main/CassioToThePeia.lua.version.txt")
         console:log("Cassiopeia.Lua Vers: "..Version)
 		console:log("Cassiopeia.Web Vers: "..tonumber(web_version))
 		if tonumber(web_version) == Version then
-            console:log("Sexy Cassiopeia v7.1 Successfully Loaded.....")
 						console:log("------------------------------------------------------------------------------------------------------------")
-						console:log("Added Auto R Gap Close")
-						console:log("Rewrote Casting + Targeting Method For Faster And Cleaner Spell Casting")
+						console:log("------------------------------------------------------------------------------------------------------------")
+						console:log("Sexy Cassiopeia v7.2 Successfully Loaded.....")
+						console:log("------------------------------------------------------------------------------------------------------------")
 						console:log("------------------------------------------------------------------------------------------------------------")
         else
 			http:download_file(url, file_name)
             console:log("Sexy Cassiopeia Update available.....")
-			console:log("Please reload via F5.....")
+						console:log("------------------------------------------------------------------------------------------------------------")
+						console:log("Please reload via F5!.....")
+						console:log("------------------------------------------------------------------------------------------------------------")
+						console:log("Please reload via F5!.....")
+						console:log("------------------------------------------------------------------------------------------------------------")
+						console:log("Please reload via F5!.....")
+						console:log("------------------------------------------------------------------------------------------------------------")
         end
 
     end
@@ -30,12 +36,8 @@ do
 
 end
 
-local Q = { range = 825, delay = .25, width = 75, speed = math.huge }
-local W = { range = 700, delay = .25, width = 160, speed = math.huge }
-local E = { range = 700, delay = .125, width = 0, speed = math.huge }
-local R = { range = 825, delay = .5, width = 200, speed = math.huge }
-
 pred:use_prediction()
+--require "LucifersPussyPrediction"
 
 local myHero = game.local_player
 local local_player = game.local_player
@@ -44,6 +46,11 @@ local local_player = game.local_player
 local function Ready(spell)
   return spellbook:can_cast(spell)
 end
+
+local Q = { range = 825, delay = .25, width = 80, radius = 37.5, speed = 2000 }
+local W = { range = 700, delay = .25, width = 160, radius = 80, speed = 2000 }
+local E = { range = 700, delay = .125, width = 0, speed = 0 }
+local R = { range = 800, delay = .5, width = 200, radius = 412.5, speed = 2000 }
 
 -- Return game data
 
@@ -86,13 +93,106 @@ local function GetDistanceSqr(unit, p2)
 	return dx*dx + dz*dz
 end
 
-local function GetDistanceSqr2(unit, p2)
+local function GetDistanceSqr2(p1, p2)
 	p2x, p2y, p2z = p2.x, p2.y, p2.z
-	p1 = unit.origin
 	p1x, p1y, p1z = p1.x, p1.y, p1.z
 	local dx = p1x - p2x
 	local dz = (p1z or p1y) - (p2z or p2y)
 	return dx*dx + dz*dz
+end
+
+local function GetCenter(points)
+	local sum_x = 0
+	local sum_z = 0
+
+	for i = 1, #points do
+		sum_x = sum_x + points[i].origin.x
+		sum_z = sum_z + points[i].origin.z
+	end
+
+	local center = {x = sum_x / #points, y = 0, z = sum_z / #points}
+	return center
+end
+
+local function ContainsThemAll(circle, points)
+	local radius_sqr = circle.radi*circle.radi
+	local contains_them_all = true
+	local i = 1
+
+	while contains_them_all and i <= #points do
+		contains_them_all = GetDistanceSqr2(points[i].origin, circle.center) <= radius_sqr
+		i = i + 1
+	end
+	return contains_them_all
+end
+
+local function FarthestFromPositionIndex(points, position)
+	local index = 2
+	local actual_dist_sqr
+	local max_dist_sqr = GetDistanceSqr2(points[index].origin, position)
+
+	for i = 3, #points do
+		actual_dist_sqr = GetDistanceSqr2(points[i].origin, position)
+		if actual_dist_sqr > max_dist_sqr then
+			index = i
+			max_dist_sqr = actual_dist_sqr
+		end
+	end
+	return index
+end
+
+local function RemoveWorst(targets, position)
+	local worst_target = FarthestFromPositionIndex(targets, position)
+	table.remove(targets, worst_target)
+	return targets
+end
+
+local function GetInitialTargetsMinion(radius, main_target)
+	local targets = {main_target}
+	local diameter_sqr = 4 * radius * radius
+
+	for i, target in ipairs(game.minions) do
+		if target.object_id ~= 0 and target.object_id ~= main_target.object_id and IsValid(target) and GetDistanceSqr(main_target, target) < diameter_sqr and target.is_enemy then
+			table.insert(targets, target)
+		end
+	end
+	return targets
+end
+
+local function GetPredictedInitialTargetsMinion(speed ,delay, range, radius, main_target, ColWindwall, ColMinion)
+	local predicted_main_target = pred:predict(speed ,delay, range, radius, main_target, ColWindwall, ColMinion)
+	if predicted_main_target.can_cast then
+		local predicted_targets = {main_target}
+		local diameter_sqr = 4 * radius * radius
+
+		for i, target in ipairs(game.minions) do
+			if target.object_id ~= 0 and IsValid(target) then
+				predicted_target = pred:predict(Q.speed, Q.delay, Q.range, Q.width, target, false, false)
+				if predicted_target.can_cast and target.object_id ~= main_target.object_id and GetDistanceSqr2(predicted_main_target.cast_pos, predicted_target.cast_pos) < diameter_sqr and target.is_enemy then
+					table.insert(predicted_targets, target)
+				end
+			end
+		end
+	return predicted_targets
+	end
+end
+
+local function GetBestAoEPositionMinion(speed ,delay, range, radius, main_target, ColWindwall, ColMinion)
+	local targets = GetPredictedInitialTargetsMinion(speed ,delay, range, radius, main_target, ColWindwall, ColMinion) or GetInitialTargetsMinion(radius, main_target)
+	local position = GetCenter(targets)
+	local best_pos_found = true
+	local circle = {pos = position, radi = radius}
+	circle.center = position
+
+	if #targets >= 2 then best_pos_found = ContainsThemAll(circle, targets) end
+
+	while not best_pos_found do
+		targets = RemoveWorst(targets, position)
+		position = GetCenter(targets)
+		circle.center = position
+		best_pos_found = ContainsThemAll(circle, targets)
+	end
+	return vec3.new(position.x, position.y, position.z), #targets
 end
 
 local function GetEnemyCount(range, unit)
@@ -132,85 +232,115 @@ function IsKillable(unit)
 	return true
 end
 
+local function EpicMonsterPlusSiegMinion(unit)
+	if unit.champ_name == "SRU_Baron"
+		or unit.champ_name == "SRU_RiftHerald"
+		or unit.champ_name == "SRU_Dragon_Water"
+		or unit.champ_name == "SRU_Dragon_Fire"
+		or unit.champ_name == "SRU_Dragon_Earth"
+		or unit.champ_name == "SRU_Dragon_Air"
+		or unit.champ_name == "SRU_Dragon_Elder"
+		or unit.champ_name ==	"SRU_ChaosMinionSiege" then
+		return true
+	else
+		return false
+	end
+end
 
 -- Menu Config
 
-Cass_category = menu:add_category("Shaun's Sexy Cassiopeia")
+if not file_manager:directory_exists("Shaun's Sexy Common") then
+  file_manager:create_directory("Shaun's Sexy Common")
+end
+
+if file_manager:directory_exists("Shaun's Sexy Common") then
+end
+
+if file_manager:file_exists("Shaun's Sexy Common//Logo.png") then
+	Cass_category = menu:add_category_sprite("Shaun's Sexy Cassiopeia", "Shaun's Sexy Common//Logo.png")
+else
+	http:download_file("https://raw.githubusercontent.com/TheShaunyboi/BruhWalkerEncrypted/main/Common/Logo.png", "Shaun's Sexy Common//Logo.png")
+	Cass_category = menu:add_category("Shaun's Sexy Cassiopeia")
+end
+
 Cass_enabled = menu:add_checkbox("Enabled", Cass_category, 1)
 Cass_combokey = menu:add_keybinder("Combo Mode Key", Cass_category, 32)
+--[[s_table = {}
+s_table[1] = "PKPrediction"
+s_table[2] = "Bruh Internal"
+Cass_prediction = menu:add_combobox("Prediction Selector", Cass_category, s_table, 0)]]
 
 Cass_aa_mode = menu:add_subcategory("Auto Attacks Selector", Cass_category)
-Cass_aa = menu:add_slider("Stop AA In Combo Mode >= Slider Level", Cass_aa_mode, 1, 18, 11)
+Cass_aa = menu:add_slider("Stop [AA] In Combo Mode >= Slider Level", Cass_aa_mode, 1, 18, 11)
 
 Cass_ks_function = menu:add_subcategory("Kill Steal", Cass_category)
-Cass_ks_use_q = menu:add_checkbox("Use Q", Cass_ks_function, 1)
-Cass_ks_use_w = menu:add_checkbox("Use W", Cass_ks_function, 1)
-Cass_ks_use_e = menu:add_checkbox("Use E", Cass_ks_function, 1)
-Cass_ks_use_r = menu:add_checkbox("Use R", Cass_ks_function, 1)
+Cass_ks_use_q = menu:add_checkbox("Use [Q]", Cass_ks_function, 1)
+Cass_ks_use_w = menu:add_checkbox("Use [W]", Cass_ks_function, 1)
+Cass_ks_use_e = menu:add_checkbox("Use [E]", Cass_ks_function, 1)
+Cass_ks_use_r = menu:add_checkbox("Use [R]", Cass_ks_function, 1)
 Cass_ks_use_r_blacklist = menu:add_subcategory("Ultimate Kill Steal Blacklist", Cass_ks_function)
 local players = game.players
 for _, t in pairs(players) do
     if t and t.is_enemy then
-        menu:add_checkbox("Use R Kill Steal On: "..tostring(t.champ_name), Cass_ks_use_r_blacklist, 1)
+        menu:add_checkbox("Use [R] Kill Steal On: "..tostring(t.champ_name), Cass_ks_use_r_blacklist, 1)
     end
 end
 
 Cass_lasthit = menu:add_subcategory("Last Hit", Cass_category)
-Cass_lasthit_use = menu:add_checkbox("Use E Last Hit", Cass_lasthit, 1)
-Cass_lasthit_auto = menu:add_checkbox("Auto E Last Hit", Cass_lasthit, 1)
-Cass_lasthit_mana = menu:add_slider("Minimum Mana To E Last Hit", Cass_lasthit, 0, 200, 50)
+Cass_lasthit_use = menu:add_checkbox("Use [E] Last Hit", Cass_lasthit, 1)
+Cass_lasthit_auto = menu:add_checkbox("Auto [E] Last Hit", Cass_lasthit, 1)
+Cass_lasthit_mana = menu:add_slider("Minimum Mana To [E] Last Hit", Cass_lasthit, 0, 200, 50)
 
 Cass_combo = menu:add_subcategory("Combo", Cass_category)
-Cass_combo_use_q = menu:add_checkbox("Use Q", Cass_combo, 1)
-Cass_combo_use_w = menu:add_checkbox("Use W", Cass_combo, 1)
-Cass_combo_use_e = menu:add_checkbox("Use E", Cass_combo, 1)
-Cass_combo_use_r = menu:add_subcategory("R Combo Settings", Cass_combo, 1)
-Cass_combo_r_enemy_hp = menu:add_slider("Combo R if Enemy HP is lower than [%]", Cass_combo_use_r, 1, 100, 50)
-Cass_combo_r_my_hp = menu:add_slider("Only Combo R if My HP is Greater than [%]", Cass_combo_use_r, 1, 100, 20)
-Cass_combo_use_r_blacklist = menu:add_subcategory("Ultimate Combo Blacklist", Cass_combo_use_r)
+Cass_combo_use_q = menu:add_checkbox("Use [Q]", Cass_combo, 1)
+Cass_combo_use_w = menu:add_checkbox("Use [W]", Cass_combo, 1)
+Cass_combo_use_e = menu:add_checkbox("Use [E]", Cass_combo, 1)
+Cass_combo_r = menu:add_subcategory("[R] Combo Settings", Cass_combo, 1)
+Cass_combo_use_r = menu:add_checkbox("Use [R]", Cass_combo_r, 1)
+Cass_combo_r_enemy_hp = menu:add_slider("Combo [R] if Enemy HP is lower than [%]", Cass_combo_r, 1, 100, 50)
+Cass_combo_r_my_hp = menu:add_slider("Only Combo [R] if My HP is Greater than [%]", Cass_combo_r, 1, 100, 20)
+Cass_combo_use_r_blacklist = menu:add_subcategory("Ultimate Combo Blacklist", Cass_combo_r)
 local players = game.players
 for _, v in pairs(players) do
     if v and v.is_enemy then
-        menu:add_checkbox("Use R Combo On: "..tostring(v.champ_name), Cass_combo_use_r_blacklist, 1)
+        menu:add_checkbox("Use [R] Combo On: "..tostring(v.champ_name), Cass_combo_use_r_blacklist, 1)
     end
 end
-Cass_killkey = menu:add_keybinder("Unleash Full Can Kill Combo", Cass_combo, 88, "Full Combo Can Kill Target - Holding Kill key Will Perform R First Then Full Combo")
-Cass_combo_w_posbuff = menu:add_checkbox("Only W When Q Has Missed and Target Is Not Poisoned", Cass_combo, 1)
-Cass_combo_e_posbuff = menu:add_checkbox("Only E Combo When Posion Is Active", Cass_combo, 1)
+Cass_killkey = menu:add_keybinder("Engage [R] Combo Key", Cass_combo, 88, "Holding key Will Perform Enage [R] First Then Full Combo")
+Cass_combo_w_posbuff = menu:add_checkbox("Only [W] When [Q] Has Missed and Target Is Not Poisoned", Cass_combo, 1)
+Cass_combo_e_posbuff = menu:add_checkbox("Only [E] Combo When Posion Is Active", Cass_combo, 1)
 
 Cass_harass = menu:add_subcategory("Harass", Cass_category)
-Cass_harass_use_q = menu:add_checkbox("Use Q", Cass_harass, 1)
-Cass_harass_use_w = menu:add_checkbox("Use W", Cass_harass, 1)
-Cass_harass_use_e = menu:add_checkbox("use E", Cass_harass, 1)
+Cass_harass_use_q = menu:add_checkbox("Use [Q]", Cass_harass, 1)
+Cass_harass_use_w = menu:add_checkbox("Use [W]", Cass_harass, 1)
+Cass_harass_use_e = menu:add_checkbox("use [E]", Cass_harass, 1)
 Cass_harass_mana = menu:add_slider("Minimum Mana To Harass", Cass_harass, 0, 200, 50)
-Cass_harass_posbuff = menu:add_checkbox("Only E Harass When Poison Is Active", Cass_harass, 1)
+Cass_harass_posbuff = menu:add_checkbox("Only [E] Harass When Poison Is Active", Cass_harass, 1)
 
 Cass_laneclear = menu:add_subcategory("Lane Clear", Cass_category)
-Cass_laneclear_use_q = menu:add_checkbox("Use Q", Cass_laneclear, 1)
-Cass_laneclear_use_w = menu:add_checkbox("Use W", Cass_laneclear, 1)
-Cass_laneclear_use_e = menu:add_checkbox("use E", Cass_laneclear, 1)
-Cass_laneclear_min_q = menu:add_slider("Minimum Minion Number To Q", Cass_laneclear, 1, 20, 3)
-Cass_laneclear_min_w = menu:add_slider("Minimum Minion Number To W", Cass_laneclear, 1, 20, 3)
+Cass_laneclear_use_q = menu:add_checkbox("Use [Q]", Cass_laneclear, 1)
+Cass_laneclear_use_w = menu:add_checkbox("Use [W]", Cass_laneclear, 1)
+Cass_laneclear_use_e = menu:add_checkbox("use [E]", Cass_laneclear, 1)
 Cass_laneclear_mana = menu:add_slider("Minimum Mana To Lane Clear", Cass_laneclear, 0, 200, 50)
 
 Cass_jungleclear = menu:add_subcategory("Jungle Clear", Cass_category)
-Cass_jungleclear_use_q = menu:add_checkbox("Use Q", Cass_jungleclear, 1)
-Cass_jungleclear_use_w = menu:add_checkbox("Use W", Cass_jungleclear, 1)
-Cass_jungleclear_use_e = menu:add_checkbox("use E", Cass_jungleclear, 1)
+Cass_jungleclear_use_q = menu:add_checkbox("Use [Q]", Cass_jungleclear, 1)
+Cass_jungleclear_use_w = menu:add_checkbox("Use [W]", Cass_jungleclear, 1)
+Cass_jungleclear_use_e = menu:add_checkbox("use [E]", Cass_jungleclear, 1)
 Cass_jungleclear_mana = menu:add_slider("Minimum Mana To jungle Clear", Cass_jungleclear, 0, 200, 50)
 
-Cass_combo_r_options = menu:add_subcategory("Extra R Settings", Cass_category)
-Cass_combo_use_Inter = menu:add_checkbox("Auto R Interrupt Major Spells", Cass_combo_r_options, 1)
-Cass_combo_use_gapclose = menu:add_checkbox("Auto R Gap Close", Cass_combo_r_options, 1)
-Cass_combo_r_set_key = menu:add_keybinder("Semi Manual R Key", Cass_combo_r_options, 65)
-Cass_combo_r_auto = menu:add_checkbox("Use Auto R", Cass_combo_r_options, 1)
+Cass_combo_r_options = menu:add_subcategory("Extra [R] Features", Cass_category)
+Cass_combo_use_Inter = menu:add_checkbox("Auto [R] Interrupt Major Spells", Cass_combo_r_options, 1)
+Cass_combo_use_gapclose = menu:add_checkbox("Auto [R] Gap Close", Cass_combo_r_options, 1)
+Cass_combo_r_set_key = menu:add_keybinder("Semi Manual [R] Key", Cass_combo_r_options, 65)
+Cass_combo_r_auto = menu:add_checkbox("Use Auto [R]", Cass_combo_r_options, 1)
 Cass_combo_r_auto_x = menu:add_slider("Number Of Targets To Perform Auto R", Cass_combo_r_options, 1, 5, 3)
 
 Cass_draw = menu:add_subcategory("Drawing Features", Cass_category)
-Cass_draw_q = menu:add_checkbox("Draw Q", Cass_draw, 1)
-Cass_draw_e = menu:add_checkbox("Draw E", Cass_draw, 1)
-Cass_draw_r = menu:add_checkbox("Draw R", Cass_draw, 1)
-Cass_lasthit_draw = menu:add_checkbox("Draw Auto E Last Hit", Cass_draw, 1)
+Cass_draw_q = menu:add_checkbox("Draw [Q]", Cass_draw, 1)
+Cass_draw_e = menu:add_checkbox("Draw [E]", Cass_draw, 1)
+Cass_draw_r = menu:add_checkbox("Draw [R]", Cass_draw, 1)
+Cass_lasthit_draw = menu:add_checkbox("Draw Auto [E] Last Hit", Cass_draw, 1)
 Cass_draw_kill = menu:add_checkbox("Draw Full Combo Can Kill", Cass_draw, 1)
 Cass_draw_kill_healthbar = menu:add_checkbox("Draw Full Combo On Target Health Bar", Cass_draw, 1, "Health Bar Damage Is Computed From R, Q, W, E * 2")
 
@@ -289,8 +419,17 @@ local function GetRDmg(unit)
 end
 
 -- Casting
+--[[local function CastQ_PK(unit)
+
+	local hitchance, PredPos = _G.PKPred.GetHitchance(myHero.origin, unit, Q.range, Q.delay, Q.speed, Q.width, false, false)
+	console:log(tostring("Hitchance Q: "..hitchance))
+	if PredPos and hitchance >= 1 then
+		spellbook:cast_spell(SLOT_Q, Q.delay, PredPos.x, PredPos.y, PredPos.z)
+	end
+end]]
 
 local function CastQ(unit)
+
 	pred_output = pred:predict(Q.speed, Q.delay, Q.range, Q.width, unit, false, false)
 	if pred_output.can_cast then
 		castPos = pred_output.cast_pos
@@ -298,8 +437,17 @@ local function CastQ(unit)
 	end
 end
 
+--[[local function CastW_PK(unit)
+
+	local hitchance, PredPos = _G.PKPred.GetHitchance(myHero.origin, unit, W.range, W.delay, W.range, W.radius, false, false)
+	console:log(tostring("Hitchance W: "..hitchance))
+	if PredPos and hitchance >= 3 then
+		spellbook:cast_spell(SLOT_W, W.delay, PredPos.x, PredPos.y, PredPos.z)
+	end
+end]]
 
 local function CastW(unit)
+
 	pred_output = pred:predict(W.speed, W.delay, W.range, W.width, unit, false, false)
 	if pred_output.can_cast then
 		castPos = pred_output.cast_pos
@@ -311,8 +459,18 @@ local function CastE(unit)
 	spellbook:cast_spell_targetted(SLOT_E, unit, E.delay)
 end
 
+--[[local function CastR_PK(unit)
+
+	local hitchance, PredPos = _G.PKPred.GetHitchance(myHero.origin, unit, R.range, R.delay, R.range, R.radius, false, false)
+	console:log(tostring("Hitchance R: "..hitchance))
+	if PredPos and hitchance >= 3 then
+		spellbook:cast_spell(SLOT_R, R.delay, PredPos.x, PredPos.y, PredPos.z)
+	end
+end]]
+
 local function CastR(unit)
-	pred_output = pred:predict(R.speed, R.delay, R.range, R.width, unit, false, false)
+
+	pred_output = pred:predict(R.speed, R.delay, R.range, R.radius, unit, false, false)
 	if pred_output.can_cast then
 		castPos = pred_output.cast_pos
 		spellbook:cast_spell(SLOT_R, R.delay, castPos.x, castPos.y, castPos.z)
@@ -336,6 +494,11 @@ local function Combo()
 		if myHero:distance_to(target.origin) <= Q.range and IsValid(target) and IsKillable(target) then
 			if Ready(SLOT_Q) then
 				CastQ(target)
+				--[[if menu:get_value(Cass_prediction) == 0 then
+					CastQ_PK(target)
+				else
+					CastQ(target)
+				end]]
 			end
 		end
 	end
@@ -344,6 +507,11 @@ local function Combo()
 		if menu:get_value(Cass_combo_w_posbuff) == 0 and Ready(SLOT_W) then
 			if myHero:distance_to(target.origin) <= W.range and IsValid(target) and IsKillable(target) then
 				CastW(target)
+				--[[if menu:get_value(Cass_prediction) == 0 then
+					CastW_PK(target)
+					CastQ(target)
+				else
+				end]]
 			end
 		end
 	end
@@ -352,6 +520,11 @@ local function Combo()
 		if menu:get_value(Cass_combo_w_posbuff) == 1 and not HasPoison(target) and Ready(SLOT_W) then
 			if myHero:distance_to(target.origin) <= W.range and IsValid(target) and IsKillable(target) then
 				CastW(target)
+				--[[if menu:get_value(Cass_prediction) == 0 then
+					CastW_PK(target)
+				else
+					CastW(target)
+				end]]
 			end
 		end
 	end
@@ -375,9 +548,14 @@ local function Combo()
 	if menu:get_value(Cass_combo_use_r) == 1 then
 		if target:health_percentage() <= menu:get_value(Cass_combo_r_enemy_hp) and local_player:health_percentage() >= menu:get_value(Cass_combo_r_my_hp) then
 			if myHero:is_facing(target) and target:is_facing(myHero) and Ready(SLOT_R) then
-				if menu:get_value_string("Use R Combo On: "..tostring(target.champ_name)) == 1 then
+				if menu:get_value_string("Use [R] Combo On: "..tostring(target.champ_name)) == 1 then
 					if myHero:distance_to(target.origin) <= R.range and IsValid(target) and IsKillable(target) then
 						CastR(target)
+						--[[if menu:get_value(Cass_prediction) == 0 then
+							CastR_PK(target)
+						else
+							CastR(target)
+						end]]
 					end
 				end
 			end
@@ -468,9 +646,9 @@ local function KillSteal()
 		end
 		if target.object_id ~= 0 then
 			if menu:get_value(Cass_ks_use_r) == 1 then
-				if GetRDmg(target) > target.health then
+				if GetRDmg(target) > target.health and target.health > GetEDmg(target) then
 					if myHero:distance_to(target.origin) <= R.range and IsValid(target) and IsKillable(target) then
-						if Ready(SLOT_R) and menu:get_value_string("Use R Kill Steal On: "..tostring(target.champ_name)) == 1 then
+						if Ready(SLOT_R) and menu:get_value_string("Use [R] Kill Steal On: "..tostring(target.champ_name)) == 1 then
 							CastR(target)
 						end
 					end
@@ -485,14 +663,11 @@ end
 local function Engage()
 
 	for i, target in ipairs(GetEnemyHeroes()) do
-		local fulldmg = GetQDmg(target) + GetWDmg(target) + GetEDmg(target) * 2 + GetRDmg(target)
 
 		if target.object_id ~= 0 and myHero:distance_to(target.origin) <= R.range and IsValid(target) then
-			if fulldmg > target.health then
-				if Ready(SLOT_R) and Ready(SLOT_Q) and Ready(SLOT_W) then
-					if myHero:is_facing(target) and target:is_facing(myHero) then
-						CastR(target)
-					end
+			if Ready(SLOT_R) and Ready(SLOT_Q) and Ready(SLOT_W) then
+				if myHero:is_facing(target) and target:is_facing(myHero) then
+					CastR(target)
 				end
 			end
 		end
@@ -514,39 +689,39 @@ local function Clear()
 	minions = game.minions
 	for i, target in ipairs(minions) do
 
-		if menu:get_value(Cass_laneclear_use_q) == 1 then
+		if menu:get_value(Cass_laneclear_use_q) == 1 and Ready(SLOT_Q) then
 			if target.object_id ~= 0 then
-				if GetMinionCount(500, target) >= menu:get_value(Cass_laneclear_min_q) then
-					if local_player.mana >= menu:get_value(Cass_laneclear_mana) then
-						if myHero:distance_to(target.origin) <= Q.range and IsValid(target) and IsKillable(target) then
-							if Ready(SLOT_Q) then
-								CastQ(target)
-							end
+				if local_player.mana >= menu:get_value(Cass_laneclear_mana) then
+					if myHero:distance_to(target.origin) <= Q.range and IsValid(target) and IsKillable(target) then
+						local CastPos, targets = GetBestAoEPositionMinion(Q.speed, Q.delay, Q.range, Q.width, target, false, false)
+						if CastPos and targets >= 2 and Ready(SLOT_Q) then
+							spellbook:cast_spell(SLOT_Q, Q.delay, CastPos.x, CastPos.y, CastPos.z)
 						end
 					end
 				end
 			end
-		elseif menu:get_value(Cass_laneclear_use_w) == 1 then
+		end
+
+		if menu:get_value(Cass_laneclear_use_w) == 1 and Ready(SLOT_W) then
 			if target.object_id ~= 0 then
-				if GetMinionCount(500, target) >= menu:get_value(Cass_laneclear_min_w) then
-					if local_player.mana >= menu:get_value(Cass_laneclear_mana) then
-						if myHero:distance_to(target.origin) <= W.range and IsValid(target) and IsKillable(target) then
-							if Ready(SLOT_W) then
-								CastW(target)
-							end
+				if local_player.mana >= menu:get_value(Cass_laneclear_mana) then
+					if myHero:distance_to(target.origin) <= W.range and IsValid(target) and IsKillable(target) then
+						local CastPos, targets = GetBestAoEPositionMinion(W.speed, W.delay, W.range, W.width, target, false, false)
+						if CastPos and targets >= 3 and Ready(SLOT_W) then
+							spellbook:cast_spell(SLOT_W, W.delay, CastPos.x, CastPos.y, CastPos.z)
 						end
 					end
 				end
 			end
-	 	elseif menu:get_value(Cass_laneclear_use_e) == 1 then
+		end
+
+	 	if menu:get_value(Cass_laneclear_use_e) == 1 then
 			if menu:get_value(Cass_lasthit_auto) == 0 then
 				if target.object_id ~= 0 then
-					if GetMinionCount(500, target) >= 1 then
-						if local_player.mana >= menu:get_value(Cass_laneclear_mana) then
-							if myHero:distance_to(target.origin) <= E.range and IsValid(target) and IsKillable(target) then
-								if Ready(SLOT_E) then
-									CastE(target)
-								end
+					if local_player.mana >= menu:get_value(Cass_laneclear_mana) then
+						if myHero:distance_to(target.origin) <= E.range and IsValid(target) and IsKillable(target) then
+							if Ready(SLOT_E) then
+								CastE(target)
 							end
 						end
 					end
@@ -571,6 +746,7 @@ local function JungleClear()
 				end
 			end
 		end
+
 		if target.object_id ~= 0 and menu:get_value(Cass_jungleclear_use_w) == 1 then
 			if local_player.mana >= menu:get_value(Cass_jungleclear_mana) then
 				if myHero:distance_to(target.origin) <= W.range and IsValid(target) and IsKillable(target) then
@@ -580,6 +756,7 @@ local function JungleClear()
 				end
 			end
 		end
+
 		if target.object_id ~= 0 and menu:get_value(Cass_jungleclear_use_e) == 1 then
 			if local_player.mana >= menu:get_value(Cass_jungleclear_mana) then
 				if myHero:distance_to(target.origin) <= E.range and IsValid(target) and IsKillable(target) then
@@ -609,7 +786,7 @@ end
 -- Auto R >= Targets
 
 local function AutoRxTargets()
-	for i, target in ipairs(GetEnemyHeroes()) do
+for i, target in ipairs(GetEnemyHeroes()) do
 
 		if target.object_id ~= 0 then
 			if menu:get_value(Cass_combo_r_auto) == 1 and GetEnemyCount(800, myHero) >= menu:get_value(Cass_combo_r_auto_x) then
@@ -637,10 +814,22 @@ local function AutoELastHit(target)
 	for i, target in ipairs(minions) do
 		if target.object_id ~= 0 and target.is_enemy then
 			if GetEDmgLastHit(target) > target.health then
-				if combo:get_mode() ~= MODE_COMBO and not game:is_key_down(menu:get_value(Cass_combokey)) and not game:is_key_down(menu:get_value(Cass_killkey)) then
+				if not game:is_key_down(menu:get_value(Cass_combokey)) and not game:is_key_down(menu:get_value(Cass_killkey)) then
 					if myHero:distance_to(target.origin) <= E.range and IsValid(target) and IsKillable(target) then
 						if Ready(SLOT_E) then
 							CastE(target)
+						end
+					end
+				end
+			end
+
+			if EpicMonsterPlusSiegMinion(target) then
+				if GetEDmgLastHit(target) > target.health then
+					if not game:is_key_down(menu:get_value(Cass_combokey)) and not game:is_key_down(menu:get_value(Cass_killkey)) then
+						if myHero:distance_to(target.origin) <= E.range and IsValid(target) then
+							if Ready(SLOT_E) then
+								CastE(target)
+							end
 						end
 					end
 				end
@@ -684,6 +873,9 @@ local function on_draw()
 	local_player = game.local_player
 	screen_size = game.screen_size
 
+	target = selector:find_target(2000, mode_health)
+	targetvec = target.origin
+
 	if local_player.object_id ~= 0 then
 		origin = local_player.origin
 		x, y, z = origin.x, origin.y, origin.z
@@ -710,23 +902,26 @@ local function on_draw()
 	if menu:get_value(Cass_lasthit_draw) == 1 then
 		if menu:get_value(Cass_lasthit_auto) == 1 then
 			if menu:get_value(Cass_lasthit_use) == 1 then
-				renderer:draw_text_centered(screen_size.width / 2, 0, "Auto E Only Last Hit Enabled")
+				renderer:draw_text_centered(screen_size.width / 2, 0, "Auto [E] Only Last Hit Enabled")
 			end
 		end
 	end
 
+	local enemydraw = game:world_to_screen(targetvec.x, targetvec.y, targetvec.z)
 	for i, target in ipairs(GetEnemyHeroes()) do
 		local fulldmg = GetQDmg(target) + GetWDmg(target) + GetEDmg(target) * 2 + GetRDmg(target)
 		if Ready(SLOT_R) and Ready(SLOT_Q) and Ready(SLOT_W) then
 			if target.object_id ~= 0 and myHero:distance_to(target.origin) <= 1000 then
 				if menu:get_value(Cass_draw_kill) == 1 then
 					if fulldmg > target.health and IsValid(target) then
-						renderer:draw_text_big_centered(screen_size.width / 2, screen_size.height / 20 + 50, "Unleash Full Can Kill Combo On Target - Hold KILL key")
+						if enemydraw.is_valid then
+							renderer:draw_text_big_centered(enemydraw.x, enemydraw.y, "Full Combo Can Kill")
+						end
 					end
 				end
 			end
 		end
-		if menu:get_value(Cass_draw_kill_healthbar) == 1 then
+		if IsValid(target) and menu:get_value(Cass_draw_kill_healthbar) == 1 then
 			target:draw_damage_health_bar(fulldmg)
 		end
 	end
