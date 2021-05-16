@@ -4,7 +4,7 @@ end
 
 do
     local function AutoUpdate()
-		local Version = 1.4
+		local Version = 1.5
 		local file_name = "VladToTheImir.lua"
 		local url = "https://raw.githubusercontent.com/TheShaunyboi/BruhWalkerEncrypted/main/VladToTheImir.lua"
         local web_version = http:get("https://raw.githubusercontent.com/TheShaunyboi/BruhWalkerEncrypted/main/VladToTheImir.lua.version.txt")
@@ -13,7 +13,7 @@ do
 		if tonumber(web_version) == Version then
 						console:log("-------------------------------------------------")
 						console:log("-------------------------------------------------")
-            console:log("Shaun's Sexy Vladimir v1.4 Successfully Loaded.....")
+            console:log("Shaun's Sexy Vladimir v1.5 Successfully Loaded.....")
 						console:log("-------------------------------------------------")
 						console:log("-------------------------------------------------")
 
@@ -401,6 +401,8 @@ end
 
 vlad_enabled = menu:add_checkbox("Enabled", vlad_category, 1)
 vlad_combokey = menu:add_keybinder("Combo Mode Key", vlad_category, 32)
+menu:add_label("Welcome To Shaun's Sexy Vladimir", vlad_category)
+menu:add_label("#TrueBlood Baby", vlad_category)
 
 vlad_ks_function = menu:add_subcategory("Kill Steal", vlad_category)
 vlad_ks_use_q = menu:add_checkbox("Use [Q]", vlad_ks_function, 1)
