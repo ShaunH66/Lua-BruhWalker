@@ -806,7 +806,7 @@ local function on_gap_close(obj, data)
 
 	if menu:get_value(trist_extra_gapclose) == 1 then
     if IsValid(obj) then
-			if menu:get_value_string("Anti Gap Closer Blacklist: "..tostring(target.champ_name)) == 1 then
+			if menu:get_value_string("Anti Gap Closer Blacklist: "..tostring(obj.champ_name)) == 1 then
 	      if myHero:distance_to(obj.origin) < 400 and Ready(SLOT_R) then
 	        CastR(obj)
 				end
@@ -820,7 +820,7 @@ end
 local function on_possible_interrupt(obj, spell_name)
 	if IsValid(obj) then
     if menu:get_value(trist_extra_interrupt) == 1 then
-			if menu:get_value_string("Interrupt Blacklist: "..tostring(target.champ_name)) == 1 then
+			if menu:get_value_string("Interrupt Blacklist: "..tostring(obj.champ_name)) == 1 then
       	if myHero:distance_to(obj.origin) < QERrange[myHero.level] and Ready(SLOT_R) then
         	CastQ(obj)
 				end
