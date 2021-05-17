@@ -485,6 +485,7 @@ end
 trist_enabled = menu:add_checkbox("Enabled", trist_category, 1)
 trist_combokey = menu:add_keybinder("Combo Mode Key", trist_category, 32)
 menu:add_label("Welcome To Shaun's Sexy Tristana", trist_category)
+menu:add_label("#YordelPornStar", trist_category)
 menu:add_label("#BigGunSmall....Penis?", trist_category)
 
 trist_ks_function = menu:add_subcategory("Kill Steal", trist_category)
