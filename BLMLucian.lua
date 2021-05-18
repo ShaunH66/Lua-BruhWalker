@@ -4,7 +4,7 @@ end
 
 do
     local function AutoUpdate()
-		local Version = 1.2
+		local Version = 1.3
 		local file_name = "BLMLucian.lua"
 		local url = "https://raw.githubusercontent.com/TheShaunyboi/BruhWalkerEncrypted/main/BLMLucian.lua"
         local web_version = http:get("https://raw.githubusercontent.com/TheShaunyboi/BruhWalkerEncrypted/main/BLMLucian.lua.version.txt")
@@ -13,8 +13,7 @@ do
 		if tonumber(web_version) == Version then
 						console:log(".......................................................................................")
 						console:log(".......................................................................................")
-            console:log("Shaun's Sexy Lucian v1.2 Successfully Loaded")
-						console:log("Added - Don't [E] Under Turret Option")
+            console:log("Shaun's Sexy Lucian v1.3 Successfully Loaded")
 						console:log("#BLM #BlackLivesMatter #LucianBLMSaviour")
 						console:log(".......................................................................................")
 						console:log(".......................................................................................")
@@ -427,11 +426,26 @@ local function EpicMonster(unit)
 	end
 end
 
-local function IsUnderTurret(unit)
+local function IsUnderTurretE(unit)
     turrets = game.turrets
     for i, v in ipairs(turrets) do
         if v and v.is_enemy then
             local range = (v.bounding_radius / 2 + 1000 + unit.bounding_radius / 2)
+            if v.is_alive then
+                if v:distance_to(unit.origin) < range then
+                    return true
+                end
+            end
+        end
+    end
+    return false
+end
+
+local function IsUnderTurret(unit)
+    turrets = game.turrets
+    for i, v in ipairs(turrets) do
+        if v and v.is_enemy then
+            local range = (v.bounding_radius / 2 + 775 + unit.bounding_radius / 2)
             if v.is_alive then
                 if v:distance_to(unit.origin) < range then
                     return true
@@ -495,7 +509,7 @@ end
 lucian_enabled = menu:add_checkbox("Enabled", lucian_category, 1)
 lucian_combokey = menu:add_keybinder("Combo Mode Key", lucian_category, 32)
 menu:add_label("Welcome To Shaun's Sexy Lucian", lucian_category)
-menu:add_label("#BlackLivesMatter", lucian_category)
+menu:add_label("#BlackLivesMatter v1.3", lucian_category)
 
 lucian_ks_function = menu:add_subcategory("Kill Steal", lucian_category)
 lucian_ks_q = menu:add_subcategory("[Q] Settings", lucian_ks_function, 1)
@@ -646,7 +660,7 @@ local function Combo()
 			if myHero:distance_to(target.origin) < AAQRange and IsValid(target) and IsKillable(target) then
 				if not HasPassiveShotsReady(myHero) and not Ready(SLOT_W) and not Ready(SLOT_Q) then
 					if Ready(SLOT_E) then
-						if menu:get_value(lucian_combo_e_turret) == 1 and not IsUnderTurret(myHero) then
+						if menu:get_value(lucian_combo_e_turret) == 1 and not IsUnderTurretE(myHero) then
 							CastE(target)
 						elseif menu:get_value(lucian_combo_e_turret) == 0 then
 							CastE(target)
@@ -660,7 +674,7 @@ local function Combo()
 			if myHero:distance_to(target.origin) < AAQRange and IsValid(target) and IsKillable(target) then
 				if not HasPassiveShotsReady(myHero) and not Ready(SLOT_W) and not Ready(SLOT_Q) then
 					if Ready(SLOT_E) then
-						if menu:get_value(lucian_combo_e_turret) == 1 and not IsUnderTurret(myHero) then
+						if menu:get_value(lucian_combo_e_turret) == 1 and not IsUnderTurretE(myHero) then
 							CastEMouse()
 						elseif menu:get_value(lucian_combo_e_turret) == 0 then
 							CastEMouse()
@@ -674,7 +688,7 @@ local function Combo()
 			if myHero:distance_to(target.origin) < AAQRange and IsValid(target) and IsKillable(target) then
 				if not HasPassiveShotsReady(myHero) and not Ready(SLOT_W) and not Ready(SLOT_Q) then
 					if Ready(SLOT_E) then
-						if menu:get_value(lucian_combo_e_turret) == 1 and not IsUnderTurret(myHero) then
+						if menu:get_value(lucian_combo_e_turret) == 1 and not IsUnderTurretE(myHero) then
 							CastESide()
 						elseif menu:get_value(lucian_combo_e_turret) == 0 then
 							CastESide()
@@ -711,7 +725,7 @@ local function Combo()
 			if myHero:distance_to(target.origin) < AAQRange and IsValid(target) and IsKillable(target) then
 				if not HasPassiveShotsReady(myHero) then
 					if Ready(SLOT_E) then
-						if menu:get_value(lucian_combo_e_turret) == 1 and not IsUnderTurret(myHero) then
+						if menu:get_value(lucian_combo_e_turret) == 1 and not IsUnderTurretE(myHero) then
 							CastE(target)
 						elseif menu:get_value(lucian_combo_e_turret) == 0 then
 							CastE(target)
@@ -725,7 +739,7 @@ local function Combo()
 			if myHero:distance_to(target.origin) < AAQRange and IsValid(target) and IsKillable(target) then
 				if not HasPassiveShotsReady(myHero) then
 					if Ready(SLOT_E) then
-						if menu:get_value(lucian_combo_e_turret) == 1 and not IsUnderTurret(myHero) then
+						if menu:get_value(lucian_combo_e_turret) == 1 and not IsUnderTurretE(myHero) then
 							CastEMouse()
 						elseif menu:get_value(lucian_combo_e_turret) == 0 then
 							CastEMouse()
@@ -739,7 +753,7 @@ local function Combo()
 			if myHero:distance_to(target.origin) < AAQRange and IsValid(target) and IsKillable(target) then
 				if not HasPassiveShotsReady(myHero) then
 					if Ready(SLOT_E) then
-						if menu:get_value(lucian_combo_e_turret) == 1 and not IsUnderTurret(myHero) then
+						if menu:get_value(lucian_combo_e_turret) == 1 and not IsUnderTurretE(myHero) then
 							CastESide()
 						elseif menu:get_value(lucian_combo_e_turret) == 0 then
 							CastESide()
@@ -761,7 +775,7 @@ local function Harass()
 	if menu:get_value(lucian_harass_use_q) == 1 and not menu:get_toggle_state(lucian_harass_use_auto_q) then
 		if myHero:distance_to(target.origin) <= Q.range and IsValid(target) and IsKillable(target) then
 			if Ready(SLOT_Q) and not HasPassiveShotsReady(myHero) then
-				if GrabHarassMana then
+				if GrabHarassMana and not IsUnderTurret(myHero) then
 					if menu:get_value_string("Harass Target Blacklist: "..tostring(target.champ_name)) == 1 then
 						CastQ(target)
 					end
@@ -773,7 +787,7 @@ local function Harass()
 	if menu:get_value(lucian_harass_use_w) == 1 then
 		if myHero:distance_to(target.origin) and IsValid(target) and IsKillable(target) then
 			if myHero:distance_to(target.origin) <= W.range then
-				if Ready(SLOT_W) and not Ready(SLOT_Q) and not HasPassiveShotsReady(myHero) and GrabHarassMana then
+				if Ready(SLOT_W) and not IsUnderTurret(myHero) and not Ready(SLOT_Q) and not HasPassiveShotsReady(myHero) and GrabHarassMana then
 					if menu:get_value_string("Harass Target Blacklist: "..tostring(target.champ_name)) == 1 then
 						CastW(target)
 					end
@@ -807,7 +821,7 @@ local function AutoQHarass()
 			pred_output = pred:predict(Q2.speed, QDelay[spellbook:get_spell_slot(SLOT_Q).level], Q2.range, 45, target, false, false)
 			if pred_output.can_cast then
 				NewCastPos = GetLineTargetCount(myHero.origin, pred_output.cast_pos, QDelay[spellbook:get_spell_slot(SLOT_Q).level], Q2.speed, 45)
-				if NewCastPos and Ready(SLOT_Q) and GrabAutoHarassMana then
+				if NewCastPos and Ready(SLOT_Q) and not IsUnderTurret(myHero) and GrabAutoHarassMana then
 					spellbook:cast_spell_targetted(SLOT_Q, NewCastPos, QDelay[spellbook:get_spell_slot(SLOT_Q).level])
 				end
 			end
@@ -928,7 +942,7 @@ local function QExtend()
 	target = selector:find_target(Q2.range, mode_health)
 
 	if menu:get_value(lucian_harass_use_q_ext) == 1 then
-		if IsValid(target) then
+		if IsValid(target) and not IsUnderTurret(myHero) then
 			pred_output = pred:predict(Q2.speed, QDelay[spellbook:get_spell_slot(SLOT_Q).level], Q2.range, 45, target, false, false)
 			if pred_output.can_cast then
 				NewCastPos = GetLineTargetCount(myHero.origin, pred_output.cast_pos, QDelay[spellbook:get_spell_slot(SLOT_Q).level], Q2.speed, 45)
