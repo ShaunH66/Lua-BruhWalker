@@ -2,14 +2,14 @@ if game.local_player.champ_name ~= "Tristana" then
 	return
 end
 
---[[do
+do
     local function AutoUpdate()
 		local Version = 1
-		local file_name = "TristyTheBitchy.lua"
-		local url = "https://raw.githubusercontent.com/TheShaunyboi/BruhWalkerEncrypted/main/TristyTheBitchy.lua"
-        local web_version = http:get("https://raw.githubusercontent.com/TheShaunyboi/BruhWalkerEncrypted/main/TristyTheBitchy.lua.version.txt")
-        console:log("TristyTheBitchy.lua Vers: "..Version)
-		console:log("TristyTheBitchyn.Web Vers: "..tonumber(web_version))
+		local file_name = "TristanaTheYordelPornStar.lua"
+		local url = "https://raw.githubusercontent.com/TheShaunyboi/BruhWalkerEncrypted/main/TristanaTheYordelPornStar.lua"
+        local web_version = http:get("https://raw.githubusercontent.com/TheShaunyboi/BruhWalkerEncrypted/main/TristanaTheYordelPornStar.lua.version.txt")
+        console:log("TristanaTheYordelPornStar.lua Vers: "..Version)
+		console:log("TristanaTheYordelPornStar.Web Vers: "..tonumber(web_version))
 		if tonumber(web_version) == Version then
 						console:log(".......................................................................................")
 						console:log(".......................................................................................")
@@ -34,7 +34,7 @@ end
     end
 
     AutoUpdate()
-end]]
+end
 
 pred:use_prediction()
 require "PKDamageLib"
@@ -43,6 +43,7 @@ local myHero = game.local_player
 local local_player = game.local_player
 local TristJumped = false
 local LastPos = nil
+local jumpreturn = false
 
 local function Ready(spell)
   return spellbook:can_cast(spell)
@@ -54,7 +55,8 @@ local Q = { delay = .1 }
 local W = { range = 900, delay = .25, width = 350, speed = 1100 }
 local E = { delay = .1, width = 300, speed = 2400  }
 local R = { delay = .25, width = 200, speed = 2000 }
-local QERrange = { 525, 533, 541, 549, 557, 565, 573, 581, 589, 597, 605, 613, 621, 629, 637, 645, 653, 661 }
+--local QERrange = { 525, 533, 541, 549, 557, 565, 573, 581, 589, 597, 605, 613, 621, 629, 637, 645, 653, 661 }
+local QERrange = myHero.attack_range + myHero.bounding_radius
 
 -- Return game data and maths
 
@@ -359,7 +361,7 @@ local function HasHealingBuff(unit)
 end
 
 local function ECount(unit)
-    if unit:has_buff"tristanaecharge") then
+    if unit:has_buff("tristanaecharge") then
         buff = unit:get_buff("tristanaecharge")
         if buff.count > 0 then
             return buff
@@ -486,14 +488,14 @@ trist_enabled = menu:add_checkbox("Enabled", trist_category, 1)
 trist_combokey = menu:add_keybinder("Combo Mode Key", trist_category, 32)
 menu:add_label("Welcome To Shaun's Sexy Tristana", trist_category)
 menu:add_label("#YordelPornStar", trist_category)
-menu:add_label("#BigGunSmall....Penis?", trist_category)
+menu:add_label("#BigGunSmall....Feet?", trist_category)
 
 trist_ks_function = menu:add_subcategory("Kill Steal", trist_category)
-trist_ks_use_er = menu:add_checkbox("Use [E] + [R]", trist_ks_e, 1)
-trist_ks_w = menu:add_subcategory("[W] + [R] Smart Settings", trist_ks_function, 1)
+trist_ks_use_er = menu:add_checkbox("Use [E] + [R]", trist_ks_function, 1)
+--[[trist_ks_w = menu:add_subcategory("[W] + [R] Smart Settings", trist_ks_function, 1)
 trist_ks_use_w = menu:add_checkbox("Use Smart [W] + [R]", trist_ks_w, 1)
 trist_ks_use_w_back = menu:add_slider("[W] Back To Original Position IF My HP < than [%]", trist_ks_w, 1, 100, 20)
-trist_ks_use_w_count = menu:add_slider("Only [W] + [R] IF Target Count <= 'X' Number", trist_ks_w, 1, 5, 2)
+trist_ks_use_w_count = menu:add_slider("Only [W] + [R] IF Target Count <= 'X' Number", trist_ks_w, 1, 5, 2)]]
 trist_ks_r = menu:add_subcategory("[R] Smart Settings", trist_ks_function, 1)
 trist_ks_use_r = menu:add_checkbox("Use [R]", trist_ks_r, 1)
 trist_ks_use_r_aa = menu:add_slider("Don't Use [R] IF 'X' AA Can Kill", trist_ks_r, 1, 10, 3)
@@ -508,16 +510,19 @@ end
 trist_combo = menu:add_subcategory("Combo", trist_category)
 trist_combo_q = menu:add_subcategory("[Q] Settings", trist_combo)
 trist_combo_use_q = menu:add_checkbox("Use [Q]", trist_combo_q, 1)
+trist_combo_use_q_charge = menu:add_checkbox("Use [Q] Only IF Target Has E Charge", trist_combo_q, 1)
 trist_combo_w = menu:add_subcategory("[W] Smart Settings", trist_combo)
 trist_combo_use_w = menu:add_checkbox("Use Smart [W]", trist_combo_w, 1)
-trist_combo_use_w_hp = menu:add_slider("[W] IF Target HP lower than [%]", trist_combo_w, 1, 100, 30)
+trist_combo_use_w_hp = menu:add_slider("[W] IF Target HP <= than [%]", trist_combo_w, 1, 100, 30)
 trist_combo_use_w_count = menu:add_slider("Only [W] IF Target Count <= 'X' Number", trist_combo_w, 1, 5, 1)
+trist_combo_use_w_e = menu:add_checkbox("Wait For [E] To Be Ready", trist_combo_w, 0)
 trist_combo_e = menu:add_subcategory("[E] Settings", trist_combo)
 trist_combo_use_e = menu:add_checkbox("Use [E]", trist_combo_e, 1)
 
 trist_harass = menu:add_subcategory("Harass", trist_category)
 trist_harass_q = menu:add_subcategory("[Q] Settings", trist_harass)
 trist_harass_use_q = menu:add_checkbox("Use [Q]", trist_harass_q, 1)
+trist_harass_use_q_charge = menu:add_checkbox("Use [Q] Only IF Target Has E Charge", trist_harass_q, 1)
 trist_harass_e = menu:add_subcategory("[E] Settings", trist_harass)
 trist_harass_use_e = menu:add_checkbox("Use [E]", trist_harass_e, 1)
 trist_harass_min_mana = menu:add_slider("Minimum Mana [%] To Harass", trist_harass, 1, 100, 20)
@@ -542,6 +547,7 @@ trist_jungleclear_min_mana = menu:add_slider("Minimum Mana [%] To Jungle", trist
 
 trist_extra = menu:add_subcategory("[Sexy] Extra Features", trist_category)
 trist_extra_turret = menu:add_checkbox("Smart [E] Turrent Usage", trist_extra, 1)
+trist_extra_saveme = menu:add_checkbox("Smart [E] Save Me Usage", trist_extra, 1)
 trist_extra_semi_r_key = menu:add_keybinder("[R] Semi Manual Key - Target Closest To Cursor", trist_extra, 65)
 trist_extra_gapclose = menu:add_checkbox("[R] Anti Gap Closer", trist_extra, 1)
 trist_extra_interrupt = menu:add_checkbox("[R] Interrupt Major Channel Spells", trist_extra, 1)
@@ -576,22 +582,20 @@ local function CastW(unit)
 	pred_output = pred:predict(W.speed, W.delay, W.range, W.width, unit, false, false)
 	if pred_output.can_cast then
 		castPos = pred_output.cast_pos
-		spellbook:cast_spell(SLOT_W, W.delay, castPos.x + 400, castPos.y, castPos.z)
+		spellbook:cast_spell(SLOT_W, W.delay, castPos.x, castPos.y, castPos.z)
 	end
 end
 
 local function CastE(unit)
-	origin = target.origin
+	origin = unit.origin
 	x, y, z = origin.x, origin.y, origin.z
 	spellbook:cast_spell(SLOT_E, E.delay, x, y, z)
-	orbwalker:reset_aa()
 end
 
 local function CastR(unit)
-	origin = target.origin
+	origin = unit.origin
 	x, y, z = origin.x, origin.y, origin.z
 	spellbook:cast_spell(SLOT_R, R.delay, x, y, z)
-	orbwalker:reset_aa()
 end
 
 -- Combo
@@ -601,26 +605,34 @@ local function Combo()
 	target = selector:find_target(1500, mode_health)
 
 	if menu:get_value(trist_combo_use_q) == 1 then
-		if myHero:distance_to(target.origin) <= QERrange[myHero.level] and IsValid(target) and IsKillable(target) then
-			if Ready(SLOT_Q) and HasECharge(target) then
-				CastQ()
-			end
-		end
-	end
-
-	if menu:get_value(trist_combo_use_w) == 1 then
-		if myHero:distance_to(target.origin) > QERrange[myHero.level] and IsValid(target) and IsKillable(target) then
-			if myHero:distance_to(target.origin) <= W.range and GetEnemyCountCicular(1500, target.origin) <= menu:get_value(trist_combo_use_w_count) then
-		   	if Ready(SLOT_W) and Ready(SLOT_E) and menu:get_value(trist_combo_use_w_hp) < target.health and not IsUnderTurret(target) then
-					CastW(target)
+		if myHero:distance_to(target.origin) <= QERrange and IsValid(target) and IsKillable(target) then
+			if Ready(SLOT_Q) then
+				if menu:get_value(trist_combo_use_q_charge) == 1 and HasECharge(target) then
+					CastQ()
+				elseif menu:get_value(trist_combo_use_q_charge) == 0 then
+					CastQ()
 				end
 			end
 		end
 	end
 
+	local TristWHP = target.health/target.max_health <= menu:get_value(trist_combo_use_w_hp) / 100
+	if menu:get_value(trist_combo_use_w) == 1 then
+		if myHero:distance_to(target.origin) > QERrange and IsValid(target) and IsKillable(target) then
+			if myHero:distance_to(target.origin) <= W.range and GetEnemyCountCicular(1500, target.origin) <= menu:get_value(trist_combo_use_w_count) then
+		   	if Ready(SLOT_W) and TristWHP and not IsUnderTurret(target) then
+					if menu:get_value(trist_combo_use_w_e) == 1 and Ready(SLOT_E) then
+						CastW(target)
+					elseif menu:get_value(trist_combo_use_w_e) == 0 then
+						CastW(target)
+					end
+				end
+			end
+		end
+	end
 
 	if menu:get_value(trist_combo_use_e) == 1 then
-		if myHero:distance_to(target.origin) < QERrange[myHero.level] and IsValid(target) and IsKillable(target) then
+		if myHero:distance_to(target.origin) < QERrange and IsValid(target) and IsKillable(target) then
 			if Ready(SLOT_E) then
 				CastE(target)
 			end
@@ -636,11 +648,15 @@ local function Harass()
 	target = selector:find_target(W.range, mode_health)
 
 	if menu:get_value(trist_harass_use_q) == 1 then
-		if myHero:distance_to(target.origin) <= QERrange[myHero.level] and IsValid(target) and IsKillable(target) then
-			if Ready(SLOT_Q) and HasECharge(target) then
+		if myHero:distance_to(target.origin) <= QERrange and IsValid(target) and IsKillable(target) then
+			if Ready(SLOT_Q) then
 				if GrabHarassMana then
 					if menu:get_value_string("Harass Blacklist: "..tostring(target.champ_name)) == 1 then
-						CastQ()
+						if menu:get_value(trist_harass_use_q_charge) == 1 and HasECharge(target) then
+							CastQ()
+						elseif menu:get_value(trist_harass_use_q_charge) == 0 then
+							CastQ()
+						end
 					end
 				end
 			end
@@ -649,10 +665,12 @@ local function Harass()
 
 	if menu:get_value(trist_harass_use_e) == 1 then
 		if myHero:distance_to(target.origin) and IsValid(target) and IsKillable(target) then
-			if myHero:distance_to(target.origin) <= QERrange[myHero.level] then
+			if myHero:distance_to(target.origin) <= QERrange then
 				if GrabHarassMana then
 					if menu:get_value_string("Harass Blacklist: "..tostring(target.champ_name)) == 1 then
-						CastE(target)
+						if Ready(SLOT_E) then
+							CastE(target)
+						end
 					end
 				end
 			end
@@ -667,7 +685,7 @@ local function AutoKill()
 
 	for i, target in ipairs(GetEnemyHeroes()) do
 
-		if target.object_id ~= 0 and myHero:distance_to(target.origin) <= QERrange[myHero.level] and IsValid(target) and IsKillable(target) then
+		if target.object_id ~= 0 and myHero:distance_to(target.origin) <= QERrange and IsValid(target) and IsKillable(target) then
 			if menu:get_value(trist_ks_use_er) == 1 and HasECharge(target) then
 				if menu:get_value_string("Kill Steal Blacklist: "..tostring(target.champ_name)) == 1 then
 					local Buff = ECount(target)
@@ -681,14 +699,16 @@ local function AutoKill()
 			end
 		end
 
-		if target.object_id ~= 0 and myHero:distance_to(target.origin) <= W.range and myHero:distance_to(target.origin) > QERrange[myHero.level] and IsValid(target) and IsKillable(target) then
+		--[[if target.object_id ~= 0 and myHero:distance_to(target.origin) <= W.range and myHero:distance_to(target.origin) > QERrange[myHero.level] and IsValid(target) and IsKillable(target) then
 			if menu:get_value(trist_ks_use_w) == 1 and GetEnemyCountCicular(1500, target.origin) <= menu:get_value(trist_ks_use_w_count) then
 				if menu:get_value_string("Kill Steal Blacklist: "..tostring(target.champ_name)) == 1 then
 					if GetRDmg(target) > target.health then
-						if Ready(SLOT_W) and Ready(SLOT_R) then
-							local LastPos = vec3.new(myHero.origin.x, myHero.origin.y, myHero.origin.z)
-							local TristJumped = true
+						console:log("yoyoyoy")
+						if Ready(SLOT_W) and Ready(SLOT_R) and not TristJumped then
+							LastPos = vec3.new(myHero.origin.x, myHero.origin.y, myHero.origin.z)
+							TristJumped = true
 							CastW(target)
+							console:log("HEREE")
 						end
 					end
 				end
@@ -699,24 +719,29 @@ local function AutoKill()
 			CastR(target)
 
 			local TristHPLow = myHero.health/myHero.max_health <= menu:get_value(trist_ks_use_w_back) / 100
-			if TristHPLow and not Ready(SLOT_R) then
-				origin = LastPos.origin
+			if TristHPLow and not Ready(SLOT_R) and Ready(SLOT_W) then
+				origin = LastPos
 				x, y, z = origin.x, origin.y, origin.z
 				spellbook:cast_spell(SLOT_W, W.delay, x, y, z)
+				jumpreturn = true
+			end
+			if jumpreturn and not Ready(SLOT_W) then
 				LastPos = nil
 				TristJumped = false
+				jumpreturn = false
 			end
 			if not TristHPLow then
 				LastPos = nil
 				TristJumped = false
+				jumpreturn = false
 			end
-		end
+		end]]
 
-		local AATotalDMG = menu:get_value(trist_ks_use_r_aa) * myHero.total_attack_damage
-		if target.object_id ~= 0 and myHero:distance_to(target.origin) <= QERrange[myHero.level] and IsValid(target) and IsKillable(target) then
+		local AATotalDMG = (myHero.total_attack_damage * menu:get_value(trist_ks_use_r_aa))
+		if target.object_id ~= 0 and myHero:distance_to(target.origin) <= QERrange and IsValid(target) and IsKillable(target) then
 			if menu:get_value(trist_ks_use_r) == 1 then
 				if menu:get_value_string("Kill Steal Blacklist: "..tostring(target.champ_name)) == 1 then
-					if AATotalDMG > GetRDmg(target) then
+					if AATotalDMG < target.health and Ready(SLOT_R) then
 						if GetRDmg(target) > target.health then
 							CastR(target)
 						end
@@ -737,8 +762,8 @@ local function Clear()
 	for i, target in ipairs(minions) do
 
 		if menu:get_value(trist_laneclear_use_q) == 1 then
-			if IsValid(target) and target.object_id ~= 0 and target.is_enemy and myHero:distance_to(target.origin) < QERrange[myHero.level] then
-				if GetMinionCount(QERrange[myHero.level], myHero) >= menu:get_value(trist_laneclear_q_min) then
+			if IsValid(target) and target.object_id ~= 0 and target.is_enemy and myHero:distance_to(target.origin) < QERrange then
+				if GetMinionCount(QERrange, myHero) >= menu:get_value(trist_laneclear_q_min) then
 					if GrabLaneClearMana and Ready(SLOT_Q) then
 						CastQ()
 					end
@@ -747,7 +772,7 @@ local function Clear()
 		end
 
 		if menu:get_value(trist_laneclear_use_e) == 1 then
-			if IsValid(target) and target.object_id ~= 0 and target.is_enemy and myHero:distance_to(target.origin) < QERrange[myHero.level] then
+			if IsValid(target) and target.object_id ~= 0 and target.is_enemy and myHero:distance_to(target.origin) < QERrange then
 				if EpicMonsterPlusSiege(target) then
 					if GrabLaneClearMana and Ready(SLOT_E) then
             CastE(target)
@@ -768,7 +793,7 @@ local function JungleClear()
 	minions = game.jungle_minions
 	for i, target in ipairs(minions) do
 
-		if target.object_id ~= 0 and menu:get_value(trist_jungleclear_use_q) == 1 and myHero:distance_to(target.origin) < QERrange[myHero.level] then
+		if target.object_id ~= 0 and menu:get_value(trist_jungleclear_use_q) == 1 and myHero:distance_to(target.origin) < QERrange then
 			if IsValid(target) then
 				if GrabJungleClearMana and Ready(SLOT_Q) then
 					CastQ()
@@ -776,7 +801,7 @@ local function JungleClear()
 			end
 		end
 
-		if target.object_id ~= 0 and menu:get_value(trist_jungleclear_use_e) == 1 and myHero:distance_to(target.origin) < QERrange[myHero.level] then
+		if target.object_id ~= 0 and menu:get_value(trist_jungleclear_use_e) == 1 and myHero:distance_to(target.origin) < QERrange then
 			if IsValid(target) then
 				if GrabJungleClearMana and Ready(SLOT_E) then
           CastE(target)
@@ -792,9 +817,32 @@ local function ManualR()
   target = selector:find_target(W.range, mode_cursor)
 
   if game:is_key_down(menu:get_value(trist_extra_semi_r_key)) then
-    if myHero:distance_to(target.origin) < QERrange[myHero.level] then
+    if myHero:distance_to(target.origin) < QERrange then
 			if IsValid(target) and IsKillable(target) and Ready(SLOT_R) then
 				CastR(target)
+			end
+    end
+  end
+end
+
+-- Manual R
+
+local function RSaveMe()
+
+  target = selector:find_target(W.range, mode_distance)
+	local SaveMeHP = myHero.health/myHero.max_health <= 20 / 100
+	local TargetHP = target.health/target.max_health >= 40 / 100
+
+	if menu:get_value(trist_extra_saveme) == 1 then
+    if myHero:distance_to(target.origin) < QERrange then
+			if myHero:distance_to(target.origin) < target.attack_range then
+				if target:is_facing(myHero) then
+					if SaveMeHP and TargetHP then
+						if IsValid(target) and IsKillable(target) and Ready(SLOT_R) then
+							CastR(target)
+						end
+					end
+				end
 			end
     end
   end
@@ -821,8 +869,8 @@ local function on_possible_interrupt(obj, spell_name)
 	if IsValid(obj) then
     if menu:get_value(trist_extra_interrupt) == 1 then
 			if menu:get_value_string("Interrupt Blacklist: "..tostring(obj.champ_name)) == 1 then
-      	if myHero:distance_to(obj.origin) < QERrange[myHero.level] and Ready(SLOT_R) then
-        	CastQ(obj)
+      	if myHero:distance_to(obj.origin) < QERrange and Ready(SLOT_R) then
+        	CastR(obj)
 				end
 			end
 		end
@@ -838,7 +886,7 @@ local function AutoETurret()
 
 			if target and target.is_enemy then
 				if target.is_alive then
-					if myHero:distance_to(target.origin) < QERrange[myHero.level]
+					if myHero:distance_to(target.origin) < QERrange then
 						if GetEnemyCountCicular(1500, target.origin) == 0 then
 							if IsUnderTurret(myHero) and Ready(SLOT_E) then
 								CastE(target)
@@ -869,7 +917,6 @@ local function on_draw()
 			renderer:draw_circle(x, y, z, W.range, 255, 0, 255, 255)
 		end
 	end
-
 
 	local enemydraw = game:world_to_screen(targetvec.x, targetvec.y, targetvec.z)
 	for i, target in ipairs(GetEnemyHeroes()) do
@@ -906,11 +953,13 @@ local function on_tick()
 	end
 
 	if game:is_key_down(menu:get_value(trist_extra_semi_r_key)) then
+		orbwalker:move_to()
 		ManualR()
 	end
 
 	AutoKill()
 	AutoETurret()
+	RSaveMe()
 
 end
 
