@@ -4,7 +4,7 @@ end
 
 do
     local function AutoUpdate()
-		local Version = 1
+		local Version = 1.1
 		local file_name = "TristanaTheYordelPornStar.lua"
 		local url = "https://raw.githubusercontent.com/TheShaunyboi/BruhWalkerEncrypted/main/TristanaTheYordelPornStar.lua"
         local web_version = http:get("https://raw.githubusercontent.com/TheShaunyboi/BruhWalkerEncrypted/main/TristanaTheYordelPornStar.lua.version.txt")
@@ -13,7 +13,7 @@ do
 		if tonumber(web_version) == Version then
 						console:log(".......................................................................................")
 						console:log(".......................................................................................")
-            console:log("Shaun's Sexy Tristana v1 Successfully Loaded")
+            console:log("Shaun's Sexy Tristana v1.1 Successfully Loaded")
 						console:log(".......................................................................................")
 						console:log(".......................................................................................")
 
@@ -56,7 +56,7 @@ local W = { range = 900, delay = .25, width = 350, speed = 1100 }
 local E = { delay = .1, width = 300, speed = 2400  }
 local R = { delay = .25, width = 200, speed = 2000 }
 --local QERrange = { 525, 533, 541, 549, 557, 565, 573, 581, 589, 597, 605, 613, 621, 629, 637, 645, 653, 661 }
-local QERrange = myHero.attack_range + myHero.bounding_radius
+local QERrange = (myHero.attack_range + myHero.bounding_radius + 40)
 
 -- Return game data and maths
 
@@ -487,7 +487,7 @@ end
 trist_enabled = menu:add_checkbox("Enabled", trist_category, 1)
 trist_combokey = menu:add_keybinder("Combo Mode Key", trist_category, 32)
 menu:add_label("Welcome To Shaun's Sexy Tristana", trist_category)
-menu:add_label("#YordelPornStar", trist_category)
+menu:add_label("#YordelPornStar v1.1", trist_category)
 menu:add_label("#BigGunSmall....Feet?", trist_category)
 
 trist_ks_function = menu:add_subcategory("Kill Steal", trist_category)
@@ -498,19 +498,19 @@ trist_ks_use_w_back = menu:add_slider("[W] Back To Original Position IF My HP < 
 trist_ks_use_w_count = menu:add_slider("Only [W] + [R] IF Target Count <= 'X' Number", trist_ks_w, 1, 5, 2)]]
 trist_ks_r = menu:add_subcategory("[R] Smart Settings", trist_ks_function, 1)
 trist_ks_use_r = menu:add_checkbox("Use [R]", trist_ks_r, 1)
-trist_ks_use_r_aa = menu:add_slider("Don't Use [R] IF 'X' AA Can Kill", trist_ks_r, 1, 10, 3)
-trist_ks_blacklist = menu:add_subcategory("Kill Steal Blacklist", trist_ks_function)
+trist_ks_use_r_aa = menu:add_slider("Don't Use [R] IF 'X' AA Can Kill", trist_ks_r, 1, 10, 2)
+trist_ks_blacklist = menu:add_subcategory("Kill Steal Whitelist", trist_ks_function)
 local players = game.players
 for _, t in pairs(players) do
     if t and t.is_enemy then
-        menu:add_checkbox("Kill Steal Blacklist: "..tostring(t.champ_name), trist_ks_blacklist, 1)
+        menu:add_checkbox("Kill Steal Whitelist: "..tostring(t.champ_name), trist_ks_blacklist, 1)
     end
 end
 
 trist_combo = menu:add_subcategory("Combo", trist_category)
 trist_combo_q = menu:add_subcategory("[Q] Settings", trist_combo)
 trist_combo_use_q = menu:add_checkbox("Use [Q]", trist_combo_q, 1)
-trist_combo_use_q_charge = menu:add_checkbox("Use [Q] Only IF Target Has E Charge", trist_combo_q, 1)
+trist_combo_use_q_charge = menu:add_checkbox("Use [Q] Only IF Target Has E Charge", trist_combo_q, 0)
 trist_combo_w = menu:add_subcategory("[W] Smart Settings", trist_combo)
 trist_combo_use_w = menu:add_checkbox("Use Smart [W]", trist_combo_w, 1)
 trist_combo_use_w_hp = menu:add_slider("[W] IF Target HP <= than [%]", trist_combo_w, 1, 100, 30)
@@ -522,15 +522,15 @@ trist_combo_use_e = menu:add_checkbox("Use [E]", trist_combo_e, 1)
 trist_harass = menu:add_subcategory("Harass", trist_category)
 trist_harass_q = menu:add_subcategory("[Q] Settings", trist_harass)
 trist_harass_use_q = menu:add_checkbox("Use [Q]", trist_harass_q, 1)
-trist_harass_use_q_charge = menu:add_checkbox("Use [Q] Only IF Target Has E Charge", trist_harass_q, 1)
+trist_harass_use_q_charge = menu:add_checkbox("Use [Q] Only IF Target Has E Charge", trist_harass_q, 0)
 trist_harass_e = menu:add_subcategory("[E] Settings", trist_harass)
 trist_harass_use_e = menu:add_checkbox("Use [E]", trist_harass_e, 1)
 trist_harass_min_mana = menu:add_slider("Minimum Mana [%] To Harass", trist_harass, 1, 100, 20)
-trist_harass_blacklist = menu:add_subcategory("Harass Target Blacklist", trist_harass)
+trist_harass_blacklist = menu:add_subcategory("Harass Target Whitelist", trist_harass)
 local players = game.players
 for _, t in pairs(players) do
     if t and t.is_enemy then
-        menu:add_checkbox("Harass Blacklist: "..tostring(t.champ_name), trist_harass_blacklist, 1)
+        menu:add_checkbox("Harass Whitelist: "..tostring(t.champ_name), trist_harass_blacklist, 1)
     end
 end
 
@@ -547,23 +547,26 @@ trist_jungleclear_min_mana = menu:add_slider("Minimum Mana [%] To Jungle", trist
 
 trist_extra = menu:add_subcategory("[Sexy] Extra Features", trist_category)
 trist_extra_turret = menu:add_checkbox("Smart [E] Turret Usage", trist_extra, 1)
-trist_extra_saveme = menu:add_checkbox("Smart [R] Save Me! Usage", trist_extra, 1)
+trist_extra_save = menu:add_subcategory("Smart [R] Save Me! Settings", trist_extra)
+trist_extra_saveme = menu:add_checkbox("Use Smart [R] Save Me! Usage", trist_extra_save, 1)
+trist_extra_saveme_myhp = menu:add_slider("[R] Save Me! When My HP < [%]", trist_extra_save, 1, 100, 25)
+trist_extra_saveme_target = menu:add_slider("[R] Save Me! When Target > [%]", trist_extra_save, 1, 100, 45)
 trist_extra_semi_r_key = menu:add_keybinder("[R] Semi Manual Key - Target Closest To Cursor", trist_extra, 65)
 trist_extra_gapclose = menu:add_checkbox("[R] Anti Gap Closer", trist_extra, 1)
 trist_extra_interrupt = menu:add_checkbox("[R] Interrupt Major Channel Spells", trist_extra, 1)
-trist_extra_gapclose_blacklist = menu:add_subcategory("Anti Gap Closer Blacklist", trist_extra)
+trist_extra_gapclose_blacklist = menu:add_subcategory("Anti Gap Closer Whitelist", trist_extra)
 local players = game.players
 for _, t in pairs(players) do
     if t and t.is_enemy then
-        menu:add_checkbox("Anti Gap Closer Blacklist: "..tostring(t.champ_name), trist_extra_gapclose_blacklist, 1)
+        menu:add_checkbox("Anti Gap Closer Whitelist: "..tostring(t.champ_name), trist_extra_gapclose_blacklist, 1)
     end
 end
 
-trist_extra_interrupt_blacklist = menu:add_subcategory("Interrupt Blacklist", trist_extra)
+trist_extra_interrupt_blacklist = menu:add_subcategory("Interrupt Whitelist", trist_extra)
 local players = game.players
 for _, t in pairs(players) do
     if t and t.is_enemy then
-        menu:add_checkbox("Interrupt Blacklist: "..tostring(t.champ_name), trist_extra_interrupt_blacklist, 1)
+        menu:add_checkbox("Interrupt Whitelist: "..tostring(t.champ_name), trist_extra_interrupt_blacklist, 1)
     end
 end
 
@@ -651,7 +654,7 @@ local function Harass()
 		if myHero:distance_to(target.origin) <= QERrange and IsValid(target) and IsKillable(target) then
 			if Ready(SLOT_Q) then
 				if GrabHarassMana then
-					if menu:get_value_string("Harass Blacklist: "..tostring(target.champ_name)) == 1 then
+					if menu:get_value_string("Harass Whitelist: "..tostring(target.champ_name)) == 1 then
 						if menu:get_value(trist_harass_use_q_charge) == 1 and HasECharge(target) then
 							CastQ()
 						elseif menu:get_value(trist_harass_use_q_charge) == 0 then
@@ -667,7 +670,7 @@ local function Harass()
 		if myHero:distance_to(target.origin) and IsValid(target) and IsKillable(target) then
 			if myHero:distance_to(target.origin) <= QERrange then
 				if GrabHarassMana then
-					if menu:get_value_string("Harass Blacklist: "..tostring(target.champ_name)) == 1 then
+					if menu:get_value_string("Harass Whitelist: "..tostring(target.champ_name)) == 1 then
 						if Ready(SLOT_E) then
 							CastE(target)
 						end
@@ -687,7 +690,7 @@ local function AutoKill()
 
 		if target.object_id ~= 0 and myHero:distance_to(target.origin) <= QERrange and IsValid(target) and IsKillable(target) then
 			if menu:get_value(trist_ks_use_er) == 1 and HasECharge(target) then
-				if menu:get_value_string("Kill Steal Blacklist: "..tostring(target.champ_name)) == 1 then
+				if menu:get_value_string("Kill Steal Whitelist: "..tostring(target.champ_name)) == 1 then
 					local Buff = ECount(target)
 					if Buff and Buff.count >= 3 then
 						local FullDMG = (GetEDmg(target) + GetRDmg(target))
@@ -701,7 +704,7 @@ local function AutoKill()
 
 		--[[if target.object_id ~= 0 and myHero:distance_to(target.origin) <= W.range and myHero:distance_to(target.origin) > QERrange[myHero.level] and IsValid(target) and IsKillable(target) then
 			if menu:get_value(trist_ks_use_w) == 1 and GetEnemyCountCicular(1500, target.origin) <= menu:get_value(trist_ks_use_w_count) then
-				if menu:get_value_string("Kill Steal Blacklist: "..tostring(target.champ_name)) == 1 then
+				if menu:get_value_string("Kill Steal whitelist: "..tostring(target.champ_name)) == 1 then
 					if GetRDmg(target) > target.health then
 						console:log("yoyoyoy")
 						if Ready(SLOT_W) and Ready(SLOT_R) and not TristJumped then
@@ -740,7 +743,7 @@ local function AutoKill()
 		local AATotalDMG = (myHero.total_attack_damage * menu:get_value(trist_ks_use_r_aa))
 		if target.object_id ~= 0 and myHero:distance_to(target.origin) <= QERrange and IsValid(target) and IsKillable(target) then
 			if menu:get_value(trist_ks_use_r) == 1 then
-				if menu:get_value_string("Kill Steal Blacklist: "..tostring(target.champ_name)) == 1 then
+				if menu:get_value_string("Kill Steal Whitelist: "..tostring(target.champ_name)) == 1 then
 					if AATotalDMG < target.health and Ready(SLOT_R) then
 						if GetRDmg(target) > target.health then
 							CastR(target)
@@ -830,8 +833,8 @@ end
 local function RSaveMe()
 
   target = selector:find_target(W.range, mode_distance)
-	local SaveMeHP = myHero.health/myHero.max_health <= 20 / 100
-	local TargetHP = target.health/target.max_health >= 40 / 100
+	local SaveMeHP = myHero.health/myHero.max_health <= menu:get_value(trist_extra_saveme_myhp) / 100
+	local TargetHP = target.health/target.max_health >= menu:get_value(trist_extra_saveme_target) / 100
 
 	if menu:get_value(trist_extra_saveme) == 1 then
     if myHero:distance_to(target.origin) < QERrange then
@@ -854,7 +857,7 @@ local function on_gap_close(obj, data)
 
 	if menu:get_value(trist_extra_gapclose) == 1 then
     if IsValid(obj) then
-			if menu:get_value_string("Anti Gap Closer Blacklist: "..tostring(obj.champ_name)) == 1 then
+			if menu:get_value_string("Anti Gap Closer Whitelist: "..tostring(obj.champ_name)) == 1 then
 	      if myHero:distance_to(obj.origin) < 400 and Ready(SLOT_R) then
 	        CastR(obj)
 				end
@@ -868,7 +871,7 @@ end
 local function on_possible_interrupt(obj, spell_name)
 	if IsValid(obj) then
     if menu:get_value(trist_extra_interrupt) == 1 then
-			if menu:get_value_string("Interrupt Blacklist: "..tostring(obj.champ_name)) == 1 then
+			if menu:get_value_string("Interrupt Whitelist: "..tostring(obj.champ_name)) == 1 then
       	if myHero:distance_to(obj.origin) < QERrange and Ready(SLOT_R) then
         	CastR(obj)
 				end
