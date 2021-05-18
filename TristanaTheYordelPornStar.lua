@@ -4,7 +4,7 @@ end
 
 do
     local function AutoUpdate()
-		local Version = 1.1
+		local Version = 1.2
 		local file_name = "TristanaTheYordelPornStar.lua"
 		local url = "https://raw.githubusercontent.com/TheShaunyboi/BruhWalkerEncrypted/main/TristanaTheYordelPornStar.lua"
         local web_version = http:get("https://raw.githubusercontent.com/TheShaunyboi/BruhWalkerEncrypted/main/TristanaTheYordelPornStar.lua.version.txt")
@@ -13,7 +13,7 @@ do
 		if tonumber(web_version) == Version then
 						console:log(".......................................................................................")
 						console:log(".......................................................................................")
-            console:log("Shaun's Sexy Tristana v1.1 Successfully Loaded")
+            console:log("Shaun's Sexy Tristana v1.2 Successfully Loaded")
 						console:log(".......................................................................................")
 						console:log(".......................................................................................")
 
@@ -487,7 +487,7 @@ end
 trist_enabled = menu:add_checkbox("Enabled", trist_category, 1)
 trist_combokey = menu:add_keybinder("Combo Mode Key", trist_category, 32)
 menu:add_label("Welcome To Shaun's Sexy Tristana", trist_category)
-menu:add_label("#YordelPornStar v1.1", trist_category)
+menu:add_label("#YordelPornStar v1.2", trist_category)
 menu:add_label("#BigGunSmall....Feet?", trist_category)
 
 trist_ks_function = menu:add_subcategory("Kill Steal", trist_category)
@@ -620,9 +620,10 @@ local function Combo()
 	end
 
 	local TristWHP = target.health/target.max_health <= menu:get_value(trist_combo_use_w_hp) / 100
+	local MaxJumpRange = myHero:distance_to(target.origin) <= W.range + QERrange
 	if menu:get_value(trist_combo_use_w) == 1 then
 		if myHero:distance_to(target.origin) > QERrange and IsValid(target) and IsKillable(target) then
-			if myHero:distance_to(target.origin) <= W.range and GetEnemyCountCicular(1500, target.origin) <= menu:get_value(trist_combo_use_w_count) then
+			if MaxJumpRange and GetEnemyCountCicular(1500, target.origin) <= menu:get_value(trist_combo_use_w_count) then
 		   	if Ready(SLOT_W) and TristWHP and not IsUnderTurret(target) then
 					if menu:get_value(trist_combo_use_w_e) == 1 and Ready(SLOT_E) then
 						CastW(target)
