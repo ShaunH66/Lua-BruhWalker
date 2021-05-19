@@ -4,7 +4,7 @@ end
 
 do
     local function AutoUpdate()
-		local Version = 1.2
+		local Version = 1.3
 		local file_name = "TristanaTheYordelPornStar.lua"
 		local url = "https://raw.githubusercontent.com/TheShaunyboi/BruhWalkerEncrypted/main/TristanaTheYordelPornStar.lua"
         local web_version = http:get("https://raw.githubusercontent.com/TheShaunyboi/BruhWalkerEncrypted/main/TristanaTheYordelPornStar.lua.version.txt")
@@ -13,7 +13,7 @@ do
 		if tonumber(web_version) == Version then
 						console:log(".......................................................................................")
 						console:log(".......................................................................................")
-            console:log("Shaun's Sexy Tristana v1.2 Successfully Loaded")
+            console:log("Shaun's Sexy Tristana v1.3 Successfully Loaded")
 						console:log(".......................................................................................")
 						console:log(".......................................................................................")
 
@@ -41,9 +41,6 @@ require "PKDamageLib"
 
 local myHero = game.local_player
 local local_player = game.local_player
-local TristJumped = false
-local LastPos = nil
-local jumpreturn = false
 
 local function Ready(spell)
   return spellbook:can_cast(spell)
@@ -55,8 +52,6 @@ local Q = { delay = .1 }
 local W = { range = 900, delay = .25, width = 350, speed = 1100 }
 local E = { delay = .1, width = 300, speed = 2400  }
 local R = { delay = .25, width = 200, speed = 2000 }
---local QERrange = { 525, 533, 541, 549, 557, 565, 573, 581, 589, 597, 605, 613, 621, 629, 637, 645, 653, 661 }
-local QERrange = (myHero.attack_range + myHero.bounding_radius + 40)
 
 -- Return game data and maths
 
@@ -487,19 +482,15 @@ end
 trist_enabled = menu:add_checkbox("Enabled", trist_category, 1)
 trist_combokey = menu:add_keybinder("Combo Mode Key", trist_category, 32)
 menu:add_label("Welcome To Shaun's Sexy Tristana", trist_category)
-menu:add_label("#YordelPornStar v1.2", trist_category)
+menu:add_label("#YordelPornStar v1.3", trist_category)
 menu:add_label("#BigGunSmall....Feet?", trist_category)
 
 trist_ks_function = menu:add_subcategory("Kill Steal", trist_category)
 trist_ks_use_er = menu:add_checkbox("Use [E] + [R]", trist_ks_function, 1)
---[[trist_ks_w = menu:add_subcategory("[W] + [R] Smart Settings", trist_ks_function, 1)
-trist_ks_use_w = menu:add_checkbox("Use Smart [W] + [R]", trist_ks_w, 1)
-trist_ks_use_w_back = menu:add_slider("[W] Back To Original Position IF My HP < than [%]", trist_ks_w, 1, 100, 20)
-trist_ks_use_w_count = menu:add_slider("Only [W] + [R] IF Target Count <= 'X' Number", trist_ks_w, 1, 5, 2)]]
 trist_ks_r = menu:add_subcategory("[R] Smart Settings", trist_ks_function, 1)
 trist_ks_use_r = menu:add_checkbox("Use [R]", trist_ks_r, 1)
 trist_ks_use_r_aa = menu:add_slider("Don't Use [R] IF 'X' AA Can Kill", trist_ks_r, 1, 10, 2)
-trist_ks_blacklist = menu:add_subcategory("Kill Steal Whitelist", trist_ks_function)
+trist_ks_blacklist = menu:add_subcategory("Kill Steal Champ Whitelist", trist_ks_function)
 local players = game.players
 for _, t in pairs(players) do
     if t and t.is_enemy then
@@ -518,6 +509,13 @@ trist_combo_use_w_count = menu:add_slider("Only [W] IF Target Count <= 'X' Numbe
 trist_combo_use_w_e = menu:add_checkbox("Wait For [E] To Be Ready", trist_combo_w, 0)
 trist_combo_e = menu:add_subcategory("[E] Settings", trist_combo)
 trist_combo_use_e = menu:add_checkbox("Use [E]", trist_combo_e, 1)
+trist_combo_use_e_blacklist = menu:add_subcategory("[E] Combo Champ Whitelist", trist_combo_e)
+local players = game.players
+for _, t in pairs(players) do
+    if t and t.is_enemy then
+        menu:add_checkbox("Use [E] Combo Whitelist: "..tostring(t.champ_name), trist_combo_use_e_blacklist, 1)
+    end
+end
 
 trist_harass = menu:add_subcategory("Harass", trist_category)
 trist_harass_q = menu:add_subcategory("[Q] Settings", trist_harass)
@@ -526,7 +524,7 @@ trist_harass_use_q_charge = menu:add_checkbox("Use [Q] Only IF Target Has E Char
 trist_harass_e = menu:add_subcategory("[E] Settings", trist_harass)
 trist_harass_use_e = menu:add_checkbox("Use [E]", trist_harass_e, 1)
 trist_harass_min_mana = menu:add_slider("Minimum Mana [%] To Harass", trist_harass, 1, 100, 20)
-trist_harass_blacklist = menu:add_subcategory("Harass Target Whitelist", trist_harass)
+trist_harass_blacklist = menu:add_subcategory("Harass Champ Whitelist", trist_harass)
 local players = game.players
 for _, t in pairs(players) do
     if t and t.is_enemy then
@@ -552,9 +550,10 @@ trist_extra_saveme = menu:add_checkbox("Use Smart [R] Save Me! Usage", trist_ext
 trist_extra_saveme_myhp = menu:add_slider("[R] Save Me! When My HP < [%]", trist_extra_save, 1, 100, 25)
 trist_extra_saveme_target = menu:add_slider("[R] Save Me! When Target > [%]", trist_extra_save, 1, 100, 45)
 trist_extra_semi_r_key = menu:add_keybinder("[R] Semi Manual Key - Target Closest To Cursor", trist_extra, 65)
-trist_extra_gapclose = menu:add_checkbox("[R] Anti Gap Closer", trist_extra, 1)
-trist_extra_interrupt = menu:add_checkbox("[R] Interrupt Major Channel Spells", trist_extra, 1)
-trist_extra_gapclose_blacklist = menu:add_subcategory("Anti Gap Closer Whitelist", trist_extra)
+
+trist_extra_gap = menu:add_subcategory("[R] Anti Gap Closer Settings", trist_extra)
+trist_extra_gapclose = menu:add_toggle("[R] Toggle Anti Gap Closer key", 1, trist_extra_gap, 90, true)
+trist_extra_gapclose_blacklist = menu:add_subcategory("[R] Anti Gap Closer Champ Whitelist", trist_extra_gap)
 local players = game.players
 for _, t in pairs(players) do
     if t and t.is_enemy then
@@ -562,7 +561,9 @@ for _, t in pairs(players) do
     end
 end
 
-trist_extra_interrupt_blacklist = menu:add_subcategory("Interrupt Whitelist", trist_extra)
+trist_extra_int = menu:add_subcategory("[R] Interrupt Major Channel Spells Settings", trist_extra, 1)
+trist_extra_interrupt = menu:add_checkbox("Use [R] Interrupt Major Channel Spells", trist_extra_int, 1)
+trist_extra_interrupt_blacklist = menu:add_subcategory("[R] Interrupt Champ Whitelist", trist_extra_int)
 local players = game.players
 for _, t in pairs(players) do
     if t and t.is_enemy then
@@ -572,6 +573,7 @@ end
 
 trist_draw = menu:add_subcategory("The Drawing Features", trist_category)
 trist_draw_w = menu:add_checkbox("Draw [W] Range", trist_draw, 1)
+trist_draw_gapclose = menu:add_checkbox("Draw [R] Anti Gap Closer Toggle Text", trist_draw, 1)
 trist_draw_kill = menu:add_checkbox("Draw Full Combo Can Kill Text", trist_draw, 1)
 trist_draw_kill_healthbar = menu:add_checkbox("Draw Full Combo Colours On Target Health Bar", trist_draw, 1)
 
@@ -637,8 +639,10 @@ local function Combo()
 
 	if menu:get_value(trist_combo_use_e) == 1 then
 		if myHero:distance_to(target.origin) < QERrange and IsValid(target) and IsKillable(target) then
-			if Ready(SLOT_E) then
-				CastE(target)
+			if menu:get_value_string("Use [E] Combo Whitelist: "..tostring(target.champ_name)) == 1 then
+				if Ready(SLOT_E) then
+					CastE(target)
+				end
 			end
 		end
 	end
@@ -702,44 +706,6 @@ local function AutoKill()
 				end
 			end
 		end
-
-		--[[if target.object_id ~= 0 and myHero:distance_to(target.origin) <= W.range and myHero:distance_to(target.origin) > QERrange[myHero.level] and IsValid(target) and IsKillable(target) then
-			if menu:get_value(trist_ks_use_w) == 1 and GetEnemyCountCicular(1500, target.origin) <= menu:get_value(trist_ks_use_w_count) then
-				if menu:get_value_string("Kill Steal whitelist: "..tostring(target.champ_name)) == 1 then
-					if GetRDmg(target) > target.health then
-						console:log("yoyoyoy")
-						if Ready(SLOT_W) and Ready(SLOT_R) and not TristJumped then
-							LastPos = vec3.new(myHero.origin.x, myHero.origin.y, myHero.origin.z)
-							TristJumped = true
-							CastW(target)
-							console:log("HEREE")
-						end
-					end
-				end
-			end
-		end
-
-		if TristJumped then
-			CastR(target)
-
-			local TristHPLow = myHero.health/myHero.max_health <= menu:get_value(trist_ks_use_w_back) / 100
-			if TristHPLow and not Ready(SLOT_R) and Ready(SLOT_W) then
-				origin = LastPos
-				x, y, z = origin.x, origin.y, origin.z
-				spellbook:cast_spell(SLOT_W, W.delay, x, y, z)
-				jumpreturn = true
-			end
-			if jumpreturn and not Ready(SLOT_W) then
-				LastPos = nil
-				TristJumped = false
-				jumpreturn = false
-			end
-			if not TristHPLow then
-				LastPos = nil
-				TristJumped = false
-				jumpreturn = false
-			end
-		end]]
 
 		local AATotalDMG = (myHero.total_attack_damage * menu:get_value(trist_ks_use_r_aa))
 		if target.object_id ~= 0 and myHero:distance_to(target.origin) <= QERrange and IsValid(target) and IsKillable(target) then
@@ -856,7 +822,7 @@ end
 
 local function on_gap_close(obj, data)
 
-	if menu:get_value(trist_extra_gapclose) == 1 then
+	if menu:get_toggle_state(trist_extra_gapclose) then
     if IsValid(obj) then
 			if menu:get_value_string("Anti Gap Closer Whitelist: "..tostring(obj.champ_name)) == 1 then
 	      if myHero:distance_to(obj.origin) < 400 and Ready(SLOT_R) then
@@ -939,6 +905,12 @@ local function on_draw()
 			target:draw_damage_health_bar(fulldmg)
 		end
 	end
+
+	if menu:get_value(trist_draw_gapclose) == 1 then
+		if menu:get_toggle_state(trist_extra_gapclose) then
+			renderer:draw_text_centered(screen_size.width / 2, 0, "Toggle [R] Anti Gap Closer Enabled")
+		end
+	end
 end
 
 local function on_tick()
@@ -960,6 +932,8 @@ local function on_tick()
 		orbwalker:move_to()
 		ManualR()
 	end
+
+	QERrange = (myHero.attack_range + myHero.bounding_radius + 40)
 
 	AutoKill()
 	AutoETurret()
