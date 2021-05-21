@@ -4,17 +4,15 @@ end
 
 do
     local function AutoUpdate()
-		local Version = 1
+		local Version = 1.2
 		local file_name = "JayceyBaby.lua"
 		local url = "https://raw.githubusercontent.com/TheShaunyboi/BruhWalkerEncrypted/main/JayceyBaby.lua"
         local web_version = http:get("https://raw.githubusercontent.com/TheShaunyboi/BruhWalkerEncrypted/main/JayceyBaby.lua.version.txt")
         console:log("JayceyBaby.lua Vers: "..Version)
 		console:log("JayceyBaby.Web Vers: "..tonumber(web_version))
 		if tonumber(web_version) == Version then
-						console:log("-------------------------------------------------")
-            console:log("Shaun's Sexy Jayce v1 Successfully Loaded.....")
-						console:log("-------------------------------------------------")
-						console:log("-------------------------------------------------")
+            console:log("Shaun's Sexy Jayce Successfully Loaded.....")
+
 
         else
 			http:download_file(url, file_name)
@@ -31,6 +29,31 @@ do
     AutoUpdate()
 end
 
+local VIP = http:get("https://raw.githubusercontent.com/TheShaunyboi/BruhWalkerEncrypted/main/VIP_USER_LIST.lua.txt")
+VIP = VIP .. ','
+local LIST = {}
+for user in VIP:gmatch("(.-),") do
+	table.insert(LIST, user)
+end
+local USER = client.username
+local function VIP_USER_LIST()
+	for _, value in pairs(LIST) do
+		if string.find(tostring(value), client.username) then
+			return true
+		end
+	end
+return false
+end
+
+if not VIP_USER_LIST() then
+  console:log("You Are Not VIP! To Become a Supportor Please Contact Shaunyboi")
+  return
+end
+
+if VIP_USER_LIST() then
+  console:log("..................You Are VIP! Thanks For Supporting <3 #Family........................")
+end
+
 
 pred:use_prediction()
 require "PKDamageLib"
@@ -39,6 +62,7 @@ local myHero = game.local_player
 local local_player = game.local_player
 local QCanFire = false
 local AutoQCanFire = false
+local Qcast = false
 
 
 local function Ready(spell)
@@ -431,43 +455,63 @@ end
 
 -- Menu Config
 
-jayce_category = menu:add_category("Shaun's Sexy Jayce")
+if not file_manager:directory_exists("Shaun's Sexy Common") then
+  file_manager:create_directory("Shaun's Sexy Common")
+end
+
+if file_manager:directory_exists("Shaun's Sexy Common") then
+end
+
+if file_manager:file_exists("Shaun's Sexy Common//Logo.png") then
+	jayce_category = menu:add_category_sprite("Shaun's Sexy Jayce", "Shaun's Sexy Common//Logo.png")
+else
+	http:download_file("https://raw.githubusercontent.com/TheShaunyboi/BruhWalkerEncrypted/main/Common/Logo.png", "Shaun's Sexy Common//Logo.png")
+	jayce_category = menu:add_category("Shaun's Sexy Jayce")
+end
+
 jayce_enabled = menu:add_checkbox("Enabled", jayce_category, 1)
 jayce_combokey = menu:add_keybinder("Combo Mode Key", jayce_category, 32)
+menu:add_label("Welcome To Shaun's Sexy Jayce", jayce_category)
+menu:add_label("#HeyWheresMyGateGone", jayce_category)
 
 jayce_ks_function = menu:add_subcategory("Kill Steal", jayce_category)
-jayce_ks_use_q = menu:add_checkbox("Use Ranged EQ", jayce_ks_function, 1)
-jayce_ks_use_hammer_q = menu:add_checkbox("Use Hammer Q", jayce_ks_function, 1)
-jayce_ks_use_hammer_e = menu:add_checkbox("USe Hammer E", jayce_ks_function, 1)
+jayce_ks_use_q = menu:add_checkbox("Use Ranged [EQ]", jayce_ks_function, 1)
+jayce_ks_use_hammer_q = menu:add_checkbox("Use Hammer [Q]", jayce_ks_function, 1)
+jayce_ks_use_hammer_e = menu:add_checkbox("Use Hammer [E]", jayce_ks_function, 1)
 
 jayce_combo = menu:add_subcategory("Combo", jayce_category)
 jayce_combo_ranged = menu:add_subcategory("Ranged Combo", jayce_combo)
-jayce_combo_use_ranged_q = menu:add_checkbox("Use Range Q", jayce_combo_ranged, 1)
-jayce_combo_use_ranged_w = menu:add_checkbox("Use Ranged W", jayce_combo_ranged, 1)
-jayce_combo_use_ranged_e = menu:add_checkbox("Use Ranged E", jayce_combo_ranged, 1)
+jayce_combo_use_ranged_q = menu:add_checkbox("Use Range [Q]", jayce_combo_ranged, 1)
+jayce_combo_use_ranged_w = menu:add_checkbox("Use Ranged [W]", jayce_combo_ranged, 1)
+jayce_combo_use_ranged_e = menu:add_checkbox("Use Ranged [E]", jayce_combo_ranged, 1)
 jayce_combo_hammer = menu:add_subcategory("Hammer Combo", jayce_combo)
-jayce_combo_use_hammer_q = menu:add_checkbox("Use Hammer Q", jayce_combo_hammer, 1)
-jayce_combo_use_hammer_w = menu:add_checkbox("Use Hammer W", jayce_combo_hammer, 1)
-jayce_combo_use_hammer_e = menu:add_checkbox("Use Hammer E", jayce_combo_hammer, 1)
-jayce_combo_r_set = menu:add_subcategory("R Combo Settings", jayce_combo)
-jayce_combo_use_r_auto = menu:add_checkbox("Combo R Auto Switch On Spell Cool Downs + Distance Checks", jayce_combo_r_set, 1)
-jayce_combo_use_r_switch_hp = menu:add_slider("Distance To Switch To Hammer Form", jayce_combo_r_set, 1, 1000, 300)
-jayce_combo_use_r_switch_hp2 = menu:add_slider("Distance To Switch To Ranged Form", jayce_combo_r_set, 1, 1000, 500)
+jayce_combo_use_hammer_q = menu:add_checkbox("Use Hammer [Q]", jayce_combo_hammer, 1)
+jayce_combo_use_hammer_w = menu:add_checkbox("Use Hammer [W]", jayce_combo_hammer, 1)
+jayce_combo_use_hammer_e = menu:add_checkbox("Use Hammer [E]", jayce_combo_hammer, 1)
+jayce_combo_use_e_ehp = menu:add_slider("Target HP Greater Then [%] To Use Hammer [E]", jayce_combo_hammer, 1, 100, 60)
+jayce_combo_use_e_hp = menu:add_slider("Jayce HP Lower Then [%] To Use Hammer [E]", jayce_combo_hammer, 1, 100, 25)
+jayce_combo_r_set = menu:add_subcategory("[R] Combo Settings", jayce_combo)
+jayce_combo_use_r_auto = menu:add_checkbox("Combo [R] Auto Switch On Spell Cool Downs + Distance Checks", jayce_combo_r_set, 1)
+jayce_combo_use_r_switch_hp = menu:add_slider("Distance To Switch To [Hammer] Form", jayce_combo_r_set, 1, 1000, 300)
+jayce_combo_use_r_switch_hp2 = menu:add_slider("Distance To Switch To [Ranged] Form", jayce_combo_r_set, 1, 1000, 500)
+
 
 jayce_harass = menu:add_subcategory("Harass", jayce_category)
 jayce_harass_ranged = menu:add_subcategory("Ranged Harass", jayce_harass)
-jayce_harass_use_ranged_q = menu:add_checkbox("Use Ranged Q", jayce_harass_ranged, 1)
-jayce_harass_use_ranged_e = menu:add_checkbox("Use Ranged E", jayce_harass_ranged, 1)
+jayce_harass_use_ranged_q = menu:add_checkbox("Use Ranged [Q]", jayce_harass_ranged, 1)
+jayce_harass_use_ranged_e = menu:add_checkbox("Use Ranged [E]", jayce_harass_ranged, 1)
 jayce_harass_hammer = menu:add_subcategory("Hammer Harras", jayce_harass)
-jayce_harass_use_hammer_q = menu:add_checkbox("Use Hammer Q", jayce_harass_hammer, 1)
-jayce_harass_use_hammer_e = menu:add_checkbox("Use Hammer E", jayce_harass_hammer, 1)
+jayce_harass_use_hammer_q = menu:add_checkbox("Use Hammer [Q]", jayce_harass_hammer, 1)
+jayce_harass_use_hammer_e = menu:add_checkbox("Use Hammer [E]", jayce_harass_hammer, 1)
 jayce_harass_min_mana = menu:add_slider("Minimum Mana To Harass", jayce_harass, 1, 500, 100)
 
-jayce_extra = menu:add_subcategory("EPIC Extra Features", jayce_category)
-jayce_eq_set_key = menu:add_keybinder("Semi Manual Ranged EQ Key - Closest To Cursor Target", jayce_extra, 65)
-jayce_e_interrupt = menu:add_checkbox("E Hammer To Interrupt Channel Spells", jayce_extra, 1)
-jayce_eq_auto = menu:add_checkbox("Auto Ranged EQ AoE", jayce_extra, 1)
-jayce_eq_auto_min = menu:add_slider("Minimum Targets To Auto Ranged EQ", jayce_extra, 1, 5, 3)
+jayce_extra = menu:add_subcategory("Extra Features", jayce_category)
+jayce_auto_e = menu:add_checkbox("Auto [E] When You Manually [Q] In Any Direction", jayce_extra, 1)
+jayce_eq_set_key = menu:add_keybinder("Semi Manual Ranged [EQ] Key - Closest To Cursor Target", jayce_extra, 65)
+jayce_e_interrupt = menu:add_checkbox("[E] Hammer To Interrupt Channel Spells", jayce_extra, 1)
+jayce_e_gapclose = menu:add_checkbox("[E] Hammer To Anti Gapclose Targets", jayce_extra, 1)
+jayce_eq_auto = menu:add_checkbox("Auto Ranged [EQ] - Using Best Prediction For Max Damage", jayce_extra, 1)
+jayce_eq_auto_min = menu:add_slider("Minimum Targets To Auto Ranged [EQ]", jayce_extra, 1, 5, 3)
 
 
 --[[jayce_laneclear = menu:add_subcategory("Lane Clear", jayce_category)
@@ -491,10 +535,10 @@ jayce_jungleclear_hammer_q_min = menu:add_slider("Number Of Minions To Use Hamme
 jayce_jungleclear_min_mana = menu:add_slider("Minimum Mana To Jungle Clear", jayce_laneclear, 1, 500, 100)]]
 
 jayce_draw = menu:add_subcategory("The Drawing Features", jayce_category)
-jayce_draw_q = menu:add_checkbox("Draw Normal Q Range", jayce_draw, 1)
-jayce_draw_eq = menu:add_checkbox("Draw EQ Range", jayce_draw, 1)
-jayce_draw_hammer_q = menu:add_checkbox("Draw Q Hammer Range", jayce_draw, 1)
-jayce_r_best_draw = menu:add_checkbox("Draw Auto R Best Position Circle + Count", jayce_draw, 1)
+jayce_draw_q = menu:add_checkbox("Draw Normal [Q] Range", jayce_draw, 1)
+jayce_draw_eq = menu:add_checkbox("Draw [EQ] Range", jayce_draw, 1)
+jayce_draw_hammer_q = menu:add_checkbox("Draw [Q] Hammer Range", jayce_draw, 1)
+jayce_r_best_draw = menu:add_checkbox("Draw Auto [R] Best Position Circle + Count", jayce_draw, 1)
 jayce_draw_kill = menu:add_checkbox("Draw Full Combo Can Kill Text", jayce_draw, 1)
 jayce_draw_kill_healthbar = menu:add_checkbox("Draw Full Combo On Target Health Bar", jayce_draw, 1, "Health Bar Damage Is Computed From R > Q > W")
 
@@ -606,6 +650,12 @@ local function CastERanged(unit)
 	end
 end
 
+local function CastEMouse()
+	local mouse = game.mouse_pos
+	spellbook:cast_spell(SLOT_E, RangedE.delay, mouse.x, mouse.y, mouse.z)
+	Qcast = false
+end
+
 local function CastHammerE(unit)
 
 	spellbook:cast_spell_targetted(SLOT_E, unit, HammerE.delay)
@@ -675,10 +725,14 @@ local function Combo()
 			end
 		end
 
+		local EnemyHP = target.health/target.max_health >= menu:get_value(jayce_combo_use_e_ehp) / 100
+		local MyHP = myHero.health/myHero.max_health <= menu:get_value(jayce_combo_use_e_hp) / 100
 		if menu:get_value(jayce_combo_use_hammer_e) == 1 then
 			if myHero:distance_to(target.origin) <= HammerE.range and IsValid(target) and IsKillable(target) then
-				if Ready(SLOT_E) then
-					CastHammerE(target)
+				if EnemyHP and MyHP then
+					if Ready(SLOT_E) then
+						CastHammerE(target)
+					end
 				end
 			end
 		end
@@ -885,10 +939,8 @@ local function AutoEQ()
 					local CastPos, targets = GetBestAoEPosition(RangedQ2.speed, RangedQ2.delay, RangedQ2.range, RangedQ2.width, unit, true, true)
 					if CastPos and targets >= menu:get_value(jayce_eq_auto_min) then
 						if Ready(SLOT_Q) and not Ready(SLOT_E) and AutoQCanFire then
-							if pred_output.can_cast then
-								castPos = pred_output.cast_pos
-								spellbook:cast_spell(SLOT_Q, RangedQ2.delay, castPos.x, castPos.y, castPos.z)
-							end
+							spellbook:cast_spell(SLOT_Q, RangedQ2.delay, CastPos.x, CastPos.y, CastPos.z)
+
 						end
 						if Ready(SLOT_Q) and Ready(SLOT_E) then
 							Direction = Sub(unit.origin, myHero.origin):normalized()
@@ -945,6 +997,31 @@ local function on_possible_interrupt(obj, spell_name)
 	end
 end
 
+-- Auto Hammer E Gap
+
+local function on_possible_gapclose(obj, spell_name)
+	if IsValid(obj) then
+    if menu:get_value(jayce_e_gapclose) == 1 and not IsRangedForm() then
+      if myHero:distance_to(obj.origin) < HammerE.range and Ready(SLOT_E) then
+        CastHammerE(obj)
+			end
+		end
+	end
+end
+
+local function QManualThenE()
+
+	if menu:get_value(jayce_auto_e) == 1 then
+		if Ready(SLOT_Q) and Ready(SLOT_E) then
+			if IsRangedForm() then
+			 	if Qcast then
+				 	CastEMouse()
+			 	end
+			end
+		end
+	end
+end
+
 -- Auto R --
 
 local function AutoR()
@@ -976,6 +1053,15 @@ local function AutoR()
 	end
 end
 
+local function on_active_spell(obj, active_spell)
+
+	if Is_Me(obj) then
+		if active_spell.spell_name == "JayceShockBlast" then
+			Qcast = true
+		end
+	end
+end
+
 -- object returns, draw and tick usage
 
 screen_size = game.screen_size
@@ -983,7 +1069,8 @@ screen_size = game.screen_size
 local function on_draw()
 	local_player = game.local_player
 
-	local target = selector:find_target(RangedQ2.range, mode_health)
+	target = selector:find_target(2000, mode_health)
+	targetvec = target.origin
 
 	if local_player.object_id ~= 0 then
 		origin = local_player.origin
@@ -1013,18 +1100,21 @@ local function on_draw()
 		end
 	end
 
+	local enemydraw = game:world_to_screen(targetvec.x, targetvec.y, targetvec.z)
 	for i, target in ipairs(GetEnemyHeroes()) do
 		local fulldmg =  GetQRangeDmg(target) + GetQHammerDmg(target) + GetEDmg(target)
 		if Ready(SLOT_R) then
 			if target.object_id ~= 0 and myHero:distance_to(target.origin) <=  RangedQ2.range then
 				if menu:get_value(jayce_draw_kill) == 1 then
 					if fulldmg > target.health and IsValid(target) then
-						renderer:draw_text_big_centered(screen_size.width / 2, screen_size.height / 20 + 50, "Full Spell Rotation Can Kill Target")
+						if enemydraw.is_valid then
+							renderer:draw_text_big_centered(enemydraw.x, enemydraw.y, "Can Kill Target")
+						end
 					end
 				end
 			end
 		end
-		if menu:get_value(jayce_draw_kill_healthbar) == 1 then
+		if IsValid(target) and menu:get_value(jayce_draw_kill_healthbar) == 1 then
 			target:draw_damage_health_bar(fulldmg)
 		end
 	end
@@ -1042,6 +1132,7 @@ local function on_tick()
 
 	if game:is_key_down(menu:get_value(jayce_eq_set_key)) then
 		ManualEQCast()
+		orbwalker:move_to()
 	end
 
 	if menu:get_value(jayce_r_best_draw) == 1 then
@@ -1051,6 +1142,7 @@ local function on_tick()
 	AutoKill()
 	AutoEQ()
 	AutoR()
+	QManualThenE()
 
 	if not Ready(SLOT_Q) and not Ready(SLOT_E) then
 		QCanFire = false
@@ -1062,4 +1154,5 @@ end
 client:set_event_callback("on_tick", on_tick)
 client:set_event_callback("on_draw", on_draw)
 client:set_event_callback("on_possible_interrupt", on_possible_interrupt)
---client:set_event_callback("on_gap_close", on_gap_close)
+client:set_event_callback("on_gap_close", on_gap_close)
+client:set_event_callback("on_active_spell", on_active_spell)

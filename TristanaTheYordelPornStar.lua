@@ -4,21 +4,16 @@ end
 
 do
     local function AutoUpdate()
-		local Version = 1.3
+		local Version = 1.7
 		local file_name = "TristanaTheYordelPornStar.lua"
 		local url = "https://raw.githubusercontent.com/TheShaunyboi/BruhWalkerEncrypted/main/TristanaTheYordelPornStar.lua"
         local web_version = http:get("https://raw.githubusercontent.com/TheShaunyboi/BruhWalkerEncrypted/main/TristanaTheYordelPornStar.lua.version.txt")
         console:log("TristanaTheYordelPornStar.lua Vers: "..Version)
 		console:log("TristanaTheYordelPornStar.Web Vers: "..tonumber(web_version))
 		if tonumber(web_version) == Version then
-						console:log(".......................................................................................")
-						console:log(".......................................................................................")
-            console:log("Shaun's Sexy Tristana v1.3 Successfully Loaded")
-						console:log(".......................................................................................")
-						console:log(".......................................................................................")
-
-        else
-			http:download_file(url, file_name)
+            console:log(".................Shaun's Sexy Tristana Successfully Loaded........................")
+    else
+						http:download_file(url, file_name)
 			      console:log("Sexy Tristana Update available.....")
 						console:log("Please Reload via F5!............")
 						console:log("---------------------------------")
@@ -34,6 +29,31 @@ do
     end
 
     AutoUpdate()
+end
+
+local VIP = http:get("https://raw.githubusercontent.com/TheShaunyboi/BruhWalkerEncrypted/main/VIP_USER_LIST.lua.txt")
+VIP = VIP .. ','
+local LIST = {}
+for user in VIP:gmatch("(.-),") do
+	table.insert(LIST, user)
+end
+local USER = client.username
+local function VIP_USER_LIST()
+	for _, value in pairs(LIST) do
+		if string.find(tostring(value), client.username) then
+			return true
+		end
+	end
+return false
+end
+
+if not VIP_USER_LIST() then
+  console:log("You Are Not VIP! To Become a Supportor Please Contact Shaunyboi")
+  return
+end
+
+if VIP_USER_LIST() then
+  console:log("..................You Are VIP! Thanks For Supporting <3 #Family........................")
 end
 
 pred:use_prediction()
@@ -482,7 +502,7 @@ end
 trist_enabled = menu:add_checkbox("Enabled", trist_category, 1)
 trist_combokey = menu:add_keybinder("Combo Mode Key", trist_category, 32)
 menu:add_label("Welcome To Shaun's Sexy Tristana", trist_category)
-menu:add_label("#YordelPornStar v1.3", trist_category)
+menu:add_label("#YordelPornStar", trist_category)
 menu:add_label("#BigGunSmall....Feet?", trist_category)
 
 trist_ks_function = menu:add_subcategory("Kill Steal", trist_category)
@@ -607,6 +627,8 @@ end
 
 local function Combo()
 
+	local QERrange = (myHero.attack_range + myHero.bounding_radius + 40)
+
 	target = selector:find_target(1500, mode_health)
 
 	if menu:get_value(trist_combo_use_q) == 1 then
@@ -652,6 +674,8 @@ end
 
 local function Harass()
 
+	local QERrange = (myHero.attack_range + myHero.bounding_radius + 40)
+
 	local GrabHarassMana = myHero.mana/myHero.max_mana >= menu:get_value(trist_harass_min_mana) / 100
 	target = selector:find_target(W.range, mode_health)
 
@@ -691,6 +715,7 @@ end
 
 local function AutoKill()
 
+	local QERrange = (myHero.attack_range + myHero.bounding_radius + 40)
 	for i, target in ipairs(GetEnemyHeroes()) do
 
 		if target.object_id ~= 0 and myHero:distance_to(target.origin) <= QERrange and IsValid(target) and IsKillable(target) then
@@ -726,6 +751,7 @@ end
 
 local function Clear()
 
+	local QERrange = (myHero.attack_range + myHero.bounding_radius + 40)
 	local GrabLaneClearMana = myHero.mana/myHero.max_mana >= menu:get_value(trist_laneclear_min_mana) / 100
 
 	minions = game.minions
@@ -758,6 +784,7 @@ end
 
 local function JungleClear()
 
+	local QERrange = (myHero.attack_range + myHero.bounding_radius + 40)
 	local GrabJungleClearMana = myHero.mana/myHero.max_mana >= menu:get_value(trist_jungleclear_min_mana) / 100
 
 	minions = game.jungle_minions
@@ -784,6 +811,8 @@ end
 -- Manual R
 
 local function ManualR()
+
+	local QERrange = (myHero.attack_range + myHero.bounding_radius + 40)
   target = selector:find_target(W.range, mode_cursor)
 
   if game:is_key_down(menu:get_value(trist_extra_semi_r_key)) then
@@ -798,6 +827,8 @@ end
 -- Manual R
 
 local function RSaveMe()
+
+	local QERrange = (myHero.attack_range + myHero.bounding_radius + 40)
 
   target = selector:find_target(W.range, mode_distance)
 	local SaveMeHP = myHero.health/myHero.max_health <= menu:get_value(trist_extra_saveme_myhp) / 100
@@ -822,6 +853,8 @@ end
 
 local function on_gap_close(obj, data)
 
+	local QERrange = (myHero.attack_range + myHero.bounding_radius + 40)
+
 	if menu:get_toggle_state(trist_extra_gapclose) then
     if IsValid(obj) then
 			if menu:get_value_string("Anti Gap Closer Whitelist: "..tostring(obj.champ_name)) == 1 then
@@ -836,6 +869,8 @@ end
 -- Interrupt
 
 local function on_possible_interrupt(obj, spell_name)
+
+	local QERrange = (myHero.attack_range + myHero.bounding_radius + 40)
 	if IsValid(obj) then
     if menu:get_value(trist_extra_interrupt) == 1 then
 			if menu:get_value_string("Interrupt Whitelist: "..tostring(obj.champ_name)) == 1 then
@@ -848,6 +883,8 @@ local function on_possible_interrupt(obj, spell_name)
 end
 
 local function AutoETurret()
+
+	local QERrange = (myHero.attack_range + myHero.bounding_radius + 40)
 
 	if menu:get_value(trist_extra_turret) == 1 then
 
@@ -872,6 +909,8 @@ end
 -- object returns, draw and tick usage
 
 local function on_draw()
+
+	local QERrange = (myHero.attack_range + myHero.bounding_radius + 40)
 	screen_size = game.screen_size
 
 	target = selector:find_target(2000, mode_health)
@@ -932,8 +971,6 @@ local function on_tick()
 		orbwalker:move_to()
 		ManualR()
 	end
-
-	QERrange = (myHero.attack_range + myHero.bounding_radius + 40)
 
 	AutoKill()
 	AutoETurret()

@@ -4,21 +4,17 @@ end
 
 do
     local function AutoUpdate()
-		local Version = 2.2
+		local Version = 2.5
 		local file_name = "OhAyKaisa.lua"
 		local url = "https://raw.githubusercontent.com/TheShaunyboi/BruhWalkerEncrypted/main/OhAyKaisa.lua"
         local web_version = http:get("https://raw.githubusercontent.com/TheShaunyboi/BruhWalkerEncrypted/main/OhAyKaisa.lua.version.txt")
         console:log("OhAyKaisa.lua Vers: "..Version)
-		console:log("OhAyKaisa.Web Vers: "..tonumber(web_version))
+				console:log("OhAyKaisa.Web Vers: "..tonumber(web_version))
 		if tonumber(web_version) == Version then
-						console:log("-------------------------------------------------")
-						console:log("-------------------------------------------------")
-            console:log("...Shaun's Sexy Kaisa v2.2 Successfully Loaded...")
-						console:log("-------------------------------------------------")
-						console:log("-------------------------------------------------")
+            console:log("..................Shaun's Sexy Kaisa Successfully Loaded..........................")
 
-        else
-			http:download_file(url, file_name)
+    else
+						http:download_file(url, file_name)
 			      console:log("Sexy Kaisa Update available.....")
 						console:log("Please Reload via F5!.....")
 						console:log("----------------------------")
@@ -31,6 +27,33 @@ do
 
     AutoUpdate()
 end
+
+
+local VIP = http:get("https://raw.githubusercontent.com/TheShaunyboi/BruhWalkerEncrypted/main/VIP_USER_LIST.lua.txt")
+VIP = VIP .. ','
+local LIST = {}
+for user in VIP:gmatch("(.-),") do
+	table.insert(LIST, user)
+end
+local USER = client.username
+local function VIP_USER_LIST()
+	for _, value in pairs(LIST) do
+		if string.find(tostring(value), client.username) then
+			return true
+		end
+	end
+return false
+end
+
+if not VIP_USER_LIST() then
+  console:log("You Are Not VIP! To Become a Supportor Please Contact Shaunyboi")
+  return
+end
+
+if VIP_USER_LIST() then
+  console:log("..................You Are VIP! Thanks For Supporting <3 #Family........................")
+end
+
 
 pred:use_prediction()
 require "PKDamageLib"

@@ -3,33 +3,52 @@ if game.local_player.champ_name ~= "Vladimir" then
 end
 
 do
-    local function AutoUpdate()
-		local Version = 1.5
+  local function AutoUpdate()
+		local Version = 1.8
 		local file_name = "VladToTheImir.lua"
 		local url = "https://raw.githubusercontent.com/TheShaunyboi/BruhWalkerEncrypted/main/VladToTheImir.lua"
-        local web_version = http:get("https://raw.githubusercontent.com/TheShaunyboi/BruhWalkerEncrypted/main/VladToTheImir.lua.version.txt")
-        console:log("VladToTheImir.Lua Vers: "..Version)
+	  local web_version = http:get("https://raw.githubusercontent.com/TheShaunyboi/BruhWalkerEncrypted/main/VladToTheImir.lua.version.txt")
+	  console:log("VladToTheImir.Lua Vers: "..Version)
 		console:log("VladToTheImir.Web Vers: "..tonumber(web_version))
 		if tonumber(web_version) == Version then
-						console:log("-------------------------------------------------")
-						console:log("-------------------------------------------------")
-            console:log("Shaun's Sexy Vladimir v1.5 Successfully Loaded.....")
-						console:log("-------------------------------------------------")
-						console:log("-------------------------------------------------")
+			console:log("..................Shaun's Sexy Vlad Successfully Loaded..........................")
 
-        else
+  	else
 			http:download_file(url, file_name)
-			      console:log("Sexy Vladimir Update available.....")
-						console:log("Please Reload via F5!.....")
-						console:log("----------------------------")
-						console:log("Please Reload via F5!.....")
-						console:log("----------------------------")
-						console:log("Please Reload via F5!.....")
-        end
+			console:log("Sexy Vladimir Update available.....")
+			console:log("Please Reload via F5!.....")
+			console:log("----------------------------")
+			console:log("Please Reload via F5!.....")
+			console:log("----------------------------")
+			console:log("Please Reload via F5!.....")
+		end
+  end
+  AutoUpdate()
+end
 
-    end
+local VIP = http:get("https://raw.githubusercontent.com/TheShaunyboi/BruhWalkerEncrypted/main/VIP_USER_LIST.lua.txt")
+VIP = VIP .. ','
+local LIST = {}
+for user in VIP:gmatch("(.-),") do
+	table.insert(LIST, user)
+end
+local USER = client.username
+local function VIP_USER_LIST()
+	for _, value in pairs(LIST) do
+		if string.find(tostring(value), client.username) then
+			return true
+		end
+	end
+return false
+end
 
-    AutoUpdate()
+if not VIP_USER_LIST() then
+  console:log("You Are Not VIP! To Become a Supportor Please Contact Shaunyboi")
+  return
+end
+
+if VIP_USER_LIST() then
+  console:log("..................You Are VIP! Thanks For Supporting <3 #Family........................")
 end
 
 pred:use_prediction()
@@ -889,7 +908,6 @@ local function on_draw()
 			end
 		end
 	end
-
 end
 
 local function on_tick()

@@ -4,20 +4,18 @@ end
 
 do
     local function AutoUpdate()
-		local Version = 2.0
+		local Version = 2.2
 		local file_name = "EzToTheReal.lua"
 		local url = "https://raw.githubusercontent.com/TheShaunyboi/BruhWalkerEncrypted/main/EzToTheReal.lua"
         local web_version = http:get("https://raw.githubusercontent.com/TheShaunyboi/BruhWalkerEncrypted/main/EzToTheReal.lua.version.txt")
         console:log("EzToTheReal.Lua Vers: "..Version)
 		console:log("EzToTheReal.Web Vers: "..tonumber(web_version))
 		if tonumber(web_version) == Version then
-						console:log("----------------------------------------------------------------")
-						console:log("----------------------------------------------------------------")
-						console:log("Sexy Ezreal v2.0 successfully loaded.....")
-						console:log("----------------------------------------------------------------")
-						console:log("----------------------------------------------------------------")
+
+						console:log("Sexy Ezreal Successfully Loaded.....")
+
         else
-			http:download_file(url, file_name)
+						http:download_file(url, file_name)
 			      console:log("Sexy Ezreal Update available.....")
 						console:log("Please Reload via F5!.....")
 						console:log("----------------------------")
@@ -29,6 +27,31 @@ do
     end
 
     AutoUpdate()
+end
+
+local VIP = http:get("https://raw.githubusercontent.com/TheShaunyboi/BruhWalkerEncrypted/main/VIP_USER_LIST.lua.txt")
+VIP = VIP .. ','
+local LIST = {}
+for user in VIP:gmatch("(.-),") do
+	table.insert(LIST, user)
+end
+local USER = client.username
+local function VIP_USER_LIST()
+	for _, value in pairs(LIST) do
+		if string.find(tostring(value), client.username) then
+			return true
+		end
+	end
+return false
+end
+
+if not VIP_USER_LIST() then
+  console:log("You Are Not VIP! To Become a Supportor Please Contact Shaunyboi")
+  return
+end
+
+if VIP_USER_LIST() then
+  console:log("..................You Are VIP! Thanks For Supporting <3 #Family........................")
 end
 
 pred:use_prediction()

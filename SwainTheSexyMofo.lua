@@ -4,18 +4,16 @@ end
 
 do
     local function AutoUpdate()
-		local Version = 1
+		local Version = 1.1
 		local file_name = "SwainTheSexyMofo.lua"
 		local url = "https://raw.githubusercontent.com/TheShaunyboi/BruhWalkerEncrypted/main/SwainTheSexyMofo.lua"
         local web_version = http:get("https://raw.githubusercontent.com/TheShaunyboi/BruhWalkerEncrypted/main/SwainTheSexyMofo.lua.version.txt")
         console:log("SwainTheSexyMofo.lua Vers: "..Version)
 		console:log("SwainTheSexyMofo.Web Vers: "..tonumber(web_version))
 		if tonumber(web_version) == Version then
-						console:log("-------------------------------------------------")
-						console:log("-------------------------------------------------")
-            console:log("...Shaun's Sexy Swain v1 Successfully Loaded.....")
-						console:log("-------------------------------------------------")
-						console:log("-------------------------------------------------")
+
+            console:log("...Shaun's Sexy Swain Successfully Loaded.....")
+
 
         else
 			http:download_file(url, file_name)
@@ -30,6 +28,31 @@ do
     end
 
     AutoUpdate()
+end
+
+local VIP = http:get("https://raw.githubusercontent.com/TheShaunyboi/BruhWalkerEncrypted/main/VIP_USER_LIST.lua.txt")
+VIP = VIP .. ','
+local LIST = {}
+for user in VIP:gmatch("(.-),") do
+	table.insert(LIST, user)
+end
+local USER = client.username
+local function VIP_USER_LIST()
+	for _, value in pairs(LIST) do
+		if string.find(tostring(value), client.username) then
+			return true
+		end
+	end
+return false
+end
+
+if not VIP_USER_LIST() then
+  console:log("You Are Not VIP! To Become a Supportor Please Contact Shaunyboi")
+  return
+end
+
+if VIP_USER_LIST() then
+  console:log("..................You Are VIP! Thanks For Supporting <3 #Family........................")
 end
 
 pred:use_prediction()
@@ -408,15 +431,27 @@ end
 
 -- Menu Config
 
-swain_category = menu:add_category("Shaun's Sexy Swain")
+if not file_manager:directory_exists("Shaun's Sexy Common") then
+  file_manager:create_directory("Shaun's Sexy Common")
+end
+
+if file_manager:file_exists("Shaun's Sexy Common//Logo.png") then
+	swain_category = menu:add_category_sprite("Shaun's Sexy Swain", "Shaun's Sexy Common//Logo.png")
+else
+	http:download_file("https://raw.githubusercontent.com/TheShaunyboi/BruhWalkerEncrypted/main/Common/Logo.png", "Shaun's Sexy Common//Logo.png")
+	swain_category = menu:add_category("Shaun's Sexy Swain")
+end
+
 swain_enabled = menu:add_checkbox("Enabled", swain_category, 1)
 swain_combokey = menu:add_keybinder("Combo Mode Key", swain_category, 32)
+menu:add_label("Welcome To Shaun's Sexy Swain", swain_category)
+menu:add_label("#WheresMyBirdsYouDick..", swain_category)
 
 swain_ks_function = menu:add_subcategory("Kill Steal", swain_category)
-swain_ks_use_q = menu:add_checkbox("Use Q", swain_ks_function, 1)
-swain_ks_use_w = menu:add_checkbox("Use W", swain_ks_function, 1)
-swain_ks_use_e = menu:add_checkbox("Use E", swain_ks_function, 1)
-swain_ks_use_r = menu:add_checkbox("Use R", swain_ks_function, 1)
+swain_ks_use_q = menu:add_checkbox("Use [Q]", swain_ks_function, 1)
+swain_ks_use_w = menu:add_checkbox("Use [W]", swain_ks_function, 1)
+swain_ks_use_e = menu:add_checkbox("Use [E]", swain_ks_function, 1)
+swain_ks_use_r = menu:add_checkbox("Use [R]", swain_ks_function, 1)
 swain_ks_r_blacklist = menu:add_subcategory("Ultimate Kill Steal Blacklist", swain_ks_function)
 local players = game.players
 for _, t in pairs(players) do
@@ -425,20 +460,19 @@ for _, t in pairs(players) do
     end
 end
 
-
 swain_combo = menu:add_subcategory("Combo", swain_category)
-swain_combo_q = menu:add_subcategory("Q Settings", swain_combo)
-swain_combo_use_q = menu:add_checkbox("Use Q", swain_combo_q, 1)
-swain_combo_w = menu:add_subcategory("W Settings", swain_combo)
-swain_combo_use_w = menu:add_checkbox("Use W", swain_combo_w, 1)
-swain_combo_e = menu:add_subcategory("E Settings", swain_combo)
-swain_combo_use_e = menu:add_checkbox("Use E", swain_combo_e, 1)
-swain_combo_e_range = menu:add_slider("Max E Range In Combo", swain_combo_e, 1, 850, 850)
-swain_combo_use_w_imb = menu:add_checkbox("Use W Only When Target Is Immobilised ", swain_combo_w, 1)
-swain_combo_w_range = menu:add_slider("Max W Range In Combo", swain_combo_w, 1, 5000, 2000)
-swain_combo_r = menu:add_subcategory("R Combo Settings", swain_combo)
-swain_combo_use_r = menu:add_checkbox("Use R", swain_combo_r, 1)
-swain_combo_r_enemy_hp = menu:add_slider("Combo R if Enemy HP is lower than [%]", swain_combo_r, 1, 100, 30)
+swain_combo_q = menu:add_subcategory("[Q] Settings", swain_combo)
+swain_combo_use_q = menu:add_checkbox("Use [Q]", swain_combo_q, 1)
+swain_combo_w = menu:add_subcategory("[W] Settings", swain_combo)
+swain_combo_use_w = menu:add_checkbox("Use [W]", swain_combo_w, 1)
+swain_combo_use_w_imb = menu:add_checkbox("Use [W] Only When Target Is Immobilised", swain_combo_w, 1)
+swain_combo_w_range = menu:add_slider("Max [W] Range In Combo", swain_combo_w, 1, 5000, 2000)
+swain_combo_e = menu:add_subcategory("[E] Settings", swain_combo)
+swain_combo_use_e = menu:add_checkbox("Use [E]", swain_combo_e, 1)
+swain_combo_e_range = menu:add_slider("Max [E] Range In Combo", swain_combo_e, 1, 850, 850)
+swain_combo_r = menu:add_subcategory("[R] Combo Settings", swain_combo)
+swain_combo_use_r = menu:add_checkbox("Use [R]", swain_combo_r, 1)
+swain_combo_r_enemy_hp = menu:add_slider("Combo [R] if Enemy HP is lower than [%]", swain_combo_r, 1, 100, 30)
 swain_combo_r_blacklist = menu:add_subcategory("Ultimate Combo Blacklist", swain_combo_r)
 local players = game.players
 for _, v in pairs(players) do
@@ -448,38 +482,38 @@ for _, v in pairs(players) do
 end
 
 swain_harass = menu:add_subcategory("Harass", swain_category)
-swain_harass_use_q = menu:add_checkbox("Use Q", swain_harass, 1)
-swain_harass_use_e = menu:add_checkbox("Use E", swain_harass, 1)
+swain_harass_use_q = menu:add_checkbox("Use [Q]", swain_harass, 1)
+swain_harass_use_e = menu:add_checkbox("Use [E]", swain_harass, 1)
 swain_harass_min_mana = menu:add_slider("Minimum Mana [%] To Harass", swain_harass, 1, 100, 20)
 
 swain_extra = menu:add_subcategory("Sexy Automated Features", swain_category)
-swain_auto_w = menu:add_checkbox("Auto W Immobilised Targets", swain_extra, 1)
-swain_auto_r = menu:add_subcategory("Auto R Settings", swain_extra, 1)
-swain_auto_r_use = menu:add_checkbox("Use Auto R", swain_auto_r, 1)
-swain_auto_r_min = menu:add_slider("Minimum Targets To Perform Auto R", swain_auto_r, 1, 5, 3)
-swain_auto_gapclose = menu:add_checkbox("E Anti Gap Close", swain_extra, 1)
-swain_auto_interrupt = menu:add_checkbox("E Interrupt Major Channel Spells", swain_extra, 1)
+swain_auto_w = menu:add_checkbox("Auto [W] Immobilised Targets", swain_extra, 1)
+swain_auto_r = menu:add_subcategory("Auto [R] Settings", swain_extra, 1)
+swain_auto_r_use = menu:add_checkbox("Use Auto [R]", swain_auto_r, 1)
+swain_auto_r_min = menu:add_slider("Minimum Targets To Perform Auto [R]", swain_auto_r, 1, 5, 3)
+swain_auto_gapclose = menu:add_checkbox("[E] Anti Gap Close", swain_extra, 1)
+swain_auto_interrupt = menu:add_checkbox("[E] Interrupt Major Channel Spells", swain_extra, 1)
 
 swain_laneclear = menu:add_subcategory("Lane Clear", swain_category)
-swain_laneclear_use_q = menu:add_checkbox("Use Q", swain_laneclear, 1)
-swain_laneclear_use_w = menu:add_checkbox("Use W", swain_laneclear, 1)
-swain_laneclear_use_e = menu:add_checkbox("Use E", swain_laneclear, 1)
+swain_laneclear_use_q = menu:add_checkbox("Use [Q]", swain_laneclear, 1)
+swain_laneclear_use_w = menu:add_checkbox("Use [W]", swain_laneclear, 1)
+swain_laneclear_use_e = menu:add_checkbox("Use [E]", swain_laneclear, 1)
 swain_laneclear_min_mana = menu:add_slider("Minimum Mana [%] To Lane Clear", swain_laneclear, 1, 100, 20)
-swain_laneclear_q_min = menu:add_slider("Number Of Minions To Use Q", swain_laneclear, 1, 10, 3)
-swain_laneclear_w_min = menu:add_slider("Number Of Minions To Use W", swain_laneclear, 1, 10, 3)
-swain_laneclear_e_min = menu:add_slider("Number Of Minions To Use E", swain_laneclear, 1, 10, 3)
+swain_laneclear_q_min = menu:add_slider("Number Of Minions To Use [Q]", swain_laneclear, 1, 10, 3)
+swain_laneclear_w_min = menu:add_slider("Number Of Minions To Use [W]", swain_laneclear, 1, 10, 3)
+swain_laneclear_e_min = menu:add_slider("Number Of Minions To Use [E]", swain_laneclear, 1, 10, 3)
 
 swain_jungleclear = menu:add_subcategory("Jungle Clear", swain_category)
-swain_jungleclear_use_q = menu:add_checkbox("Use Q", swain_jungleclear, 1)
-swain_jungleclear_use_w = menu:add_checkbox("Use W", swain_jungleclear, 1)
-swain_jungleclear_use_e = menu:add_checkbox("Use E", swain_jungleclear, 1)
+swain_jungleclear_use_q = menu:add_checkbox("Use [Q]", swain_jungleclear, 1)
+swain_jungleclear_use_w = menu:add_checkbox("Use [W]", swain_jungleclear, 1)
+swain_jungleclear_use_e = menu:add_checkbox("Use [E]", swain_jungleclear, 1)
 swain_jungleclear_min_mana = menu:add_slider("Minimum Mana [%] To Jungle", swain_jungleclear, 1, 100, 20)
 
 swain_draw = menu:add_subcategory("The Drawing Features", swain_category)
-swain_draw_q = menu:add_checkbox("Draw Q Range", swain_draw, 1)
-swain_draw_w = menu:add_checkbox("Draw W Range", swain_draw, 1)
-swain_draw_e = menu:add_checkbox("Draw E Range", swain_draw, 1)
-swain_draw_r = menu:add_checkbox("Draw R Range", swain_draw, 1)
+swain_draw_q = menu:add_checkbox("Draw [Q] Range", swain_draw, 1)
+swain_draw_w = menu:add_checkbox("Draw [W] Range", swain_draw, 1)
+swain_draw_e = menu:add_checkbox("Draw [E] Range", swain_draw, 1)
+swain_draw_r = menu:add_checkbox("Draw [R] Range", swain_draw, 1)
 swain_draw_kill = menu:add_checkbox("Draw Full Combo Can Kill Text", swain_draw, 1)
 swain_draw_kill_healthbar = menu:add_checkbox("Draw Full Combo On Target Health Bar", swain_draw, 1, "Health Bar Damage Is Computed From R > E > Q > W")
 
@@ -563,8 +597,8 @@ local function CastE(unit)
   end
 end
 
-local function CastR(unit)
-	spellbook:cast_spell_targetted(SLOT_R, unit, R.delay)
+local function CastR()
+	spellbook:cast_spell_targetted(SLOT_R, myHero, R.delay)
 end
 
 -- Combo
@@ -578,7 +612,7 @@ local function Combo()
 			if target:health_percentage() <= menu:get_value(swain_combo_r_enemy_hp) then
 				if menu:get_value_string("Use R Combo On: "..tostring(target.champ_name)) == 1 then
 					if Ready(SLOT_R) and not SwainRActive(myHero) then
-						CastR(target)
+						CastR()
 					end
 				end
 			end
@@ -683,7 +717,7 @@ local function AutoKill()
 			if menu:get_value(swain_ks_use_r) == 1 then
         if GetRDmg(target) > target.health then
 				  if menu:get_value_string("Use R Kill Steal On: "..tostring(target.champ_name)) == 1 and Ready(SLOT_R) and not SwainRActive(myHero) then
-					  CastR(myHero)
+					  CastR()
           end
 			  end
 		  end
@@ -773,7 +807,7 @@ end
 local function AutoR()
   if Ready(SLOT_R) and menu:get_value(swain_auto_r_use) == 1 then
     if GetEnemyCountCicular(R.range, myHero.origin) >= menu:get_value(swain_auto_r_min) and not SwainRActive(myHero) then
-      CastR(myHero)
+      CastR()
     end
   end
 end
@@ -821,6 +855,9 @@ local function on_draw()
 	local_player = game.local_player
 	screen_size = game.screen_size
 
+	target = selector:find_target(2000, mode_health)
+	targetvec = target.origin
+
 	if local_player.object_id ~= 0 then
 		origin = local_player.origin
 		x, y, z = origin.x, origin.y, origin.z
@@ -850,18 +887,19 @@ local function on_draw()
 		end
 	end
 
+	local enemydraw = game:world_to_screen(targetvec.x, targetvec.y, targetvec.z)
 	for i, target in ipairs(GetEnemyHeroes()) do
-		local fulldmg = GetQDmg(target) + GetWDmg(target) + GetEDmg(target) + GetRDmg(target)
-		if Ready(SLOT_R) then
-			if target.object_id ~= 0 and myHero:distance_to(target.origin) <= 1000 then
-				if menu:get_value(swain_draw_kill) == 1 then
-					if fulldmg > target.health and IsValid(target) then
-						renderer:draw_text_big_centered(screen_size.width / 2, screen_size.height / 20 + 50, "Full Spell Rotation Can Kill Target")
+		local fulldmg = GetQDmg(target) + GetWDmg(target) + GetEDmg(target)
+		if target.object_id ~= 0 and myHero:distance_to(target.origin) <= 1000 then
+			if menu:get_value(swain_draw_kill) == 1 then
+				if fulldmg > target.health and IsValid(target) then
+					if enemydraw.is_valid then
+						renderer:draw_text_big_centered(enemydraw.x, enemydraw.y, "Can Kill Target")
 					end
 				end
 			end
 		end
-		if menu:get_value(swain_draw_kill_healthbar) == 1 then
+		if IsValid(target) and menu:get_value(swain_draw_kill_healthbar) == 1 then
 			target:draw_damage_health_bar(fulldmg)
 		end
 	end

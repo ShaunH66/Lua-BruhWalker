@@ -4,18 +4,16 @@ end
 
 do
     local function AutoUpdate()
-		local Version = 1.1
+		local Version = 1.2
 		local file_name = "LuluTheDon.lua"
 		local url = "https://raw.githubusercontent.com/TheShaunyboi/BruhWalkerEncrypted/main/LuluTheDon.lua"
         local web_version = http:get("https://raw.githubusercontent.com/TheShaunyboi/BruhWalkerEncrypted/main/LuluTheDon.lua.version.txt")
         console:log("LuluTheDon.lua Vers: "..Version)
 		console:log("LuluTheDon.Web Vers: "..tonumber(web_version))
 		if tonumber(web_version) == Version then
-						console:log("-------------------------------------------------")
-						console:log("-------------------------------------------------")
-            console:log("....Shaun's Sexy Lulu v1.1 Successfully loaded...")
-						console:log("-------------------------------------------------")
-						console:log("-------------------------------------------------")
+
+            console:log("....Shaun's Sexy Lulu Successfully Loaded...")
+
 
         else
 			http:download_file(url, file_name)
@@ -30,6 +28,31 @@ do
     end
 
     AutoUpdate()
+end
+
+local VIP = http:get("https://raw.githubusercontent.com/TheShaunyboi/BruhWalkerEncrypted/main/VIP_USER_LIST.lua.txt")
+VIP = VIP .. ','
+local LIST = {}
+for user in VIP:gmatch("(.-),") do
+	table.insert(LIST, user)
+end
+local USER = client.username
+local function VIP_USER_LIST()
+	for _, value in pairs(LIST) do
+		if string.find(tostring(value), client.username) then
+			return true
+		end
+	end
+return false
+end
+
+if not VIP_USER_LIST() then
+  console:log("You Are Not VIP! To Become a Supportor Please Contact Shaunyboi")
+  return
+end
+
+if VIP_USER_LIST() then
+  console:log("..................You Are VIP! Thanks For Supporting <3 #Family........................")
 end
 
 pred:use_prediction()
@@ -303,39 +326,54 @@ end
 
 -- Menu Config
 
-lulu_category = menu:add_category("Shaun's Sexy Lulu")
+if not file_manager:directory_exists("Shaun's Sexy Common") then
+  file_manager:create_directory("Shaun's Sexy Common")
+end
+
+if file_manager:directory_exists("Shaun's Sexy Common") then
+end
+
+if file_manager:file_exists("Shaun's Sexy Common//Logo.png") then
+	lulu_category = menu:add_category_sprite("Shaun's Sexy Lulu", "Shaun's Sexy Common//Logo.png")
+else
+	http:download_file("https://raw.githubusercontent.com/TheShaunyboi/BruhWalkerEncrypted/main/Common/Logo.png", "Shaun's Sexy Common//Logo.png")
+	lulu_category = menu:add_category("Shaun's Sexy Lulu")
+end
+
 lulu_enabled = menu:add_checkbox("Enabled", lulu_category, 1)
 lulu_combokey = menu:add_keybinder("Combo Mode Key", lulu_category, 32)
+menu:add_label("Welcome To Shaun's Sexy Lulu", lulu_category)
+menu:add_label("#LetsMakeYouBigBaby", lulu_category)
 
 lulu_combo = menu:add_subcategory("Combo", lulu_category)
-lulu_combo_q = menu:add_subcategory("Q Settings", lulu_combo, 1)
-lulu_combo_use_q = menu:add_checkbox("Use Q", lulu_combo_q, 1)
+lulu_combo_q = menu:add_subcategory("[Q] Settings", lulu_combo, 1)
+lulu_combo_use_q = menu:add_checkbox("Use [Q]", lulu_combo_q, 1)
 
-lulu_combo_w = menu:add_subcategory("W Settings", lulu_combo, 1)
-lulu_combo_use_w = menu:add_checkbox("Use W", lulu_combo_w, 1)
-lulu_w_allyblacklist = menu:add_subcategory("Ally W Blacklist", lulu_combo_w)
+lulu_combo_w = menu:add_subcategory("[W] Settings", lulu_combo, 1)
+lulu_combo_use_w = menu:add_checkbox("Use [W]", lulu_combo_w, 1)
+lulu_w_allyblacklist = menu:add_subcategory("Ally [W] Blacklist", lulu_combo_w)
 players = game.players
 for _, v in ipairs(players) do
 	if not v.is_enemy and v.object_id ~= myHero.object_id then
 		menu:add_checkbox("Use W On : "..tostring(v.champ_name), lulu_w_allyblacklist, 1)
 	end
 end
-lulu_combo_e = menu:add_subcategory("E Settings", lulu_combo, 1)
-lulu_combo_use_e = menu:add_checkbox("Use E", lulu_combo_e, 1)
-lulu_combo_e_ally_hp = menu:add_slider("E Ally HP is lower than [%]", lulu_combo_e, 1, 100, 40)
-lulu_combo_e_me_hp = menu:add_slider("E Myself HP is lower than [%]", lulu_combo_e, 1, 100, 10)
-lulu_e_allyblacklist = menu:add_subcategory("Ally E Blacklist", lulu_combo_e)
+lulu_combo_e = menu:add_subcategory("[E] Settings", lulu_combo, 1)
+lulu_combo_use_e = menu:add_checkbox("Use [E]", lulu_combo_e, 1)
+lulu_combo_e_ally_hp = menu:add_slider("[E] Ally HP is lower than [%]", lulu_combo_e, 1, 100, 40)
+lulu_combo_e_me_hp = menu:add_slider("[E] Myself HP is lower than [%]", lulu_combo_e, 1, 100, 10)
+lulu_e_allyblacklist = menu:add_subcategory("Ally [E] Blacklist", lulu_combo_e)
 players = game.players
 for _, v in ipairs(players) do
 	if not v.is_enemy and v.object_id ~= myHero.object_id then
 		menu:add_checkbox("Use E On : "..tostring(v.champ_name), lulu_e_allyblacklist, 1)
 	end
 end
-lulu_combo_r = menu:add_subcategory("R Settings", lulu_combo)
-lulu_combo_use_r = menu:add_checkbox("Use R", lulu_combo_r, 1)
-lulu_combo_r_ally_hp = menu:add_slider("R Ally HP is lower than [%]", lulu_combo_r, 1, 100, 30)
-lulu_combo_r_me_hp = menu:add_slider("R Myself HP is lower than [%]", lulu_combo_r, 1, 100, 10)
-lulu_r_allyblacklist = menu:add_subcategory("R Ally Blacklist", lulu_combo_r)
+lulu_combo_r = menu:add_subcategory("[R] Settings", lulu_combo)
+lulu_combo_use_r = menu:add_checkbox("Use [R]", lulu_combo_r, 1)
+lulu_combo_r_ally_hp = menu:add_slider("[R] Ally HP is lower than [%]", lulu_combo_r, 1, 100, 30)
+lulu_combo_r_me_hp = menu:add_slider("[R] Myself HP is lower than [%]", lulu_combo_r, 1, 100, 10)
+lulu_r_allyblacklist = menu:add_subcategory("[R] Ally Blacklist", lulu_combo_r)
 players = game.players
 for _, v in ipairs(players) do
 	if not v.is_enemy and v.object_id ~= myHero.object_id then
@@ -343,38 +381,38 @@ for _, v in ipairs(players) do
 	end
 end
 lulu_harass = menu:add_subcategory("Harass", lulu_category)
-lulu_harass_q = menu:add_subcategory("Q Settings", lulu_harass, 1)
-lulu_harass_use_q = menu:add_checkbox("Use Q", lulu_harass_q, 1)
-lulu_harass_use_q_ext = menu:add_checkbox("Use Q Extended", lulu_harass_q, 1)
-lulu_harass_use_w = menu:add_checkbox("Use W", lulu_harass, 1)
+lulu_harass_q = menu:add_subcategory("[Q] Settings", lulu_harass, 1)
+lulu_harass_use_q = menu:add_checkbox("Use [Q]", lulu_harass_q, 1)
+lulu_harass_use_q_ext = menu:add_checkbox("Use [Q] Extended", lulu_harass_q, 1)
+lulu_harass_use_w = menu:add_checkbox("Use [W]", lulu_harass, 1)
 
 lulu_ks = menu:add_subcategory("Kill Steal", lulu_category)
-lulu_ks_use_q = menu:add_checkbox("Use Q", lulu_ks , 1)
-lulu_ks_use_e = menu:add_checkbox("Use E", lulu_ks , 1)
+lulu_ks_use_q = menu:add_checkbox("Use [Q]", lulu_ks , 1)
+lulu_ks_use_e = menu:add_checkbox("Use [E]", lulu_ks , 1)
 
 lulu_extra = menu:add_subcategory("Automated Features", lulu_category)
-lulu_manual_r_use = menu:add_subcategory("Semi Manual R Settings", lulu_extra)
-lulu_manual_r_key = menu:add_keybinder("Semi Manual R Key - Myself When Ally > R Range", lulu_manual_r_use, 90)
-lulu_manual_r_ally_hp = menu:add_slider("Semi Manual R - Ally HP is lower than [%]", lulu_manual_r_use, 1, 100, 30)
-lulu_r_knockup_use = menu:add_subcategory("Auto R Knockup", lulu_extra, 1)
-lulu_r_knockup = menu:add_checkbox("Use Auto R Knockup", lulu_r_knockup_use, 1)
+lulu_manual_r_use = menu:add_subcategory("Semi Manual [R] Settings", lulu_extra)
+lulu_manual_r_key = menu:add_keybinder("Semi Manual [R] Key - Myself When Ally > R Range", lulu_manual_r_use, 90)
+lulu_manual_r_ally_hp = menu:add_slider("Semi Manual [R] - Ally HP is lower than [%]", lulu_manual_r_use, 1, 100, 30)
+lulu_r_knockup_use = menu:add_subcategory("Auto [R] Knockup", lulu_extra, 1)
+lulu_r_knockup = menu:add_checkbox("Use Auto [R] Knockup", lulu_r_knockup_use, 1)
 lulu_r_knockup_min = menu:add_slider("Minimum Number Of Targets To Knock Up", lulu_r_knockup_use, 1, 5, 3)
 --lulu_aoe_q = menu:add_checkbox("Auto AoE Q", lulu_extra, 1)
 --lulu_aoe_q_min = menu:add_slider("Minimum Number Of Targets To AoE Q", lulu_extra, 1, 5, 3)
-lulu_w_interrupt = menu:add_checkbox("Auto W Interrupt Major Channel Spells", lulu_extra, 1)
-lulu_w_gap = menu:add_checkbox("Auto W Gap Closer", lulu_extra, 1)
+lulu_w_interrupt = menu:add_checkbox("Auto [W] Interrupt Major Channel Spells", lulu_extra, 1)
+lulu_w_gap = menu:add_checkbox("Auto [W] Gap Closer", lulu_extra, 1)
 
 lulu_laneclear = menu:add_subcategory("Lane Clear", lulu_category)
-lulu_laneclear_use_q = menu:add_checkbox("Use Q", lulu_laneclear, 1)
-lulu_laneclear_use_w = menu:add_checkbox("Use W Ally Or Self", lulu_laneclear, 1)
-lulu_laneclear_q_min = menu:add_slider("Number Of Minions To Use Q & W", lulu_laneclear, 1, 10, 3)
+lulu_laneclear_use_q = menu:add_checkbox("Use [Q]", lulu_laneclear, 1)
+lulu_laneclear_use_w = menu:add_checkbox("Use [W] Ally Or Self", lulu_laneclear, 1)
+lulu_laneclear_q_min = menu:add_slider("Number Of Minions To Use [Q] & [W]", lulu_laneclear, 1, 10, 3)
 
 lulu_draw = menu:add_subcategory("The Drawing Features", lulu_category)
-lulu_draw_q = menu:add_checkbox("Draw Q Range", lulu_draw, 1)
-lulu_draw_q_ext = menu:add_checkbox("Draw Q Extended Range", lulu_draw, 1)
-lulu_draw_w = menu:add_checkbox("Draw W/E Range", lulu_draw, 1)
-lulu_draw_r = menu:add_checkbox("Draw R Range", lulu_draw, 1)
-lulu_draw_r_knockup = menu:add_checkbox("Draw R Knockup Range", lulu_draw, 1)
+lulu_draw_q = menu:add_checkbox("Draw [Q] Range", lulu_draw, 1)
+lulu_draw_q_ext = menu:add_checkbox("Draw [Q] Extended Range", lulu_draw, 1)
+lulu_draw_w = menu:add_checkbox("Draw [W] & [E] Range", lulu_draw, 1)
+lulu_draw_r = menu:add_checkbox("Draw [R] Range", lulu_draw, 1)
+lulu_draw_r_knockup = menu:add_checkbox("Draw [R] Knockup Range", lulu_draw, 1)
 
 
 local function GetQDmg(unit)
@@ -431,7 +469,7 @@ end
 
 local function Combo()
 
-	target = selector:find_target(Q2.range, mode_health)
+	target = selector:find_target(2000, mode_health)
 
 	players = game.players
 	for _, ally in ipairs(players) do
@@ -486,11 +524,12 @@ local function Combo()
 			end
 		end
 
+		local AllyHP = ally.health/ally.max_health <= menu:get_value(lulu_combo_e_ally_hp) / 100
 		if menu:get_value(lulu_combo_use_e) == 1 then
 			if not ally.is_enemy and ally.object_id ~= myHero.object_id then
-				if ally:health_percentage() <= menu:get_value(lulu_combo_e_ally_hp) then
+				if AllyHP then
 					if menu:get_value_string("Use E On : "..tostring(ally.champ_name)) == 1 then
-						if ally:distance_to(target.origin) <= E.range and IsValid(target) and IsValid(ally) then
+						if ally:distance_to(target.origin) <= Q.range and IsValid(target) and IsValid(ally) then
 							if Ready(SLOT_E) and ally:distance_to(myHero.origin) <= E.range then
 								CastE(ally)
 							end
@@ -500,9 +539,10 @@ local function Combo()
 			end
 		end
 
+		local MyHP = myHero.health/myHero.max_health <= menu:get_value(lulu_combo_e_me_hp) / 100
 		if menu:get_value(lulu_combo_use_e) == 1 then
-			if myHero:health_percentage() <= menu:get_value(lulu_combo_e_me_hp) then
-				if ally:distance_to(myHero.origin) > E.range and myHero:distance_to(target.origin) <= E.range and IsValid(target) and IsKillable(target) then
+			if MyHP then
+				if ally:distance_to(myHero.origin) > E.range and myHero:distance_to(target.origin) <= Q.range and IsValid(target) and IsKillable(target) then
 					if Ready(SLOT_E) then
 						CastE(myHero)
 					end
@@ -800,6 +840,7 @@ screen_size = game.screen_size
 
 local function on_draw()
 	local_player = game.local_player
+
 
 	if local_player.object_id ~= 0 then
 		origin = local_player.origin

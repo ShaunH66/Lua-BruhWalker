@@ -5,20 +5,16 @@ end
 -- AutoUpdate
 do
     local function AutoUpdate()
-		local Version = 7.3
+		local Version = 7.5
 		local file_name = "CassioToThePeia.lua"
 		local url = "http://raw.githubusercontent.com/TheShaunyboi/BruhWalkerEncrypted/main/CassioToThePeia.lua"
         local web_version = http:get("https://raw.githubusercontent.com/TheShaunyboi/BruhWalkerEncrypted/main/CassioToThePeia.lua.version.txt")
         console:log("Cassiopeia.Lua Vers: "..Version)
 		console:log("Cassiopeia.Web Vers: "..tonumber(web_version))
 		if tonumber(web_version) == Version then
-						console:log("------------------------------------------------------------------------------------------------------------")
-						console:log("------------------------------------------------------------------------------------------------------------")
-						console:log("Sexy Cassiopeia v7.3 Successfully Loaded.....")
-						console:log("------------------------------------------------------------------------------------------------------------")
-						console:log("------------------------------------------------------------------------------------------------------------")
+						console:log("Sexy Cassiopeia Successfully Loaded.....")
         else
-			http:download_file(url, file_name)
+						http:download_file(url, file_name)
             console:log("Sexy Cassiopeia Update available.....")
 						console:log("------------------------------------------------------------------------------------------------------------")
 						console:log("Please reload via F5!.....")
@@ -35,6 +31,33 @@ do
 
 
 end
+
+local VIP = http:get("https://raw.githubusercontent.com/TheShaunyboi/BruhWalkerEncrypted/main/VIP_USER_LIST.lua.txt")
+VIP = VIP .. ','
+local LIST = {}
+for user in VIP:gmatch("(.-),") do
+	table.insert(LIST, user)
+end
+local USER = client.username
+local function VIP_USER_LIST()
+	for _, value in pairs(LIST) do
+		console:log(tostring(value))
+		if string.find(tostring(value), client.username) then
+			return true
+		end
+	end
+return false
+end
+
+if not VIP_USER_LIST() then
+  console:log("You Are Not VIP! To Become a Supportor Please Contact Shaunyboi")
+  return
+end
+
+if VIP_USER_LIST() then
+  console:log("..................You Are VIP! Thanks For Supporting <3 #Family........................")
+end
+
 
 pred:use_prediction()
 --require "LucifersPussyPrediction"
@@ -266,6 +289,7 @@ end
 Cass_enabled = menu:add_checkbox("Enabled", Cass_category, 1)
 Cass_combokey = menu:add_keybinder("Combo Mode Key", Cass_category, 32)
 menu:add_label("Welcome To Shaun's Sexy Cassiopeia", Cass_category)
+menu:add_label(tostring(USER), Cass_category)
 menu:add_label("#IPA-BeerIsMyPosion", Cass_category)
 --[[s_table = {}
 s_table[1] = "PKPrediction"

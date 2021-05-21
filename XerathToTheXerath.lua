@@ -4,22 +4,15 @@ end
 
 do
     local function AutoUpdate()
-		local Version = 1.8
+		local Version = 1.9
 		local file_name = "XerathToTheXerath.lua"
 		local url = "https://raw.githubusercontent.com/TheShaunyboi/BruhWalkerEncrypted/main/XerathToTheXerath.lua"
         local web_version = http:get("https://raw.githubusercontent.com/TheShaunyboi/BruhWalkerEncrypted/main/XearthToTheXearth.lua.version.txt")
         console:log("XerathToTheXerath.Lua Vers: "..Version)
 		console:log("XerathToTheXerath.Web Vers: "..tonumber(web_version))
 		if tonumber(web_version) == Version then
-            console:log("Sexy Xerath v1.8 successfully loaded.....")
-						console:log("--------------------------------------------------------------------")
-						console:log("Added Blacklist Ultimate to Kill Steal and Combo R Settings")
-						console:log("Changed Semi R Manual To Cursor Targeting")
-						console:log("Added E Combo Max Usage Range Slider")
-						console:log("Added check for Flash Slot Usage (D/F) for Semi Manual Flash > Q Key")
-						console:log("Added E Anti Gap Closer")
-						console:log("Updated For Latest Bruh Patch")
-						console:log("--------------------------------------------------------------------")
+            console:log("Sexy Xerath Successfully Loaded.....")
+
         else
 			http:download_file(url, file_name)
             console:log("Sexy Xerath Update available.....")
@@ -33,6 +26,31 @@ do
     end
 
     AutoUpdate()
+end
+
+local VIP = http:get("https://raw.githubusercontent.com/TheShaunyboi/BruhWalkerEncrypted/main/VIP_USER_LIST.lua.txt")
+VIP = VIP .. ','
+local LIST = {}
+for user in VIP:gmatch("(.-),") do
+	table.insert(LIST, user)
+end
+local USER = client.username
+local function VIP_USER_LIST()
+	for _, value in pairs(LIST) do
+		if string.find(tostring(value), client.username) then
+			return true
+		end
+	end
+return false
+end
+
+if not VIP_USER_LIST() then
+  console:log("You Are Not VIP! To Become a Supportor Please Contact Shaunyboi")
+  return
+end
+
+if VIP_USER_LIST() then
+  console:log("..................You Are VIP! Thanks For Supporting <3 #Family........................")
 end
 
 pred:use_prediction()
@@ -229,15 +247,27 @@ end
 
 -- Menu Config
 
-xerath_category = menu:add_category("Shaun's Sexy Xerath")
+if not file_manager:directory_exists("Shaun's Sexy Common") then
+  file_manager:create_directory("Shaun's Sexy Common")
+end
+
+if file_manager:file_exists("Shaun's Sexy Common//Logo.png") then
+	xerath_category = menu:add_category_sprite("Shaun's Sexy Xerath", "Shaun's Sexy Common//Logo.png")
+else
+	http:download_file("https://raw.githubusercontent.com/TheShaunyboi/BruhWalkerEncrypted/main/Common/Logo.png", "Shaun's Sexy Common//Logo.png")
+	xerath_category = menu:add_category("Shaun's Sexy Xerath")
+end
+
 xerath_enabled = menu:add_checkbox("Enabled", xerath_category, 1)
 xerath_combokey = menu:add_keybinder("Combo Mode Key", xerath_category, 32)
+menu:add_label("Welcome To Shaun's Sexy Xerath", xerath_category)
+menu:add_label("#LetMeTickleYouWithMyBolts", xerath_category)
 
 xerath_ks_function = menu:add_subcategory("Kill Steal", xerath_category)
-xerath_ks_use_q = menu:add_checkbox("Use Q", xerath_ks_function, 1)
-xerath_ks_use_w = menu:add_checkbox("Use W", xerath_ks_function, 1)
-xerath_ks_use_r = menu:add_checkbox("Use R", xerath_ks_function, 1)
-xerath_ks_use_range = menu:add_slider("Target Greater Than Range To Use R Kill Steal", xerath_ks_function, 1, 5000, 1450)
+xerath_ks_use_q = menu:add_checkbox("Use [Q]", xerath_ks_function, 1)
+xerath_ks_use_w = menu:add_checkbox("Use [W]", xerath_ks_function, 1)
+xerath_ks_use_r = menu:add_checkbox("Use [R]", xerath_ks_function, 1)
+xerath_ks_use_range = menu:add_slider("Target Greater Than Range To Use [R] Kill Steal", xerath_ks_function, 1, 5000, 1450)
 xerath_ks_r_blacklist = menu:add_subcategory("Ultimate Kill Steal Blacklist", xerath_ks_function)
 local players = game.players
 for _, t in pairs(players) do
@@ -247,16 +277,16 @@ for _, t in pairs(players) do
 end
 
 xerath_combo = menu:add_subcategory("Combo", xerath_category)
-xerath_combo_use_q = menu:add_checkbox("Use Q", xerath_combo, 1)
-xerath_combo_use_w = menu:add_checkbox("Use W", xerath_combo, 1)
-xerath_combo_use_e = menu:add_checkbox("Use E", xerath_combo, 1)
-xerath_combo_use_e_set = menu:add_subcategory("E Combo Settings", xerath_combo)
-xerath_combo_use_e_range = menu:add_slider("E Max Range Usage", xerath_combo_use_e_set, 1, 1125, 1125)
-xerath_combo_r = menu:add_subcategory("R Combo Settings", xerath_combo)
-xerath_combo_use_r = menu:add_checkbox("Use R", xerath_combo_r, 1)
-xerath_combo_use_range = menu:add_slider("Target Greater Than Range To Use R Combo", xerath_combo_r, 1, 5000, 1450)
-xerath_combo_r_enemy_hp = menu:add_slider("Use Combo R if Enemy HP is lower than [%]", xerath_combo_r, 1, 100, 40)
-xerath_combo_r_my_hp = menu:add_slider("Only Combo R if My HP is Greater than [%]", xerath_combo_r, 1, 100, 20)
+xerath_combo_use_q = menu:add_checkbox("Use [Q]", xerath_combo, 1)
+xerath_combo_use_w = menu:add_checkbox("Use [W]", xerath_combo, 1)
+xerath_combo_use_e = menu:add_checkbox("Use [E]", xerath_combo, 1)
+xerath_combo_use_e_set = menu:add_subcategory("[E] Combo Settings", xerath_combo)
+xerath_combo_use_e_range = menu:add_slider("[E] Max Range Usage", xerath_combo_use_e_set, 1, 1125, 1125)
+xerath_combo_r = menu:add_subcategory("[R] Combo Settings", xerath_combo)
+xerath_combo_use_r = menu:add_checkbox("Use [R]", xerath_combo_r, 1)
+xerath_combo_use_range = menu:add_slider("Target Greater Than Range To Use [R] Combo", xerath_combo_r, 1, 5000, 1450)
+xerath_combo_r_enemy_hp = menu:add_slider("Use Combo [R] if Enemy HP is lower than [%]", xerath_combo_r, 1, 100, 40)
+xerath_combo_r_my_hp = menu:add_slider("Only Combo [R] if My HP is Greater than [%]", xerath_combo_r, 1, 100, 20)
 xerath_combo_r_blacklist = menu:add_subcategory("Ultimate Combo Blacklist", xerath_combo_r)
 local players = game.players
 for _, v in pairs(players) do
@@ -266,35 +296,35 @@ for _, v in pairs(players) do
 end
 
 xerath_harass = menu:add_subcategory("Harass", xerath_category)
-xerath_harass_use_q = menu:add_checkbox("Use Q", xerath_harass, 1)
-xerath_harass_use_w = menu:add_checkbox("Use W", xerath_harass, 1)
+xerath_harass_use_q = menu:add_checkbox("Use [Q]", xerath_harass, 1)
+xerath_harass_use_w = menu:add_checkbox("Use [W]", xerath_harass, 1)
 xerath_harass_min_mana = menu:add_slider("Minimum Mana To Harass", xerath_harass, 1, 500, 100)
 
 xerath_laneclear = menu:add_subcategory("Lane Clear", xerath_category)
-xerath_laneclear_use_q = menu:add_checkbox("Use Q", xerath_laneclear, 1)
-xerath_laneclear_use_w = menu:add_checkbox("Use W", xerath_laneclear, 1)
+xerath_laneclear_use_q = menu:add_checkbox("Use [Q]", xerath_laneclear, 1)
+xerath_laneclear_use_w = menu:add_checkbox("Use [W]", xerath_laneclear, 1)
 xerath_laneclear_min_mana = menu:add_slider("Minimum Mana To Lane Clear", xerath_laneclear, 1, 500, 200)
-xerath_laneclear_min_q = menu:add_slider("Minimum Minion To Q", xerath_laneclear, 1, 10, 3)
-xerath_laneclear_min_w = menu:add_slider("Minimum Minion To W", xerath_laneclear, 1, 10, 3)
+xerath_laneclear_min_q = menu:add_slider("Minimum Minion To [Q]", xerath_laneclear, 1, 10, 3)
+xerath_laneclear_min_w = menu:add_slider("Minimum Minion To [W]", xerath_laneclear, 1, 10, 3)
 
 xerath_jungleclear = menu:add_subcategory("Jungle Clear", xerath_category)
-xerath_jungleclear_use_q = menu:add_checkbox("Use Q", xerath_jungleclear, 1)
-xerath_jungleclear_use_w = menu:add_checkbox("Use W", xerath_jungleclear, 1)
+xerath_jungleclear_use_q = menu:add_checkbox("Use [Q]", xerath_jungleclear, 1)
+xerath_jungleclear_use_w = menu:add_checkbox("Use [W]", xerath_jungleclear, 1)
 xerath_jungleclear_min_mana = menu:add_slider("Minimum Mana To jungle Clear", xerath_jungleclear, 1, 500, 200)
 
 xerath_combo_r_options = menu:add_subcategory("Misc Settings", xerath_category)
-xerath_combo_use_gap = menu:add_checkbox("E Anti Gap Closer", xerath_combo_r_options, 1)
-xerath_combo_use_inter = menu:add_checkbox("E Interrupt Major Spells", xerath_combo_r_options, 1)
-xerath_combo_panic_e_key = menu:add_keybinder("Semi Manual E Key", xerath_combo_r_options, 90)
-xerath_combo_r_set_key = menu:add_keybinder("Semi Manual R Key - Enemy Nearest To Cursor", xerath_combo_r_options, 65)
-xerath_combo_fq_key = menu:add_keybinder("Semi Manual Flash > Q Key", xerath_combo_r_options, 88)
+xerath_combo_use_gap = menu:add_checkbox("[E] Anti Gap Closer", xerath_combo_r_options, 1)
+xerath_combo_use_inter = menu:add_checkbox("[E] Interrupt Major Spells", xerath_combo_r_options, 1)
+xerath_combo_panic_e_key = menu:add_keybinder("Semi Manual [E] Key", xerath_combo_r_options, 90)
+xerath_combo_r_set_key = menu:add_keybinder("Semi Manual[ R] Key - Enemy Nearest To Cursor", xerath_combo_r_options, 65)
+xerath_combo_fq_key = menu:add_keybinder("Semi Manual Flash > [Q] Key", xerath_combo_r_options, 88)
 
 xerath_draw = menu:add_subcategory("The Drawing Features", xerath_category)
-xerath_draw_q = menu:add_checkbox("Draw Q", xerath_draw, 1)
-xerath_draw_w = menu:add_checkbox("Draw W", xerath_draw, 1)
-xerath_draw_e = menu:add_checkbox("Draw E", xerath_draw, 1)
-xerath_draw_r = menu:add_checkbox("Draw R", xerath_draw, 1)
-xerath_draw_fq = menu:add_checkbox("Draw Flash > Q Range", xerath_draw, 1)
+xerath_draw_q = menu:add_checkbox("Draw [Q]", xerath_draw, 1)
+xerath_draw_w = menu:add_checkbox("Draw [W]", xerath_draw, 1)
+xerath_draw_e = menu:add_checkbox("Draw [E]", xerath_draw, 1)
+xerath_draw_r = menu:add_checkbox("Draw [R]", xerath_draw, 1)
+xerath_draw_fq = menu:add_checkbox("Draw Flash > [Q] Range", xerath_draw, 1)
 xerath_draw_kill = menu:add_checkbox("Draw Full Combo Can Kill", xerath_draw, 1)
 xerath_draw_kill_healthbar = menu:add_checkbox("Draw Full Combo On Target Health Bar", xerath_draw, 1, "Health Bar Damage Is Computed From R, Q, W")
 
@@ -831,7 +861,8 @@ screen_size = game.screen_size
 local function on_draw()
 	local_player = game.local_player
 
-	local target = selector:find_target(Q.range, mode_health)
+	target = selector:find_target(2000, mode_health)
+	targetvec = target.origin
 	local GetQDmg = getdmg("Q", target, game.myHero, 1)
 	local GetWDmg = getdmg("W", target, game.myHero, 1)
 	local GetEDmg = getdmg("E", target, game.myHero, 1)
@@ -874,18 +905,21 @@ local function on_draw()
 		end
 	end
 
+	local enemydraw = game:world_to_screen(targetvec.x, targetvec.y, targetvec.z)
 	for i, target in ipairs(GetEnemyHeroes()) do
 		local fulldmg = GetQDmg + GetWDmg + (GetRDmg * level)
 		if Ready(SLOT_Q) and Ready(SLOT_W) and Ready(SLOT_R) then
 			if target.object_id ~= 0 and myHero:distance_to(target.origin) <= Q.range then
 				if menu:get_value(xerath_draw_kill) == 1 then
 					if fulldmg > target.health and IsValid(target) then
-						renderer:draw_text_big_centered(screen_size.width / 2, screen_size.height / 20 + 30, "Full Combo Rotation Can Kill")
+						if enemydraw.is_valid then
+							renderer:draw_text_big_centered(enemydraw.x, enemydraw.y, "Can Kill Target")
+						end
 					end
 				end
 			end
 		end
-		if menu:get_value(xerath_draw_kill_healthbar) == 1 then
+		if IsValid(target) and menu:get_value(xerath_draw_kill_healthbar) == 1 then
 			target:draw_damage_health_bar(fulldmg)
 		end
 	end
