@@ -78,9 +78,13 @@ require "PKDamageLib"
 
 local myHero = game.local_player
 local local_player = game.local_player
-local QFire = false
-local RFire = false
-local INSECGO = false
+local InsecReady = false
+local FleeReady = false
+local e_cast = nil
+local q_cast = nil
+local r_cast = nil
+local flee_e_cast = nil
+local flee_q_cast = nil
 
 -- Ranges
 local Q = { range = 1000, delay = .25, width = 140, speed = 1600 }
@@ -109,18 +113,18 @@ function IsKillable(unit)
 end
 
 local function IsUnderTurret(unit)
-    turrets = game.turrets
-    for i, v in ipairs(turrets) do
-        if v and v.is_enemy then
-            local range = (v.bounding_radius / 2 + 775 + unit.bounding_radius / 2)
-            if v.is_alive then
-                if v:distance_to(unit.origin) < range then
-                    return true
-                end
-            end
+  turrets = game.turrets
+  for i, v in ipairs(turrets) do
+    if v and v.is_enemy then
+      local range = (v.bounding_radius / 2 + 775 + unit.bounding_radius / 2)
+      if v.is_alive then
+        if v:distance_to(unit.origin) < range then
+          return true
         end
+      end
     end
-    return false
+  end
+  return false
 end
 
 local function AzirE(unit)
@@ -132,13 +136,17 @@ end
 
 -- No lib Functions End
 
+local function SupressedSpellReady(spell)
+  return spellbook:can_cast_ignore_supressed(spell)
+end
+
 local soldiers = {}
 local function on_object_created(object, obj_name)
-    if object and obj_name == "AzirSoldier" then
-        if object.is_alive then
-            table.insert(soldiers, object)
-        end
+  if object and obj_name == "AzirSoldier" then
+    if object.is_alive then
+      table.insert(soldiers, object)
     end
+  end
 end
 
 function CountSoldiers()
@@ -149,21 +157,47 @@ function CountSoldiers()
     return count
 end
 
+function SoldiersInQRange()
+  for _ in pairs(soldiers) do
+    if solider:distance_to(target.origin) < Q.range then
+			return true
+		end
+  end
+	return false
+end
 
---[[local function SoldierDmg(unit)
+function SoldiersWReady()
+  local w_count = SLOT_W.count
+  if w_count > 0
+    count = w_count + 1
+  end
+  return count
+end
+
+function FullComboManReady()
+	local spell_slot_q = spellbook:get_spell_slot(SLOT_Q)
+	local spell_slot_w = spellbook:get_spell_slot(SLOT_W)
+	local spell_slot_e = spellbook:get_spell_slot(SLOT_E)
+	local spell_slot_r = spellbook:get_spell_slot(SLOT_R)
+	local total_spell_cost = spell_slot_q.spell_data.mana_cost + spell_slot_w.spell_data.mana_cost + spell_slot_e.spell_data.mana_cost + spell_slot_r.spell_data.mana_cost
+	if myHero.mana > total_spell_cost then
+		return true
+	end
+	return false
+end
+
+local function SoldierDmg(unit)
 	local level = myHero.level
 
 	if level < 8 then
-
-		return unit:calculate_phys_damage(58 + (2 * LvL)) + 0.6 * myHero.ability_power)
+		AADmg = unit:calculate_phys_damage(58 + (2 * level)) + 0.6 * myHero.ability_power)
 	elseif level < 12 then
-
-		return unit:calculate_phys_damage(35 + (5 * LvL)) + 0.6 * myHero.ability_power)
+		AADmg = unit:calculate_phys_damage(35 + (5 * level)) + 0.6 * myHero.ability_power)
 	elseif level > 12 then
-
-		return unit:calculate_phys_damage((10 * LvL) - 20) + 0.6 * myHero.ability_power)
+		AADmg = unit:calculate_phys_damage((10 * level) - 20) + 0.6 * myHero.ability_power)
 	end
-end]]
+	return AADmg
+end
 
 -- Damage Cals
 
@@ -210,12 +244,11 @@ azir_ks_function = menu:add_subcategory("Kill Steal", azir_category)
 azir_ks_q = menu:add_subcategory("[Q] Settings", azir_ks_function, 1)
 azir_ks_use_q = menu:add_checkbox("Use [Q]", azir_ks_q, 1)
 azir_ks_use_qw = menu:add_checkbox("Use [W] Target >= [Q] Range", azir_ks_q, 1)
-azir_ks_qe = menu:add_subcategory("[Q] + [E] Smart Settings", azir_ks_function, 1)
-azir_ks_use_e = menu:add_checkbox("Use [Q] + [E]", azir_ks_qe, 1)
+azir_ks_e = menu:add_subcategory("[E] Smart Settings", azir_ks_function, 1)
+azir_ks_use_e = menu:add_checkbox("[E]", azir_ks_qe, 1)
 azir_ks_use_e_count = menu:add_slider("<= Enemy Count Around To [E]", azir_ks_qe, 1, 5, 2)
 azir_ks_r = menu:add_subcategory("[R] Smart Settings", azir_ks_function, 1)
 azir_ks_use_r = menu:add_checkbox("Use [R]", azir_ks_r, 1)
-azir_ks_r_overkill = menu:add_checkbox("[R] Overkill Check", azir_ks_r, 1)
 azir_ks_insec = menu:add_subcategory("[INSEC] Settings", azir_ks_function, 1)
 azir_ks_insec_use = menu:add_checkbox("Use [INSEC]", azir_ks_insec, 1)
 azir_ks_use_insec_count = menu:add_slider("<= Enemy Count Around To [INSEC]", azir_ks_insec, 1, 5, 2)
@@ -252,13 +285,16 @@ azir_laneclear_use_w = menu:add_checkbox("Use [W]", azir_laneclear, 1)
 azir_laneclear_min_mana = menu:add_slider("Minimum Mana [%] To Lane Clear", azir_laneclear, 1, 100, 20)
 azir_laneclear_q_min = menu:add_slider("Number Of Minions To Use [Q]", azir_laneclear, 1, 10, 3)
 
+azir_lasthit = menu:add_subcategory("Last Hit", azir_category)
+azir_lasthit_use_q = menu:add_checkbox("Use [Q]", azir_lasthit, 1)
+
 azir_jungleclear = menu:add_subcategory("Jungle Clear", azir_category)
 azir_jungleclear_use_q = menu:add_checkbox("Use [Q]", azir_jungleclear, 1)
 azir_jungleclear_use_w = menu:add_checkbox("Use [W]", azir_jungleclear, 1)
 azir_jungleclear_min_mana = menu:add_slider("Minimum Mana [%] To Jungle", azir_jungleclear, 1, 100, 20)
 
 azir_extra_insec = menu:add_subcategory("[INSEC] Settings", azir_category)
-azir_insec_key = menu:add_keybinder("INSEC Key", azir_extra_insec, 32)
+azir_insec_key = menu:add_keybinder("INSEC Hold Key - Target Nearest To Cursor", azir_extra_insec, 32)
 e_table = {}
 e_table[1] = "To Allys"
 e_table[2] = "To Ally Tower"
@@ -337,11 +373,9 @@ local function CastE(unit)
 end
 
 local function CastR(unit)
-	pred_output = pred:predict(R.speed, R.delay, R.range, R.width, unit, false, false)
-	if pred_output.can_cast then
-		castPos = pred_output.cast_pos
-		spellbook:cast_spell(SLOT_R, R.delay, castPos.x, castPos.y, castPos.z)
-	end
+	origin = unit.origin
+	x, y, z = origin.x, origin.y, origin.z
+	spellbook:cast_spell(SLOT_R, R.delay, x, y, z)
 end
 
 -- Combo
@@ -365,33 +399,31 @@ local function Combo()
 				end
 			end
 		end
-	end
 
-	if menu:get_value(azir_combo_use_qw) == 1 then
-		if ml.IsValid(target) and IsKillable(target) then
-			if myHero:distance_to(target.origin) <= Q.range then
-				if myHero:distance_to(target.origin) > W.range then
-					if ml.Ready(SLOT_W) and ml.Ready(SLOT_Q) then
-						CastW(target)
+		if menu:get_value(azir_combo_use_qw) == 1 then
+			if ml.IsValid(target) and IsKillable(target) then
+				if myHero:distance_to(target.origin) <= Q.range then
+					if myHero:distance_to(target.origin) > W.range then
+						if SoldiersWReady() > 0 and ml.Ready(SLOT_Q) then
+							CastW(target)
+						end
 					end
 				end
 			end
 		end
-	end
 
-	if menu:get_value(azir_combo_use_w) == 1 then
-		if ml.IsValid(target) and IsKillable(target) then
-			if myHero:distance_to(target.origin) <= Q.range then
-				if myHero:distance_to(target.origin) <= W.range then
-					if ml.Ready(SLOT_W) then
-						CastW(target)
+		if menu:get_value(azir_combo_use_w) == 1 then
+			if ml.IsValid(target) and IsKillable(target) then
+				if myHero:distance_to(target.origin) <= Q.range then
+					if myHero:distance_to(target.origin) <= W.range then
+						if SoldiersWReady() > 0 then
+							CastW(target)
+						end
 					end
 				end
 			end
 		end
-	end
 
-	for _, soldier in pairs(soldiers) do
 		if menu:get_value(azir_combo_use_e) == 1 then
 			if myHero:distance_to(target.origin) <= E.range and ml.IsValid(target) and IsKillable(target) then
 				local _, count = ml.GetEnemyCount(target.origin, 1500)
@@ -427,29 +459,29 @@ local function Harass()
 				end
 			end
 		end
-	end
 
-	if menu:get_value(azir_harass_use_qw) == 1 then
-		if ml.IsValid(target) and IsKillable(target) then
-			if myHero:distance_to(target.origin) <= Q.range then
-				if myHero:distance_to(target.origin) > W.range then
-					if CountSoldiers() <  menu:get_value(azir_combo_w_savecount) then
-						if ml.Ready(SLOT_W) and ml.Ready(SLOT_Q) then
-							CastW(target)
+		if menu:get_value(azir_harass_use_qw) == 1 then
+			if ml.IsValid(target) and IsKillable(target) then
+				if myHero:distance_to(target.origin) <= Q.range then
+					if myHero:distance_to(target.origin) > W.range then
+						if CountSoldiers() <  menu:get_value(azir_combo_w_savecount) then
+							if SoldiersWReady() > 0 and ml.Ready(SLOT_Q) then
+								CastW(target)
+							end
 						end
 					end
 				end
 			end
 		end
-	end
 
-	if menu:get_value(azir_harass_use_w) == 1 then
-		if ml.IsValid(target) and IsKillable(target) then
-			if myHero:distance_to(target.origin) <= Q.range then
-				if myHero:distance_to(target.origin) <= W.range then
-					if CountSoldiers() <  menu:get_value(azir_combo_w_savecount) then
-						if ml.Ready(SLOT_W) then
-							CastW(target)
+		if menu:get_value(azir_harass_use_w) == 1 then
+			if ml.IsValid(target) and IsKillable(target) then
+				if myHero:distance_to(target.origin) <= Q.range then
+					if myHero:distance_to(target.origin) <= W.range then
+						if CountSoldiers() <  menu:get_value(azir_combo_w_savecount) then
+							if SoldiersWReady() > 0 then
+								CastW(target)
+							end
 						end
 					end
 				end
@@ -460,32 +492,77 @@ end
 
 -- KillSteal
 
---[[local function AutoKill()
+local function AutoKill()
 
-	local QERrange = (myHero.attack_range + myHero.bounding_radius + 40)
 	for i, target in ipairs(GetEnemyHeroes()) do
-
-		if target.object_id ~= 0 and myHero:distance_to(target.origin) <= QERrange and IsValid(target) and IsKillable(target) then
-			if menu:get_value(azir_ks_use_er) == 1 and HasECharge(target) then
-				if menu:get_value_string("Kill Steal Whitelist: "..tostring(target.champ_name)) == 1 then
-					local Buff = ECount(target)
-					if Buff and Buff.count >= 3 then
-						local FullDMG = (GetEDmg(target) + GetRDmg(target))
-						if FullDMG > target.health and Ready(SLOT_R) then
+		for _, soldier in pairs(soldiers) do
+			if target.object_id ~= 0 and myHero:distance_to(target.origin) <= 300 and ml.IsValid(target) and IsKillable(target) then
+				if menu:get_value(azir_ks_use_r) == 1 then
+					if menu:get_value_string("Kill Steal Whitelist: "..tostring(target.champ_name)) == 1 then
+						if GetRDmg(target) > target.health and ml.Ready(SLOT_R) then
 							CastR(target)
 						end
 					end
 				end
 			end
-		end
 
-		local AATotalDMG = (myHero.total_attack_damage * menu:get_value(azir_ks_use_r_aa))
-		if target.object_id ~= 0 and myHero:distance_to(target.origin) <= QERrange and IsValid(target) and IsKillable(target) then
-			if menu:get_value(azir_ks_use_r) == 1 then
-				if menu:get_value_string("Kill Steal Whitelist: "..tostring(target.champ_name)) == 1 then
-					if AATotalDMG < target.health and Ready(SLOT_R) then
-						if GetRDmg(target) > target.health then
-							CastR(target)
+			if target.object_id ~= 0 and myHero:distance_to(target.origin) <= Q.range and ml.IsValid(target) and IsKillable(target) then
+				if menu:get_value(azir_ks_use_q) == 1 then
+					if menu:get_value_string("Kill Steal Whitelist: "..tostring(target.champ_name)) == 1 then
+						if GetQDmg(target) > target.health then
+							if myHero:distance_to(soldier.origin) <= Q.range and ml.Ready(SLOT_Q) then
+								CastQ(target)
+							end
+						end
+					end
+				end
+			end
+
+			if menu:get_value(azir_ks_use_qw) == 1 then
+				if ml.IsValid(target) and IsKillable(target) then
+					if myHero:distance_to(target.origin) <= Q.range then
+						if myHero:distance_to(target.origin) > W.range then
+							if SoldiersWReady() > 0 and ml.Ready(SLOT_Q) then
+								if menu:get_value_string("Kill Steal Whitelist: "..tostring(target.champ_name)) == 1 then
+									if GetQDmg(target) > target.health then
+										CastW(target)
+									end
+								end
+							end
+						end
+					end
+				end
+			end
+
+			if menu:get_value(azir_ks_use_qw) == 1 then
+				if ml.IsValid(target) and IsKillable(target) then
+					if myHero:distance_to(target.origin) <= Q.range then
+						if myHero:distance_to(target.origin) <= W.range then
+							if SoldiersWReady() > 0 and ml.Ready(SLOT_Q) then
+								if menu:get_value_string("Kill Steal Whitelist: "..tostring(target.champ_name)) == 1 then
+									if GetQDmg(target) > target.health then
+										CastW(target)
+									end
+								end
+							end
+						end
+					end
+				end
+			end
+
+			local QWEComboDMG = GetQDmg(target) + GetWDmg(target) + GetEDmg(target)
+			if menu:get_value(azir_ks_use_e) == 1 then
+				if myHero:distance_to(target.origin) <= E.range and ml.IsValid(target) and IsKillable(target) then
+					local _, count = ml.GetEnemyCount(target.origin, 1500)
+					if count <= menu:get_value(azir_ks_use_e_count) then
+						if soldier:distance_to(target.origin) <= Q.range then
+							if ml.Ready(SLOT_E) and not IsUnderTurret(target) then
+								if menu:get_value_string("Kill Steal Whitelist: "..tostring(target.champ_name)) == 1 then
+									if QWEComboDMG > target.health then
+										CastE(target)
+									end
+								end
+							end
 						end
 					end
 				end
@@ -498,27 +575,30 @@ end
 
 local function Clear()
 
-	local QERrange = (myHero.attack_range + myHero.bounding_radius + 40)
 	local GrabLaneClearMana = myHero.mana/myHero.max_mana >= menu:get_value(azir_laneclear_min_mana) / 100
 
 	minions = game.minions
 	for i, target in ipairs(minions) do
 
 		if menu:get_value(azir_laneclear_use_q) == 1 then
-			if IsValid(target) and target.object_id ~= 0 and target.is_enemy and myHero:distance_to(target.origin) < QERrange then
-				if GetMinionCount(QERrange, myHero) >= menu:get_value(azir_laneclear_q_min) then
-					if GrabLaneClearMana and Ready(SLOT_Q) then
-						CastQ()
+			if ml.IsValid(target) and target.object_id ~= 0 and target.is_enemy and myHero:distance_to(target.origin) < 600 then
+				if ml.GetMinionCount(600, myHero) >= menu:get_value(azir_laneclear_q_min) then
+					if GrabLaneClearMana and ml.Ready(SLOT_Q) then
+						CastQ(target)
 					end
 				end
 			end
 		end
 
-		if menu:get_value(azir_laneclear_use_e) == 1 then
-			if IsValid(target) and target.object_id ~= 0 and target.is_enemy and myHero:distance_to(target.origin) < QERrange then
-				if EpicMonsterPlusSiege(target) then
-					if GrabLaneClearMana and Ready(SLOT_E) then
-            CastE(target)
+		if menu:get_value(azir_laneclear_use_w) == 1 then
+			if ml.IsValid(target) and IsKillable(target) then
+				if myHero:distance_to(target.origin) <= Q.range then
+					if myHero:distance_to(target.origin) <= W.range then
+						if ml.GetMinionCount(600, myHero) >= menu:get_value(azir_laneclear_q_min) then
+							if GrabLaneClearMana and SoldiersWReady() > 0 then
+								CastW(target)
+							end
+						end
 					end
 				end
 			end
@@ -531,24 +611,45 @@ end
 
 local function JungleClear()
 
-	local QERrange = (myHero.attack_range + myHero.bounding_radius + 40)
 	local GrabJungleClearMana = myHero.mana/myHero.max_mana >= menu:get_value(azir_jungleclear_min_mana) / 100
 
 	minions = game.jungle_minions
 	for i, target in ipairs(minions) do
 
-		if target.object_id ~= 0 and menu:get_value(azir_jungleclear_use_q) == 1 and myHero:distance_to(target.origin) < QERrange then
-			if IsValid(target) then
-				if GrabJungleClearMana and Ready(SLOT_Q) then
-					CastQ()
+		if menu:get_value(azir_jungleclear_use_q) == 1 then
+			if ml.IsValid(target) and target.object_id ~= 0 and target.is_enemy and myHero:distance_to(target.origin) < 500 then
+				if GrabJungleClearMana and ml.Ready(SLOT_Q) then
+					CastQ(target)
 				end
 			end
 		end
 
-		if target.object_id ~= 0 and menu:get_value(azir_jungleclear_use_e) == 1 and myHero:distance_to(target.origin) < QERrange then
-			if IsValid(target) then
-				if GrabJungleClearMana and Ready(SLOT_E) then
-          CastE(target)
+		if menu:get_value(azir_jungleclear_use_w) == 1 then
+			if ml.IsValid(target) and IsKillable(target) then
+				if myHero:distance_to(target.origin) <= 500 then
+					if myHero:distance_to(target.origin) <= W.range then
+						if GrabJungleClearMana and SoldiersWReady() > 0 then
+							CastW(target)
+						end
+					end
+				end
+			end
+		end
+	end
+end
+
+-- Q Last Hit
+
+local function Qlasthit()
+	minions = game.minions
+	for i, target in ipairs(minions) do
+
+		if menu:get_value(azir_lasthit_use_q) == 1 then
+			if ml.IsValid(target) and target.object_id ~= 0 and target.is_enemy and myHero:distance_to(target.origin) < 740 then
+				if GetQDmg() > target.health then
+					if GrabLaneClearMana and ml.Ready(SLOT_Q) then
+						CastQ(target)
+					end
 				end
 			end
 		end
@@ -559,12 +660,11 @@ end
 
 local function ManualR()
 
-	local QERrange = (myHero.attack_range + myHero.bounding_radius + 40)
-  target = selector:find_target(W.range, mode_cursor)
+  target = selector:find_target(1500, mode_cursor)
 
   if game:is_key_down(menu:get_value(azir_extra_semi_r_key)) then
-    if myHero:distance_to(target.origin) < QERrange then
-			if IsValid(target) and IsKillable(target) and Ready(SLOT_R) then
+    if myHero:distance_to(target.origin) < 300 then
+			if ml.IsValid(target) and IsKillable(target) and ml.Ready(SLOT_R) then
 				CastR(target)
 			end
     end
@@ -575,18 +675,16 @@ end
 
 local function RSaveMe()
 
-	local QERrange = (myHero.attack_range + myHero.bounding_radius + 40)
-
-  target = selector:find_target(W.range, mode_distance)
+  target = selector:find_target(1500, mode_distance)
 	local SaveMeHP = myHero.health/myHero.max_health <= menu:get_value(azir_extra_saveme_myhp) / 100
 	local TargetHP = target.health/target.max_health >= menu:get_value(azir_extra_saveme_target) / 100
 
 	if menu:get_value(azir_extra_saveme) == 1 then
-    if myHero:distance_to(target.origin) < QERrange then
+    if myHero:distance_to(target.origin) < 300 then
 			if myHero:distance_to(target.origin) < target.attack_range then
 				if target:is_facing(myHero) then
 					if SaveMeHP and TargetHP then
-						if IsValid(target) and IsKillable(target) and Ready(SLOT_R) then
+						if ml.IsValid(target) and IsKillable(target) and ml.Ready(SLOT_R) then
 							CastR(target)
 						end
 					end
@@ -596,16 +694,40 @@ local function RSaveMe()
   end
 end
 
+-- Flee
+local function Flee()
+
+	for _, soldier in pairs(soldiers) do
+		if game:is_key_down(menu:get_value(azir_extra_flee_key)) then
+			if GrabLaneClearMana and SoldiersWReady() > 0 and SupressedSpellReady(SLOT_Q) or ml.Ready(SLOT_Q) and SupressedSpellReady(SLOT_E) or ml.Ready(SLOT_) then
+				FleeReady = true
+				local mouse = game.mouse_pos
+				spellbook:cast_spell(SLOT_W, W.delay, mouse.x, mouse.y, mouse.z)
+				flee_e_cast = client:get_tick_count() + 1
+
+			if FleeReady and client:get_tick_count() >= flee_e_cast then
+				eorigin = soldier.origin
+				ex, ey, ez = eorigin.x, eorigin.y, eorigin.z
+				spellbook:cast_spell(SLOT_E, E.delay, ex, ey, ez)
+				flee_q_cast = client:get_tick_count() + 1
+			end
+
+			if FleeReady and client:get_tick_count() >= flee_q_cast then
+				local qmouse = game.mouse_pos
+				spellbook:cast_spell(SLOT_Q, Q.delay, qmouse.x, qmouse.y, qmouse.z)
+			end
+		end
+	end
+end
+
 -- Gap Close
 
 local function on_gap_close(obj, data)
 
-	local QERrange = (myHero.attack_range + myHero.bounding_radius + 40)
-
 	if menu:get_toggle_state(azir_extra_gapclose) then
     if IsValid(obj) then
 			if menu:get_value_string("Anti Gap Closer Whitelist: "..tostring(obj.champ_name)) == 1 then
-	      if myHero:distance_to(obj.origin) < 400 and Ready(SLOT_R) then
+	      if myHero:distance_to(obj.origin) < 300 and ml.Ready(SLOT_R) then
 	        CastR(obj)
 				end
 			end
@@ -617,17 +739,16 @@ end
 
 local function on_possible_interrupt(obj, spell_name)
 
-	local QERrange = (myHero.attack_range + myHero.bounding_radius + 40)
 	if IsValid(obj) then
     if menu:get_value(azir_extra_interrupt) == 1 then
 			if menu:get_value_string("Interrupt Whitelist: "..tostring(obj.champ_name)) == 1 then
-      	if myHero:distance_to(obj.origin) < QERrange and Ready(SLOT_R) then
+      	if myHero:distance_to(obj.origin) < 300 and Ready(SLOT_R) then
         	CastR(obj)
 				end
 			end
 		end
 	end
-end]]
+end
 
 local function INSEC()
 
@@ -641,22 +762,36 @@ local function INSEC()
 				if not ally.is_enemy and ally.object_id ~= myHero.object_id then
 					if ml.IsValid(target) and IsKillable(target) then
 					 	if ally:distance_to(target.origin) <= 1500 then
-							if CountSoldiers() <= 0 and myHero:distance_to(target.origin) <= E.range then
-								CastW(target)
+							if FullComboManReady() and SupressedSpellReady(SLOT_Q) or ml.Ready(SLOT_Q) and SupressedSpellReady(SLOT_E) or ml.Ready(SLOT_E) and SoldiersWReady() > 0 then
+								InsecReady = true
+
+							if InsecReady and not SoldiersInQRange() and myHero:distance_to(target.origin) <= Q.range then
+								origin = target.origin
+								x, y, z = origin.x, origin.y, origin.z
+								spellbook:cast_spell(SLOT_W, W.delay, x, y, z)
+								e_cast = client:get_tick_count() + 1
 							end
 
-							if myHero:distance_to(soldier.origin) <= E.range and soldier:distance_to(target.origin) <= Q.range then
-								CastE(target)
-								QFire = true
+							if InsecReady and client:get_tick_count() >= e_cast or myHero:distance_to(soldier.origin) <= E.range and SoldiersInQRange() then
+								eorigin = target.origin
+								ex, ey, ez = eorigin.x, eorigin.y, eorigin.z
+								spellbook:cast_spell(SLOT_E, E.delay, ex, ey, ez)
+								q_cast = client:get_tick_count() + 1
 							end
 
-							if QFire and myHero:distance_to(target.origin) <= E.range then
-								CastQ(target)
-								RFire = true
+							if InsecReady and client:get_tick_count() >= q_cast then
+								pred_output = pred:predict(Q.speed, Q.delay, Q.range, Q.width, target, false, false)
+								if pred_output.can_cast then
+									castPos = pred_output.cast_pos
+									spellbook:cast_spell(SLOT_Q, Q.delay, castPos.x, castPos.y, castPos.z)
+									r_cast = client:get_tick_count() + 1
+								end
 							end
 
-							if RFire and ml.Ready(SLOT_R) and myHero:distance_to(target.origin) <= 200 then
-								CastR(ally)
+							if InsecReady and client:get_tick_count() >= r_cast and myHero:distance_to(target.origin) <= 300 and ml.Ready(SLOT_R) then
+								rorigin = ally.origin
+								rx, ry, z = rorigin.x, rorigin.y, rorigin.z
+								spellbook:cast_spell(SLOT_R, R.delay, rx, ry, rz)
 							end
 						end
 					end
@@ -681,23 +816,29 @@ local function on_draw()
 	end
 
 	if menu:get_value(azir_draw_q) == 1 then
-		if ml.Ready(SLOT_W) then
+		if ml.Ready(SLOT_Q) or SupressedSpellReady(SLOT_Q) then
 			renderer:draw_circle(x, y, z, Q.range, 255, 0, 255, 255)
 		end
 	end
 
   if menu:get_value(azir_draw_w) == 1 then
-		if ml.Ready(SLOT_W) then
-			renderer:draw_circle(x, y, z, W.range, 255, 0, 255, 255)
+		if SoldiersWReady() > 0 then
+			renderer:draw_circle(x, y, z, W.range, 255, 255, 0, 255)
 		end
 	end
 
-	--[[local enemydraw = game:world_to_screen(targetvec.x, targetvec.y, targetvec.z)
-	for i, target in ipairs(GetEnemyHeroes()) do
-		local fulldmg = GetEDmg(target) + (myHero.total_attack_damage * 3) + GetRDmg(target)
-		if target.object_id ~= 0 and myHero:distance_to(target.origin) <= 1000 then
+	if menu:get_value(azir_draw_e) == 1 then
+		if ml.Ready(SLOT_E) or SupressedSpellReady(SLOT_E) then
+			renderer:draw_circle(x, y, z, E.range, 255, 255, 255, 255)
+		end
+	end
+
+	local enemydraw = game:world_to_screen(targetvec.x, targetvec.y, targetvec.z)
+	for i, target in ipairs(ml.GetEnemyHeroes()) do
+		local fulldmg = GetQDmg(target) + GetWDmg(target) + GetEDmg(target) + GetRDmg(target)
+		if target.object_id ~= 0 and myHero:distance_to(target.origin) <= 1500 then
 			if menu:get_value(azir_draw_kill) == 1 then
-				if fulldmg > target.health and IsValid(target) then
+				if fulldmg > target.health and ml.IsValid(target) then
 					if enemydraw.is_valid then
 						renderer:draw_text_big_centered(enemydraw.x, enemydraw.y, "Can Kill Target")
 					end
@@ -705,7 +846,7 @@ local function on_draw()
 			end
 		end
 
-		if IsValid(target) and menu:get_value(azir_draw_kill_healthbar) == 1 then
+		if ml.IsValid(target) and menu:get_value(azir_draw_kill_healthbar) == 1 then
 			target:draw_damage_health_bar(fulldmg)
 		end
 	end
@@ -714,7 +855,7 @@ local function on_draw()
 		if menu:get_toggle_state(azir_extra_gapclose) then
 			renderer:draw_text_centered(screen_size.width / 2, 0, "Toggle [R] Anti Gap Closer Enabled")
 		end
-	end]]
+	end
 end
 
 local function on_tick()
@@ -727,7 +868,11 @@ local function on_tick()
 		Harass()
 	end
 
-	--[[if combo:get_mode() == MODE_LANECLEAR then
+	if combo:get_mode() == MODE_LASTHIT then
+		Qlasthit()
+	end
+
+	if combo:get_mode() == MODE_LANECLEAR then
 		Clear()
 		JungleClear()
 	end
@@ -738,8 +883,7 @@ local function on_tick()
 	end
 
 	AutoKill()
-	AutoETurret()
-	RSaveMe()]]
+	RSaveMe()
 
 	if game:is_key_down(menu:get_value(azir_insec_key)) then
 		INSEC()
@@ -753,14 +897,22 @@ local function on_tick()
 	end
 
 	if not ml.Ready(SLOT_R) then
-		Qfire = false
-		Rfire = false
 		q_cast = nil
+		e_cast = nil
+		r_cast = nil
+		InsecReady = false
 	end
+
+	if not SupressedSpellReady(SLOT_E) and not ml.Ready(SLOT_E) and not SupressedSpellReady(SLOT_Q) and not ml.Ready(SLOT_Q) then
+		flee_e_cast = nil
+		flee_q_cast = nil
+		FleeReady = false
+	end
+
 end
 
 client:set_event_callback("on_tick", on_tick)
 client:set_event_callback("on_draw", on_draw)
---client:set_event_callback("on_gap_close", on_gap_close)
---client:set_event_callback("on_possible_interrupt", on_possible_interrupt)
+client:set_event_callback("on_gap_close", on_gap_close)
+client:set_event_callback("on_possible_interrupt", on_possible_interrupt)
 client:set_event_callback("on_object_created", on_object_created)
