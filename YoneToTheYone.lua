@@ -5,7 +5,7 @@ end
 -- AutoUpdate
 do
     local function AutoUpdate()
-		local Version = 1.8
+		local Version = 1.9
 		local file_name = "YoneToTheYone.lua"
 		local url = "http://raw.githubusercontent.com/TheShaunyboi/BruhWalkerEncrypted/main/YoneToTheYone.lua"
         local web_version = http:get("https://raw.githubusercontent.com/TheShaunyboi/BruhWalkerEncrypted/main/YoneToTheYone.lua.version.txt")
@@ -307,7 +307,6 @@ local function GetGameTime()
 	return tonumber(game.game_time)
 end
 
-
 -- Menu Config
 
 if not file_manager:directory_exists("Shaun's Sexy Common") then
@@ -346,8 +345,10 @@ yone_combo = menu:add_subcategory("Combo", yone_category)
 yone_combo_first_aa = menu:add_checkbox("Use [AA] Before First [Q] In Combo", yone_combo, 1)
 yone_combo_use_q = menu:add_checkbox("Use [Q]", yone_combo, 1)
 yone_combo_use_w = menu:add_checkbox("Use [W]", yone_combo, 1)
+yone_combo_use_e = menu:add_checkbox("Use Smart [E]", yone_combo, 1)
 yone_combo_r_setting = menu:add_subcategory("Combo [R] Settings", yone_combo)
 yone_combo_use_r = menu:add_checkbox("Use [R]", yone_combo_r_setting, 1)
+yone_combo_q3_turret = menu:add_checkbox("[Q3] Turret Check", yone_combo, 1)
 yone_combo_r_enemy_hp = menu:add_slider("Use Combo [R] if Enemy HP is lower than [%]", yone_combo_r_setting, 1, 100, 50)
 yone_combo_r_blacklist = menu:add_subcategory("Ultimate Combo Blacklist", yone_combo_r_setting)
 local players = game.players
@@ -376,6 +377,7 @@ yone_engage_enable = menu:add_checkbox("Enable Engage Function", yone_engage, 1)
 yone_combo_F_E_R = menu:add_keybinder("Semi Manual [Flash] > [E] > [R] Key - Nearest To Cursor", yone_engage, 90)
 
 yone_combo_r_options = menu:add_subcategory("Ulitmate Features", yone_category)
+yone_combo_r_turret = menu:add_checkbox("[R] All Usage Turret Check", yone_combo_r_options, 1)
 yone_combo_r_set_key = menu:add_keybinder("Semi Manual [R] Key - Nearest To Cursor", yone_combo_r_options, 65)
 yone_combo_r_auto = menu:add_checkbox("Use Auto [R]", yone_combo_r_options, 1)
 yone_combo_r_auto_x = menu:add_slider("Number Of Targets To Perform Auto [R]", yone_combo_r_options, 1, 5, 3)
@@ -388,6 +390,36 @@ yone_draw_RF = menu:add_checkbox("Draw [Flash] > [E] > [R] Range", yone_draw, 1)
 yone_lasthit_draw = menu:add_checkbox("Draw Auto [Q] Last Hit", yone_draw, 1)
 yone_draw_kill = menu:add_checkbox("Draw Full Combo Can Kill", yone_draw, 1)
 yone_draw_kill_healthbar = menu:add_checkbox("Draw Full Combo On Target Health Bar", yone_draw, 1, "Health Bar Damage Is Computed From R, Q, W, E Return * 2 AA")
+
+local function IsUnderTurret(unit)
+    turrets = game.turrets
+    for i, v in ipairs(turrets) do
+        if v and v.is_enemy then
+            local range = (v.bounding_radius / 2 + 775 + unit.bounding_radius / 2)
+            if v.is_alive and menu:get_value(yone_combo_r_turret) == 1 then
+                if v:distance_to(unit.origin) < range then
+                    return true
+                end
+            end
+        end
+    end
+    return false
+end
+
+local function IsUnderTurretQ3(unit)
+    turrets = game.turrets
+    for i, v in ipairs(turrets) do
+        if v and v.is_enemy then
+            local range = (v.bounding_radius / 2 + 775 + unit.bounding_radius / 2)
+            if v.is_alive and menu:get_value(yone_combo_q3_turret) == 1 then
+                if v:distance_to(unit.origin) < range then
+                    return true
+                end
+            end
+        end
+    end
+    return false
+end
 
 -- Damage
 
@@ -521,7 +553,7 @@ local function Combo()
 	end
 
 	if menu:get_value(yone_combo_use_q) == 1 then
-		if myHero:distance_to(target.origin) <= Q3.range and IsValid(target) and IsKillable(target) then
+		if myHero:distance_to(target.origin) <= Q3.range and IsValid(target) and IsKillable(target) and not IsUnderTurretQ3(target) then
 			if IsYoneQ3() then
 				CastQ3(target)
 			end
@@ -539,10 +571,24 @@ local function Combo()
 		end
 	end
 
+	local EDmgCheck = GetQDmg(target) + GetWDmg(target) + GetRDmg(target) + myHero.total_attack_damage * 3
+	if menu:get_value(yone_combo_use_e) == 1 then
+		if myHero:distance_to(target.origin) <= R.range and IsValid(target) and IsKillable(target) then
+			if target.health < EDmgCheck then
+				if not Ready(SLOT_Q) and Ready(SLOT_E) and not HasCastedYoneE(myHero) then
+					origin = target.origin
+					x, y, z = origin.x, origin.y, origin.z
+					castPos = pred_output.cast_pos
+					spellbook:cast_spell(SLOT_E, E.delay, x, y, z)
+				end
+			end
+		end
+	end
+
 	if menu:get_value(yone_combo_use_r) == 1 then
 		if myHero:distance_to(target.origin) <= R.range and IsValid(target) and IsKillable(target) then
 			if menu:get_value_string("Use R Combo On: "..tostring(target.champ_name)) == 1 then
-				if target:health_percentage() <= menu:get_value(yone_combo_r_enemy_hp) then
+				if target:health_percentage() <= menu:get_value(yone_combo_r_enemy_hp) and not IsUnderTurret(target) then
 					CastR(target)
 				end
 			end
@@ -563,8 +609,8 @@ local function Harass()
 	end
 
 	if menu:get_value(yone_harass_use_q) == 1 and IsYoneQ3() then
-		if myHero:distance_to(target.origin) <= Q3.range and IsValid(target) and IsKillable(target) then
-			CastQ(target)
+		if myHero:distance_to(target.origin) <= Q3.range and IsValid(target) and IsKillable(target) and not IsUnderTurretQ3(target) then
+			CastQ3(target)
 		end
 	end
 
@@ -613,7 +659,7 @@ local function KillSteal()
 			if menu:get_value(yone_ks_use_r) == 1 then
 				if GetRDmg(target) > target.health then
 					if menu:get_value_string("Use R Kill Steal On: "..tostring(target.champ_name)) == 1 then
-						if Ready(SLOT_R) then
+						if Ready(SLOT_R) and not IsUnderTurret(target) then
 							origin = target.origin
 							x, y, z = origin.x, origin.y, origin.z
 							pred_output = pred:predict(R.speed, R.delay, R.range, R.width, target, false, false)
@@ -636,10 +682,10 @@ local function Clear()
 	minions = game.minions
 	for i, target in ipairs(minions) do
 
-		if menu:get_value(yone_laneclear_use_q) == 1 and not menu:get_toggle_state(yone_lasthit_auto) then
+		if menu:get_value(yone_laneclear_use_q) == 1 and not menu:get_toggle_state(yone_lasthit_auto) and not IsYoneQ3(myHero)then
 			if target.object_id ~= 0 and target.is_enemy and myHero:distance_to(target.origin) < Q.range and IsValid(target) then
 				if GetMinionCount(Q.range, target) >= menu:get_value(yone_laneclear_min_q) then
-					if not orbwalker:can_attack() or myHero.attack_range < myHero:distance_to(target.origin) then
+					if not orbwalker:can_attack() or myHero:distance_to(target.origin) > myHero.attack_range then
 						if Ready(SLOT_Q) then
 							origin = target.origin
 							x, y, z = origin.x, origin.y, origin.z
@@ -649,6 +695,21 @@ local function Clear()
 				end
 			end
 		end
+
+		if menu:get_value(yone_laneclear_use_q) == 1 and not menu:get_toggle_state(yone_lasthit_auto) and IsYoneQ3(myHero)  then
+			if target.object_id ~= 0 and target.is_enemy and myHero:distance_to(target.origin) < Q3.range and IsValid(target) then
+				if GetMinionCount(Q.range, target) >= menu:get_value(yone_laneclear_min_q) then
+					if not orbwalker:can_attack() or myHero:distance_to(target.origin) > myHero.attack_range then
+						if Ready(SLOT_Q) and not IsUnderTurretQ3(myHero) then
+							origin = target.origin
+							x, y, z = origin.x, origin.y, origin.z
+							spellbook:cast_spell(SLOT_Q, Q.delay, x, y, z)
+						end
+					end
+				end
+			end
+		end
+
 		if menu:get_value(yone_laneclear_use_w) == 1 and Ready(SLOT_W) then
 			if target.object_id ~= 0 and target.is_enemy and myHero:distance_to(target.origin) < W.range and IsValid(target) then
 				if GetMinionCount(W.range, target) >= menu:get_value(yone_laneclear_min_w) then
@@ -704,7 +765,7 @@ local function ManualRCast()
 	target = selector:find_target(R.range, mode_cursor)
 
 	if target.object_id ~= 0 then
-		if Ready(SLOT_R) and IsValid(target) and IsKillable(target) then
+		if Ready(SLOT_R) and IsValid(target) and IsKillable(target) and not IsUnderTurret(target) then
 			origin = target.origin
 			x, y, z = origin.x, origin.y, origin.z
 			pred_output = pred:predict(R.speed, R.delay, R.range, R.width, target, false, false)
@@ -732,7 +793,7 @@ local function EFlashRCast()
 
 		target = selector:find_target(RF.range, mode_cursor)
 		if target.object_id ~= 0 then
-			if Ready(SLOT_R) and Ready(SLOT_F) and Ready(SLOT_E) and IsValid(target) and IsKillable(target) then
+			if Ready(SLOT_R) and Ready(SLOT_F) and Ready(SLOT_E) and IsValid(target) and IsKillable(target) and not IsUnderTurret(target) then
 				origin = target.origin
 				x, y, z = origin.x, origin.y, origin.z
 				spellbook:cast_spell(SLOT_F, 0.1, x, y, z)
@@ -765,7 +826,7 @@ local function EFlashRCast()
 
 		target = selector:find_target(RF.range, mode_cursor)
 		if target.object_id ~= 0 then
-			if Ready(SLOT_R) and Ready(SLOT_D) and Ready(SLOT_E) then
+			if Ready(SLOT_R) and Ready(SLOT_D) and Ready(SLOT_E) and not IsUnderTurret(target) then
 				origin = target.origin
 				x, y, z = origin.x, origin.y, origin.z
 				spellbook:cast_spell(SLOT_D, 0.1, x, y, z)
@@ -802,7 +863,7 @@ function AutoR()
   local Count = 0
   players = game.players
   for _, target in ipairs(players) do
-    if Ready(SLOT_R) and target.is_enemy and IsValid(target) and myHero:distance_to(target.origin) <= R.range then
+    if Ready(SLOT_R) and target.is_enemy and IsValid(target) and myHero:distance_to(target.origin) <= R.range and not IsUnderTurret(target) then
       pred_output = pred:predict(R.speed, R.delay, R.range, R.width, target, false, false)
       output = pred_output.cast_pos
 
@@ -820,16 +881,30 @@ end
 local function AutoQLastHit(target)
 	minions = game.minions
 	for i, target in ipairs(minions) do
-		if target.object_id ~= 0 and target.is_enemy and myHero:distance_to(target.origin) < Q.range and IsValid(target) then
+		if target.object_id ~= 0 and target.is_enemy and myHero:distance_to(target.origin) < Q.range and IsValid(target) and not IsYoneQ3(myHero) then
 			if GetMinionCount(Q.range, target) >= 1 then
 				if GetQDmg(target) > target.health then
 					if combo:get_mode() ~= MODE_COMBO and combo:get_mode() ~= MODE_HARASS and not game:is_key_down(menu:get_value(yone_combokey)) then
-						if not orbwalker:can_attack() or myHero.attack_range < myHero:distance_to(target.origin) then
+						if not orbwalker:can_attack() or myHero:distance_to(target.origin) > myHero.attack_range then
 							if Ready(SLOT_Q) then
 								origin = target.origin
 								x, y, z = origin.x, origin.y, origin.z
 								spellbook:cast_spell(SLOT_Q, Q.delay, x, y, z)
-								orbwalker:reset_aa()
+							end
+						end
+					end
+				end
+			end
+		end
+		if target.object_id ~= 0 and target.is_enemy and myHero:distance_to(target.origin) < Q3.range and IsValid(target) and IsYoneQ3(myHero) then
+			if GetMinionCount(Q.range, target) >= 1 then
+				if GetQDmg(target) > target.health then
+					if combo:get_mode() ~= MODE_COMBO and combo:get_mode() ~= MODE_HARASS and not game:is_key_down(menu:get_value(yone_combokey)) then
+						if not orbwalker:can_attack() or myHero:distance_to(target.origin) > myHero.attack_range then
+							if Ready(SLOT_Q) and not IsUnderTurretQ3(target) then
+								origin = target.origin
+								x, y, z = origin.x, origin.y, origin.z
+								spellbook:cast_spell(SLOT_Q, Q.delay, x, y, z)
 							end
 						end
 					end
@@ -885,8 +960,14 @@ local function on_draw()
 		x, y, z = origin.x, origin.y, origin.z
 
 		if menu:get_value(yone_draw_q) == 1 then
-			if Ready(SLOT_Q) then
+			if Ready(SLOT_Q) and not IsYoneQ3(myHero) then
 				renderer:draw_circle(x, y, z, Q.range, 255, 255, 255, 255)
+			end
+		end
+
+		if menu:get_value(yone_draw_q) == 1 then
+			if Ready(SLOT_Q) and IsYoneQ3(myHero) then
+				renderer:draw_circle(x, y, z, Q3.range, 255, 255, 255, 255)
 			end
 		end
 
