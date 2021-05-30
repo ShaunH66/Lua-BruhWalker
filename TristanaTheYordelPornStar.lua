@@ -4,7 +4,7 @@ end
 
 do
     local function AutoUpdate()
-		local Version = 1.7
+		local Version = 1.8
 		local file_name = "TristanaTheYordelPornStar.lua"
 		local url = "https://raw.githubusercontent.com/TheShaunyboi/BruhWalkerEncrypted/main/TristanaTheYordelPornStar.lua"
         local web_version = http:get("https://raw.githubusercontent.com/TheShaunyboi/BruhWalkerEncrypted/main/TristanaTheYordelPornStar.lua.version.txt")
@@ -716,6 +716,7 @@ end
 local function AutoKill()
 
 	local QERrange = (myHero.attack_range + myHero.bounding_radius + 40)
+
 	for i, target in ipairs(GetEnemyHeroes()) do
 
 		if target.object_id ~= 0 and myHero:distance_to(target.origin) <= QERrange and IsValid(target) and IsKillable(target) then
@@ -752,6 +753,7 @@ end
 local function Clear()
 
 	local QERrange = (myHero.attack_range + myHero.bounding_radius + 40)
+
 	local GrabLaneClearMana = myHero.mana/myHero.max_mana >= menu:get_value(trist_laneclear_min_mana) / 100
 
 	minions = game.minions
@@ -769,7 +771,7 @@ local function Clear()
 
 		if menu:get_value(trist_laneclear_use_e) == 1 then
 			if IsValid(target) and target.object_id ~= 0 and target.is_enemy and myHero:distance_to(target.origin) < QERrange then
-				if EpicMonsterPlusSiege(target) then
+				if EpicMonsterPlusSiege(target) and GetEnemyCountCicular(2000, target.origin) == 0 then
 					if GrabLaneClearMana and Ready(SLOT_E) then
             CastE(target)
 					end
@@ -785,6 +787,7 @@ end
 local function JungleClear()
 
 	local QERrange = (myHero.attack_range + myHero.bounding_radius + 40)
+
 	local GrabJungleClearMana = myHero.mana/myHero.max_mana >= menu:get_value(trist_jungleclear_min_mana) / 100
 
 	minions = game.jungle_minions
@@ -813,7 +816,8 @@ end
 local function ManualR()
 
 	local QERrange = (myHero.attack_range + myHero.bounding_radius + 40)
-  target = selector:find_target(W.range, mode_cursor)
+
+	target = selector:find_target(W.range, mode_cursor)
 
   if game:is_key_down(menu:get_value(trist_extra_semi_r_key)) then
     if myHero:distance_to(target.origin) < QERrange then
@@ -851,14 +855,12 @@ end
 
 -- Gap Close
 
-local function on_gap_close(obj, data)
-
-	local QERrange = (myHero.attack_range + myHero.bounding_radius + 40)
+local function on_dash(obj, dash_info)
 
 	if menu:get_toggle_state(trist_extra_gapclose) then
     if IsValid(obj) then
 			if menu:get_value_string("Anti Gap Closer Whitelist: "..tostring(obj.champ_name)) == 1 then
-	      if myHero:distance_to(obj.origin) < 400 and Ready(SLOT_R) then
+	      if obj:is_facing(myHero) and myHero:distance_to(dash_info.end_pos) < 400 and Ready(SLOT_R) then
 	        CastR(obj)
 				end
 			end
@@ -871,6 +873,7 @@ end
 local function on_possible_interrupt(obj, spell_name)
 
 	local QERrange = (myHero.attack_range + myHero.bounding_radius + 40)
+
 	if IsValid(obj) then
     if menu:get_value(trist_extra_interrupt) == 1 then
 			if menu:get_value_string("Interrupt Whitelist: "..tostring(obj.champ_name)) == 1 then
@@ -910,7 +913,6 @@ end
 
 local function on_draw()
 
-	local QERrange = (myHero.attack_range + myHero.bounding_radius + 40)
 	screen_size = game.screen_size
 
 	target = selector:find_target(2000, mode_health)
@@ -980,5 +982,5 @@ end
 
 client:set_event_callback("on_tick", on_tick)
 client:set_event_callback("on_draw", on_draw)
-client:set_event_callback("on_gap_close", on_gap_close)
+client:set_event_callback("on_dash", on_dash)
 client:set_event_callback("on_possible_interrupt", on_possible_interrupt)
