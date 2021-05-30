@@ -4,7 +4,7 @@ end
 
 do
     local function AutoUpdate()
-		local Version = 1.4
+		local Version = 1.6
 		local file_name = "AnnieAnnieAnnie.lua"
 		local url = "https://raw.githubusercontent.com/TheShaunyboi/BruhWalkerEncrypted/main/AnnieAnnieAnnie.lua"
         local web_version = http:get("https://raw.githubusercontent.com/TheShaunyboi/BruhWalkerEncrypted/main/AnnieAnnieAnnie.lua.version.txt")
@@ -30,6 +30,7 @@ do
     AutoUpdate()
 end
 
+
 local VIP = http:get("https://raw.githubusercontent.com/TheShaunyboi/BruhWalkerEncrypted/main/VIP_USER_LIST.lua.txt")
 VIP = VIP .. ','
 local LIST = {}
@@ -43,7 +44,7 @@ local function VIP_USER_LIST()
 			return true
 		end
 	end
-return false
+	return false
 end
 
 if not VIP_USER_LIST() then
@@ -1036,6 +1037,12 @@ local function on_tick()
 	if game:is_key_down(menu:get_value(annie_combo_flash_r_auto)) then
 		orbwalker:move_to()
 		AutoFlash()
+	end
+
+	if HasStunPassive(myHero) and Ready(SLOT_Q) then
+		orbwalker:disable_auto_attacks()
+	else
+		orbwalker:enable_auto_attacks()
 	end
 
 	AutoE()
