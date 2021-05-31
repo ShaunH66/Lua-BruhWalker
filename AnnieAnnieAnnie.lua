@@ -4,7 +4,7 @@ end
 
 do
     local function AutoUpdate()
-		local Version = 1.6
+		local Version = 1.7
 		local file_name = "AnnieAnnieAnnie.lua"
 		local url = "https://raw.githubusercontent.com/TheShaunyboi/BruhWalkerEncrypted/main/AnnieAnnieAnnie.lua"
         local web_version = http:get("https://raw.githubusercontent.com/TheShaunyboi/BruhWalkerEncrypted/main/AnnieAnnieAnnie.lua.version.txt")
@@ -1039,7 +1039,7 @@ local function on_tick()
 		AutoFlash()
 	end
 
-	if HasStunPassive(myHero) and Ready(SLOT_Q) then
+	if HasStunPassive(myHero) and Ready(SLOT_Q) and game:is_key_down(menu:get_value(annie_combokey)) then
 		orbwalker:disable_auto_attacks()
 	else
 		orbwalker:enable_auto_attacks()
