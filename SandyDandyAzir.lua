@@ -4,12 +4,12 @@ end
 
 do
     local function AutoUpdate()
-		local Version = 1.0
-		local file_name = "SandyDanyAzir.lua"
-		local url = "https://raw.githubusercontent.com/TheShaunyboi/BruhWalkerEncrypted/main/SandyDanyAzir.lua"
-    local web_version = http:get("https://raw.githubusercontent.com/TheShaunyboi/BruhWalkerEncrypted/main/SandyDanyAzir.lua.version.txt")
-    console:log("SandyDanyAzir..lua Vers: "..Version)
-		console:log("SandyDanyAzir..Web Vers: "..tonumber(web_version))
+		local Version = 1.4
+		local file_name = "SandyDandyAzir.lua"
+		local url = "https://raw.githubusercontent.com/TheShaunyboi/BruhWalkerEncrypted/main/SandyDandyAzir.lua"
+    local web_version = http:get("https://raw.githubusercontent.com/TheShaunyboi/BruhWalkerEncrypted/main/SandyDandyAzir.lua.version.txt")
+    console:log("SandyDandyAzir..lua Vers: "..Version)
+		console:log("SandyDandyAzir..Web Vers: "..tonumber(web_version))
 		if tonumber(web_version) == Version then
             console:log(".................Shaun's Sexy Azir Successfully Loaded........................")
     else
@@ -247,6 +247,13 @@ function SoldiersInQRange()
 	return false
 end
 
+function DisableRangeDraws()
+  if SoldiersInQRange() and InsecReady then
+		return true
+  end
+	return false
+end
+
 function SoldiersWReady()
   return spellbook:get_spell_slot(SLOT_W).count
 end
@@ -320,7 +327,7 @@ end
 
 azir_enabled = menu:add_checkbox("Enabled", azir_category, 1)
 azir_combokey = menu:add_keybinder("Combo Mode Key", azir_category, 32)
-azir_extra_flee_key = menu:add_keybinder("[W] [Q] [E] Manual Key - Mouse Position", azir_category, 90)
+azir_extra_flee_key = menu:add_keybinder("[W] + [Q] + [E] Drift Key - To Mouse Position", azir_category, 90)
 menu:add_label("Welcome To Shaun's Sexy Azir", azir_category)
 menu:add_label("#SandInMyBallsHurts", azir_category)
 
@@ -382,12 +389,12 @@ azir_extra_insec = menu:add_subcategory("[INSEC] Settings", azir_category)
 azir_insec_key = menu:add_keybinder("[INSEC] Hold Key - Target Nearest To Cursor", azir_extra_insec, 88)
 e_table = {}
 e_table[1] = "To Allys"
-e_table[2] = "To Ally Tower"
+e_table[2] = "To Screen Visable Ally Turret"
 e_table[3] = "Mouse Position"
 azir_insec_direction = menu:add_combobox("[R] INSEC Direction Preference", azir_extra_insec, e_table, 2)
 
 azir_extra = menu:add_subcategory("[R] Extra Features", azir_category)
-azir_extra_semi_r_key = menu:add_keybinder("[R] Semi Manual Key - Target Closest To Mouse Position", azir_extra, 65)
+azir_extra_semi_r_key = menu:add_keybinder("[R] Semi Manual Key - [R] To Mouse Position", azir_extra, 65)
 azir_extra_save = menu:add_subcategory("Smart [R] Save Me! Settings", azir_extra)
 azir_extra_saveme = menu:add_checkbox("Use Smart [R] Save Me! Usage", azir_extra_save, 1)
 azir_extra_saveme_myhp = menu:add_slider("[R] Save Me! When My HP < [%]", azir_extra_save, 1, 100, 25)
@@ -657,10 +664,16 @@ local function AutoKill()
 
 						for _, soldier in pairs(soldiers) do
 							if KS_InsecReady and ml.Ready(SLOT_W) and spellbook:get_spell_slot(SLOT_E).can_cast then
-								if myHero:distance_to(soldier.origin) <= E.range and myHero:distance_to(soldier.origin) > 600 and target:distance_to(soldier.origin) <= Q.range then
+								if myHero:distance_to(soldier.origin) <= E.range and myHero:distance_to(soldier.origin) >= 600 and target:distance_to(soldier.origin) <= Q.range then
 									CastE(soldier)
-									KS_Qfire = true
+									if soldier:distance_to(target.origin) > 250 then
+										KS_Qfire = true
+									end
 								end
+							end
+
+							if soldier:distance_to(target.origin) <= 250 and not KS_Qfire and not KS_Efire and myHero:distance_to(target.origin) <= 300 then
+								KS_Rfire = true
 							end
 
 							if KS_Qfire and not KS_Rfire and myHero:distance_to(soldier.origin) <= 200 then
@@ -748,7 +761,7 @@ local function JungleClear()
 				if myHero:distance_to(target.origin) <= W.range then
 					local BestPos, MostHit = GetBestCircularJungPos(myHero, W.range, W.width)
 					if GrabJungleClearMana and BestPos and SoldiersWReady() > 0 and spellbook:get_spell_slot(SLOT_W).can_cast then
-						x, y, z = BestPos.x, BestPos.y, BestPos.z
+						x, y, z = BestPos.x + 20, BestPos.y + 20, BestPos.z
 						spellbook:cast_spell(SLOT_W, W.delay, x, y, z)
 					end
 				end
@@ -783,12 +796,13 @@ end
 
 local function ManualR()
 
-  target = selector:find_target(1500, mode_cursor)
+  target = selector:find_target(1500, mode_distance)
 
   if game:is_key_down(menu:get_value(azir_extra_semi_r_key)) then
-    if myHero:distance_to(target.origin) < 300 then
+    if myHero:distance_to(target.origin) < 350 then
 			if ml.IsValid(target) and IsKillable(target) and ml.Ready(SLOT_R) then
-				CastR(target)
+				local mouse = game.mouse_pos
+				spellbook:cast_spell(SLOT_R, R.delay, mouse.x, mouse.y, mouse.z)
 			end
     end
   end
@@ -803,7 +817,7 @@ local function RSaveMe()
 	local TargetHP = target.health/target.max_health >= menu:get_value(azir_extra_saveme_target) / 100
 
 	if menu:get_value(azir_extra_saveme) == 1 then
-    if myHero:distance_to(target.origin) < 300 then
+    if myHero:distance_to(target.origin) < 350 then
 			if myHero:distance_to(target.origin) < target.attack_range then
 				if target:is_facing(myHero) then
 					if SaveMeHP and TargetHP then
@@ -888,10 +902,10 @@ local function INSEC()
 		if menu:get_value(azir_insec_direction) == 0 then
 			if not ally.is_enemy and ally.object_id ~= myHero.object_id then
 				if ml.IsValid(target) and IsKillable(target) then
-				 	if ally:distance_to(target.origin) <= 1500 then
+				 	if ally:distance_to(target.origin) <= 2000 then
 						if AzirInsecReady() then
 						 InsecReady = true
-					 end
+					 	end
 
 						if InsecReady and not Efire and not SoldiersInQRange() and myHero:distance_to(target.origin) < Q.range then
 							CastW(target)
@@ -900,10 +914,16 @@ local function INSEC()
 
 						for _, soldier in pairs(soldiers) do
 							if InsecReady and ml.Ready(SLOT_W) and spellbook:get_spell_slot(SLOT_E).can_cast then
-								if myHero:distance_to(soldier.origin) <= E.range and myHero:distance_to(soldier.origin) > 600 and target:distance_to(soldier.origin) <= Q.range then
+								if myHero:distance_to(soldier.origin) <= E.range and myHero:distance_to(soldier.origin) >= 600 and target:distance_to(soldier.origin) <= Q.range then
 									CastE(soldier)
-									Qfire = true
+									if soldier:distance_to(target.origin) > 250 then
+										Qfire = true
+									end
 								end
+							end
+
+							if soldier:distance_to(target.origin) <= 250 and not Qfire and not Efire and myHero:distance_to(target.origin) <= 300 then
+								Rfire = true
 							end
 
 							if Qfire and not Rfire and myHero:distance_to(soldier.origin) <= 200 then
@@ -939,10 +959,16 @@ local function INSEC()
 
 							for _, soldier in pairs(soldiers) do
 								if InsecReady and ml.Ready(SLOT_W) and spellbook:get_spell_slot(SLOT_E).can_cast then
-									if myHero:distance_to(soldier.origin) <= E.range and myHero:distance_to(soldier.origin) > 600 and target:distance_to(soldier.origin) <= Q.range then
+									if myHero:distance_to(soldier.origin) <= E.range and myHero:distance_to(soldier.origin) >= 600 and target:distance_to(soldier.origin) <= Q.range then
 										CastE(soldier)
-										Qfire = true
+										if soldier:distance_to(target.origin) > 250 then
+											Qfire = true
+										end
 									end
+								end
+
+								if soldier:distance_to(target.origin) <= 250 and not Qfire and not Efire and myHero:distance_to(target.origin) <= 300 then
+									Rfire = true
 								end
 
 								if Qfire and not Rfire and myHero:distance_to(soldier.origin) <= 200 then
@@ -975,13 +1001,19 @@ local function INSEC()
 
 				for _, soldier in pairs(soldiers) do
 					if InsecReady and ml.Ready(SLOT_W) and not Qfire and spellbook:get_spell_slot(SLOT_E).can_cast then
-						if myHero:distance_to(soldier.origin) <= E.range and myHero:distance_to(soldier.origin) > 600 and target:distance_to(soldier.origin) <= Q.range then
+						if myHero:distance_to(soldier.origin) <= E.range and myHero:distance_to(soldier.origin) >= 600 and target:distance_to(soldier.origin) <= Q.range then
 							CastE(soldier)
-							Qfire = true
+							if soldier:distance_to(target.origin) > 250 then
+								Qfire = true
+							end
 						end
 					end
 
-					if Qfire and not Rfire and myHero:distance_to(soldier.origin) <= 200 then
+					if soldier:distance_to(target.origin) <= 250 and not Qfire and not Efire and myHero:distance_to(target.origin) <= 300 then
+						Rfire = true
+					end
+
+					if Qfire and not Rfire and soldier:distance_to(myHero.origin) <= 200 then
 						CastQ(target)
 						if not spellbook:get_spell_slot(SLOT_Q).can_cast then
 							Rfire = true
@@ -1013,21 +1045,34 @@ local function on_draw()
 		x, y, z = origin.x, origin.y, origin.z
 	end
 
-	if menu:get_value(azir_draw_q) == 1 then
+	local myherodraw = game:world_to_screen(justme.x, justme.y, justme.z)
+
+	if menu:get_value(azir_draw_q) == 1 and not DisableRangeDraws() then
 		if ml.Ready(SLOT_Q) or SupressedSpellReady(SLOT_Q) then
 			renderer:draw_circle(x, y, z, Q.range, 255, 0, 255, 255)
 		end
 	end
 
-  if menu:get_value(azir_draw_w) == 1 then
+  if menu:get_value(azir_draw_w) == 1 and not DisableRangeDraws() then
 		if SoldiersWReady() > 0 then
 			renderer:draw_circle(x, y, z, W.range, 255, 255, 0, 255)
 		end
 	end
 
-	if menu:get_value(azir_draw_e) == 1 then
+	if menu:get_value(azir_draw_e) == 1 and not DisableRangeDraws() then
 		if ml.Ready(SLOT_E) or SupressedSpellReady(SLOT_E) then
 			renderer:draw_circle(x, y, z, E.range, 255, 255, 255, 255)
+		end
+	end
+
+	for _, soldier in pairs(soldiers) do
+		if InsecReady and soldier:distance_to(target.origin) <= Q.range then
+			if SoldiersInQRange() then
+				sorigin = soldier.origin
+				sx, sy, sz = sorigin.x, sorigin.y, sorigin.z
+				renderer:draw_text_big_centered(myherodraw.x, myherodraw.y + 50, "Move Outside Soldier Circle Draw")
+				renderer:draw_circle(sx, sy, sz, 600, 255, 255, 255, 255)
+			end
 		end
 	end
 
@@ -1037,7 +1082,7 @@ local function on_draw()
 		if target.object_id ~= 0 and myHero:distance_to(target.origin) <= 1500 then
 			if menu:get_value(azir_draw_kill) == 1 then
 				if fulldmg > target.health and ml.IsValid(target) then
-					if enemydraw.is_valid then
+					if enemydraw.is_valid and not InsecReady then
 						renderer:draw_text_big_centered(enemydraw.x, enemydraw.y, "Can Kill Target")
 					end
 				end
@@ -1049,9 +1094,8 @@ local function on_draw()
 		end
 	end
 
-	local myherodraw = game:world_to_screen(justme.x, justme.y, justme.z)
 	if menu:get_value(azir_draw_insec_ready) == 1 then
-	 if AzirInsecReady() then
+	 if AzirInsecReady() and not InsecReady then
 		 renderer:draw_text_big_centered(myherodraw.x, myherodraw.y + 50, "INSEC Ready!")
 	 end
  end
