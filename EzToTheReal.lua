@@ -4,7 +4,7 @@ end
 
 do
     local function AutoUpdate()
-		local Version = 2.2
+		local Version = 2.3
 		local file_name = "EzToTheReal.lua"
 		local url = "https://raw.githubusercontent.com/TheShaunyboi/BruhWalkerEncrypted/main/EzToTheReal.lua"
         local web_version = http:get("https://raw.githubusercontent.com/TheShaunyboi/BruhWalkerEncrypted/main/EzToTheReal.lua.version.txt")
@@ -56,6 +56,17 @@ end
 
 pred:use_prediction()
 
+--Ensuring that the librarys are downloaded:
+local file_name = "VectorMath.lua"
+if not file_manager:file_exists(file_name) then
+   local url = "https://raw.githubusercontent.com/stoneb2/Bruhwalker/main/VectorMath/VectorMath.lua"
+   http:download_file(url, file_name)
+   console:log("VectorMath Library Downloaded")
+   console:log("Please Reload with F5")
+end
+
+local ml = require "VectorMath"
+require "PKDamageLib"
 local myHero = game.local_player
 local local_player = game.local_player
 
@@ -301,6 +312,31 @@ local function AoEDraw()
 	end
 end
 
+function VectorPointProjectionOnLineSegment(v1, v2, v)
+    local cx, cy, ax, ay, bx, by = v.x, (v.z or v.y), v1.x, (v1.z or v1.y), v2.x, (v2.z or v2.y)
+    local rL = ((cx - ax) * (bx - ax) + (cy - ay) * (by - ay)) / ((bx - ax) * (bx - ax) + (by - ay) * (by - ay))
+    local pointLine = { x = ax + rL * (bx - ax), y = ay + rL * (by - ay) }
+    local rS = rL < 0 and 0 or (rL > 1 and 1 or rL)
+    local isOnSegment = rS == rL
+    local pointSegment = isOnSegment and pointLine or { x = ax + rS * (bx - ax), y = ay + rS * (by - ay) }
+    return pointSegment, pointLine, isOnSegment
+end
+
+function GetLineTargetCount(source, aimPos, delay, speed, width)
+    local Count = 0
+    minion = game.minions
+    for _, target in ipairs(minion) do
+        local Range = 1100 * 1100
+        if target.object_id ~= 0 and IsValid(target) and target.is_enemy and GetDistanceSqr(myHero, target) < Range then
+            local pointSegment, pointLine, isOnSegment = VectorPointProjectionOnLineSegment(source.origin, aimPos, target.origin)
+            if pointSegment and isOnSegment and (GetDistanceSqr2(target.origin, pointSegment) <= (target.bounding_radius + width) * (target.bounding_radius + width)) then
+                Count = Count + 1
+            end
+        end
+    end
+    return Count
+end
+
 -- Best Prediction End
 
 local function HasPoison(unit)
@@ -353,7 +389,8 @@ local function EpicMonster(unit)
 		or unit.champ_name == "SRU_Dragon_Fire"
 		or unit.champ_name == "SRU_Dragon_Earth"
 		or unit.champ_name == "SRU_Dragon_Air"
-		or unit.champ_name == "SRU_Dragon_Elder" then
+		or unit.champ_name == "SRU_Dragon_Elder"
+		or unit.champ_name ==	"SRU_ChaosMinionSiege" then
 		return true
 	else
 		return false
@@ -447,6 +484,8 @@ ezreal_jungleclear_use_q = menu:add_checkbox("Use [Q]", ezreal_jungleclear, 1)
 ezreal_jungleclear_use_w = menu:add_checkbox("Use [W]", ezreal_jungleclear, 1)
 ezreal_jungleclear_min_mana = menu:add_slider("Minimum Mana To jungle Clear", ezreal_jungleclear, 1, 500, 200)
 
+ezreal_lasthit = menu:add_subcategory("Last Hit", ezreal_category)
+ezreal_lasthit_q = menu:add_checkbox("Use [Q] Outside [AA] Range", ezreal_lasthit, 1)
 
 ezreal_misc_options = menu:add_subcategory("Extra Features", ezreal_category)
 ezreal_combo_r_set_key = menu:add_keybinder("Semi Manual [R] Key", ezreal_misc_options, 65)
@@ -468,50 +507,25 @@ ezreal_draw_kill_healthbar = menu:add_checkbox("Draw Full Combo On Target Health
 
 
 local function GetQDmg(unit)
-  local Damage = 0
-  local level = spellbook:get_spell_slot(SLOT_Q).level
-  local BonusDmg = myHero.total_attack_damage + (.9 * myHero.ability_power)
-  local QDamage = ({20, 45, 70, 95, 120})[level] + 0.15 * myHero.ability_power + 1.3 * myHero.total_attack_damage
-  if HasHealingBuff(unit) then
-      Damage = QDamage - 10
-  else
-			Damage = QDamage
-  end
-	return unit:calculate_phys_damage(Damage)
+	local QDmg = getdmg("Q", unit, myHero, 1)
+	return QDmg
 end
 
 local function GetWDmg(unit)
-  local Damage = 0
-  local level = spellbook:get_spell_slot(SLOT_W).level
-  local BonusDmg = myHero.total_attack_damage + (0.15 * myHero.ability_power)
-  local WDamage = ({80, 135, 190, 245, 300})[level] + (({0.7, 0.75, 0.8, 0.85, 0.9})[level] * myHero.ability_power) + 0.6 * myHero.bonus_attack_damage
-  if HasHealingBuff(unit) then
-      Damage = WDamage - 10
-  else
-			Damage = WDamage
-  end
-	return unit:calculate_magic_damage(Damage)
+	local WDmg = getdmg("W", unit, myHero, 1)
+	return WDmg
 end
 
 local function GetRDmg(unit)
-  local Damage = 0
-  local level = spellbook:get_spell_slot(SLOT_R).level
-  local BonusDmg = myHero.total_attack_damage + (0.5 * myHero.ability_power)
-  local RDamage = ({350, 500, 650})[level] + 0.9 * myHero.ability_power + myHero.bonus_attack_damage
-  if HasHealingBuff(unit) then
-      Damage = RDamage - 10
-  else
-			Damage = RDamage
-  end
-	return unit:calculate_magic_damage(Damage)
+	local RDmg = getdmg("R", unit, myHero, 1)
+	return RDmg
 end
 
 
 -- Casting
 
 local function CastQ(unit)
-	origin = unit.origin
-	x, y, z = origin.x, origin.y, origin.z
+
 	pred_output = pred:predict(Q.speed, Q.delay, Q.range, Q.width, unit, true, true)
 	if pred_output.can_cast then
 		castPos = pred_output.cast_pos
@@ -520,8 +534,7 @@ local function CastQ(unit)
 end
 
 local function CastW(unit)
-	origin = unit.origin
-	x, y, z = origin.x, origin.y, origin.z
+
 	pred_output = pred:predict(W.speed, W.delay, W.range, W.width, unit, false, false)
 	if pred_output.can_cast then
 		castPos = pred_output.cast_pos
@@ -530,8 +543,7 @@ local function CastW(unit)
 end
 
 local function CastR(unit)
-	origin = unit.origin
-	x, y, z = origin.x, origin.y, origin.z
+
 	pred_output = pred:predict(R.speed, R.delay, R.range, R.width, unit, false, false)
 	if pred_output.can_cast then
 		castPos = pred_output.cast_pos
@@ -695,8 +707,6 @@ local function JungleClear()
 		if target.object_id ~= 0 and menu:get_value(ezreal_jungleclear_use_q) == 1 and myHero:distance_to(target.origin) < Q.range and IsValid(target) then
 			if myHero.mana >= menu:get_value(ezreal_jungleclear_min_mana) then
 				if Ready(SLOT_Q) then
-					origin = target.origin
-					x, y, z = origin.x, origin.y, origin.z
 					pred_output = pred:predict(Q.speed, Q.delay, Q.range, Q.width, target, true, false)
 
 					if pred_output.can_cast then
@@ -710,8 +720,6 @@ local function JungleClear()
 		if target.object_id ~= 0 and menu:get_value(ezreal_jungleclear_use_w) == 1 and myHero:distance_to(target.origin) < W.range and IsValid(target) then
 			if myHero.mana >= menu:get_value(ezreal_jungleclear_min_mana) then
 				if EpicMonster(target) and Ready(SLOT_W) and not Ready(SLOT_Q) then
-					origin = target.origin
-					x, y, z = origin.x, origin.y, origin.z
 					pred_output = pred:predict(W.speed, W.delay, W.range, W.width, target, false, false)
 
 					if pred_output.can_cast then
@@ -760,6 +768,47 @@ local function AutoRx()
 				local CastPos, targets = GetBestAoEPosition(math.huge, 1.5, R.range, R.width, unit, false, false)
 				if CastPos and targets >= menu:get_value(ezreal_auto_r_x) then
 					spellbook:cast_spell(SLOT_R, R.delay, CastPos.x, CastPos.y, CastPos.z)
+				end
+			end
+		end
+	end
+end
+
+local function QLasthit()
+
+	minions = game.minions
+	for i, minion in ipairs(minions) do
+
+
+		if myHero:distance_to(minion.origin) < Q.range and myHero:distance_to(minion.origin) > myHero.attack_range and IsValid(minion) and IsKillable(minion) then
+			if menu:get_value(ezreal_lasthit_q) == 1 then
+				if not EpicMonster(minion) and GetQDmg(minion) > minion.health then
+					if Ready(SLOT_Q) and minion.is_alive then
+						pred_output = pred:predict(Q.speed, Q.delay, Q.range, Q.width, minion, false, false)
+						if pred_output.can_cast then
+							castPos = pred_output.cast_pos
+							count = GetLineTargetCount(myHero, castPos, Q.delay, Q.speed, Q.width / 2)
+							if count and count == 1 then
+								spellbook:cast_spell(SLOT_Q, Q.delay, castPos.x, castPos.y, castPos.z)
+							end
+						end
+					end
+				end
+			end
+		end
+		if myHero:distance_to(minion.origin) < Q.range and myHero:distance_to(minion.origin) > myHero.attack_range and IsValid(minion) and IsKillable(minion) then
+			if menu:get_value(ezreal_lasthit_q) == 1 then
+				if EpicMonster(minion) and GetQDmg(minion) > minion.health then
+					if Ready(SLOT_Q) and minion.is_alive then
+						pred_output = pred:predict(Q.speed, Q.delay, Q.range, Q.width, minion, false, false)
+						if pred_output.can_cast then
+							castPos = pred_output.cast_pos
+							count = GetLineTargetCount(myHero, castPos, Q.delay, Q.speed, Q.width / 2)
+							if count and count == 1 then
+								spellbook:cast_spell(SLOT_Q, Q.delay, castPos.x, castPos.y, castPos.z)
+							end
+						end
+					end
 				end
 			end
 		end
@@ -843,6 +892,10 @@ local function on_tick()
 	if combo:get_mode() == MODE_LANECLEAR then
 		Clear()
 		JungleClear()
+	end
+
+	if combo:get_mode() == MODE_LASTHIT then
+	QLasthit()
 	end
 
 	if game:is_key_down(menu:get_value(ezreal_combo_r_set_key)) then
