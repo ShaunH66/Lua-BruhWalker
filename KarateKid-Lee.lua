@@ -2,7 +2,7 @@ if game.local_player.champ_name ~= "LeeSin" then
 	return
 end
 
-do
+--[[do
     local function AutoUpdate()
 		local Version = 0.5
 		local file_name = "KarateKid-Lee.lua"
@@ -29,7 +29,7 @@ do
     end
 
     AutoUpdate()
-end
+end]]
 
 --Ensuring that the librarys are downloaded:
 local file_name = "VectorMath.lua"
@@ -78,14 +78,14 @@ require "PKDamageLib"
 
 local myHero = game.local_player
 local local_player = game.local_player
+
 local InsecReady = false
-local KS_InsecReady = false
+local WardCasted = false
+
 local FleeReady = false
-local Qfire = false
-local Rfire = false
-local Efire = false
-local flee_Efire = false
-local flee_Qfire = false
+local Wfire = false
+
+local KS_InsecReady = false
 local KS_Qfire = false
 local KS_Rfire = false
 local KS_Efire = false
@@ -96,6 +96,7 @@ local W = { range = 700, delay = .1, width = 0, speed = 0 }
 local E1 = { range = 350, delay = .25, width = 0, speed = 0}
 local E2 = { range = 500, delay = .25, width = 0, speed = 0}
 local R = { range = 375, delay = .25, width = 0, speed = 0 }
+local Ward = { range = 625 }
 
 local function IsFlashSlotF()
 flash = spellbook:get_spell_slot(SLOT_F)
@@ -279,7 +280,7 @@ local function FullComboManReady()
 end
 
 local function LeeInsecReady()
-	if FullComboManReady() and spellbook:get_spell_slot(SLOT_R).can_cast and spellbook:get_spell_slot(SLOT_Q).can_cast and spellbook:get_spell_slot(SLOT_W).can_cast then
+	if FullComboManReady() and ml.Ready(SLOT_Q) and ml.Ready(SLOT_W) and ml.Ready(SLOT_R) and ml.Ready(SLOT_WARD) then
 		return true
 	end
 	return false
@@ -325,16 +326,16 @@ if not file_manager:directory_exists("Shaun's Sexy Common") then
 end
 
 if file_manager:file_exists("Shaun's Sexy Common//Logo.png") then
-	lee_category = menu:add_category_sprite("Shaun's Sexy LeeSin", "Shaun's Sexy Common//Logo.png")
+	lee_category = menu:add_category_sprite("Shaun's Sexy Lee Sin", "Shaun's Sexy Common//Logo.png")
 else
 	http:download_file("https://raw.githubusercontent.com/TheShaunyboi/BruhWalkerEncrypted/main/Common/Logo.png", "Shaun's Sexy Common//Logo.png")
-	lee_category = menu:add_category("Shaun's Sexy LeeSin")
+	lee_category = menu:add_category("Shaun's Sexy Lee Sin")
 end
 
 lee_enabled = menu:add_checkbox("Enabled", lee_category, 1)
 lee_combokey = menu:add_keybinder("Combo Mode Key", lee_category, 32)
 lee_extra_flee_key = menu:add_keybinder("[Ward] Hop key - To Mouse Position", lee_category, 90)
-menu:add_label("Welcome To Shaun's Sexy LeeSin", lee_category)
+menu:add_label("Welcome To Shaun's Sexy Lee Sin", lee_category)
 menu:add_label("#SummerBodyReadyBaby", lee_category)
 
 lee_ks_function = menu:add_subcategory("Kill Steal", lee_category)
@@ -351,11 +352,11 @@ lee_combo_q = menu:add_subcategory("[Q] Settings", lee_combo)
 lee_combo_use_q1 = menu:add_checkbox("Use [Q1]", lee_combo_q, 1)
 lee_combo_use_q2 = menu:add_checkbox("Use [Q2]", lee_combo_q, 1)
 lee_combo_w = menu:add_subcategory("[W] Settings", lee_combo)
-lee_combo_use_w = menu:add_checkbox("Use [W1]", lee_combo_w, 1)
+lee_combo_use_w1 = menu:add_checkbox("Use [W1]", lee_combo_w, 1)
 lee_combo_use_w2 = menu:add_checkbox("Use [W2]", lee_combo_w, 1)
 lee_combo_use_w_hp = menu:add_slider("[W2] IF My HP <= than [%]", lee_combo_w, 1, 100, 30)
 lee_combo_e = menu:add_subcategory("[E] Settings", lee_combo)
-lee_combo_use_e = menu:add_checkbox("Use [E1]", lee_combo_e, 1)
+lee_combo_use_e1 = menu:add_checkbox("Use [E1]", lee_combo_e, 1)
 lee_combo_use_e2 = menu:add_checkbox("Use [E2]", lee_combo_e, 1)
 
 lee_harass = menu:add_subcategory("Harass", lee_category)
@@ -375,13 +376,13 @@ lee_laneclear = menu:add_subcategory("Lane Clear", lee_category)
 lee_laneclear_use_q = menu:add_checkbox("Use [Q] Settings", lee_laneclear, 1)
 lee_laneclear_use_q1 = menu:add_checkbox("Use [Q1]", lee_laneclear_use_q, 1)
 lee_laneclear_use_q2 = menu:add_checkbox("Use [Q2]", lee_laneclear_use_q, 1)
-lee_laneclear_use_w = menu:add_checkbox("Use [W] Settings", lee_laneclear_use_w, 1)
-lee_laneclear_use_w1 = menu:add_checkbox("Use [W1]", lee_laneclear, 1)
-lee_laneclear_use_w2 = menu:add_checkbox("Use [W2]", lee_laneclear, 1)
+lee_laneclear_use_w = menu:add_checkbox("Use [W] Settings", lee_laneclear, 1)
+lee_laneclear_use_w1 = menu:add_checkbox("Use [W1]", lee_laneclear_use_w, 1)
+lee_laneclear_use_w2 = menu:add_checkbox("Use [W2]", lee_laneclear_use_w, 1)
+lee_laneclear_use_w_hp = menu:add_slider("[W2] IF My HP <= than [%]", lee_laneclear_use_w, 1, 100, 30)
 lee_laneclear_use_e = menu:add_checkbox("Use [E] Settings", lee_laneclear, 1)
 lee_laneclear_use_e1 = menu:add_checkbox("Use [E1]", lee_laneclear_use_e, 1)
 lee_laneclear_use_e2 = menu:add_checkbox("Use [E2]", lee_laneclear_use_e, 1)
-lee_laneclear_use_w_hp = menu:add_slider("[W2] IF My HP <= than [%]", lee_laneclear, 1, 100, 30)
 lee_laneclear_min_mana = menu:add_slider("Minimum Energy [%] To Lane Clear", lee_laneclear, 1, 100, 20)
 lee_laneclear_e_min = menu:add_slider("Number Of Minions To Use [E]", lee_laneclear, 1, 10, 3)
 
@@ -392,10 +393,10 @@ lee_jungleclear_use_q2 = menu:add_checkbox("Use [Q2]", lee_jungleclear_use_q, 1)
 lee_jungleclear_use_w = menu:add_checkbox("Use [W] Settings", lee_jungleclear, 1)
 lee_jungleclear_use_w1 = menu:add_checkbox("Use [W1]", lee_jungleclear_use_w, 1)
 lee_jungleclear_use_w2 = menu:add_checkbox("Use [W2]", lee_jungleclear_use_w, 1)
+lee_jungleclear_use_w_hp = menu:add_slider("[W2] IF My HP <= than [%]", lee_jungleclear_use_w, 1, 100, 30)
 lee_jungleclear_use_e = menu:add_checkbox("Use [E] Settings", lee_jungleclear, 1)
 lee_jungleclear_use_e1 = menu:add_checkbox("Use [E1]", lee_jungleclear_use_e, 1)
 lee_jungleclear_use_e2 = menu:add_checkbox("Use [E2]", lee_jungleclear_use_e, 1)
-lee_jungleclear_use_w_hp = menu:add_slider("[W2] IF My HP <= than [%]", lee_laneclear, 1, 100, 30)
 lee_jungleclear_min_mana = menu:add_slider("Minimum Mana [%] To Jungle", lee_jungleclear, 1, 100, 20)
 
 lee_extra_insec = menu:add_subcategory("[INSEC] Settings", lee_category)
@@ -404,7 +405,7 @@ lee_insec_key = menu:add_keybinder("[INSEC] Hold Key - Target Nearest To Cursor"
 e_table = {}
 e_table[1] = "To Allys"
 e_table[2] = "To Screen Visable Ally Turret"
-e_table[3] = "Mouse Position"
+e_table[3] = "Extended From Start Position"
 lee_insec_direction = menu:add_combobox("[R] INSEC Direction Preference", lee_extra_insec, e_table, 2)
 lee_extra_insec_blacklist = menu:add_subcategory("[INSEC] Champ Whitelist", lee_extra_insec)
 local players = game.players
@@ -445,6 +446,7 @@ lee_draw = menu:add_subcategory("The Drawing Features", lee_category)
 lee_draw_q = menu:add_checkbox("Draw [Q] Range", lee_draw, 1)
 lee_draw_w = menu:add_checkbox("Draw [W] Range", lee_draw, 1)
 lee_draw_e = menu:add_checkbox("Draw [E] Range", lee_draw, 1)
+lee_draw_ward = menu:add_checkbox("Draw [Ward Hop] Range", lee_draw, 1)
 lee_draw_insec_ready = menu:add_checkbox("Draw [INSEC] Ready Text", lee_draw, 1)
 lee_draw_gapclose = menu:add_checkbox("Draw [R] Anti Gap Closer Toggle Text", lee_draw, 1)
 lee_draw_kill = menu:add_checkbox("Draw Full Combo Can Kill Text", lee_draw, 1)
@@ -471,7 +473,7 @@ local function CastW2Self()
 end
 
 local function CastE()
-	spellbook:cast_spell(SLOT_E, E.delay, x, y, z)
+	spellbook:cast_spell(SLOT_E, E1.delay, x, y, z)
 end
 
 local function CastR(unit)
@@ -537,9 +539,8 @@ local function Combo()
 
 	if menu:get_value(lee_combo_use_e1) == 1 then
 		if myHero:distance_to(target.origin) <= E1.range and ml.IsValid(target) and IsKillable(target) then
-				if ml.Ready(SLOT_E) then
-					CastE()
-				end
+			if ml.Ready(SLOT_E) then
+				CastE()
 			end
 		end
 	end
@@ -614,9 +615,8 @@ local function Harass()
 
 		if menu:get_value(lee_harass_use_e1) == 1 then
 			if myHero:distance_to(target.origin) <= E1.range and ml.IsValid(target) and IsKillable(target) then
-					if ml.Ready(SLOT_E) then
-						CastE()
-					end
+				if ml.Ready(SLOT_E) then
+					CastE()
 				end
 			end
 		end
@@ -643,23 +643,24 @@ local function AutoKill()
 				if menu:get_value_string("Kill Steal Whitelist: "..tostring(target.champ_name)) == 1 then
 					if GetQDmg(target) > target.health then
 						if ml.Ready(SLOT_Q) then
-						CastQ(target)
-					end
-				end
-			end
-		end
-
-		for i, target in ipairs(ml.GetEnemyHeroes()) do
-			if target.object_id ~= 0 and myHero:distance_to(target.origin) <= Q.range and ml.IsValid(target) and IsKillable(target) then
-				if menu:get_value(lee_ks_use_q) == 1 then
-					if menu:get_value_string("Kill Steal Whitelist: "..tostring(target.champ_name)) == 1 then
-						if GetQDmg(target) > target.health then
-							if ml.Ready(SLOT_Q) and TargetHasQ1Buff(target) then
 							CastQ(target)
 						end
 					end
 				end
 			end
+		end
+
+		if target.object_id ~= 0 and myHero:distance_to(target.origin) <= Q.range and ml.IsValid(target) and IsKillable(target) then
+			if menu:get_value(lee_ks_use_q) == 1 then
+				if menu:get_value_string("Kill Steal Whitelist: "..tostring(target.champ_name)) == 1 then
+					if GetQDmg(target) > target.health then
+						if ml.Ready(SLOT_Q) and TargetHasQ1Buff(target) then
+							CastQ(target)
+						end
+					end
+				end
+			end
+		end
 
 		local QRDmg = GetQDmg(target) + GetRDmg(target)
 		if target.object_id ~= 0 and myHero:distance_to(target.origin) <= Q.range and ml.IsValid(target) and IsKillable(target) then
@@ -932,29 +933,34 @@ end
 -- Flee
 local function Flee()
 
-	local GrabLaneClearMana = myHero.mana/myHero.max_mana >= menu:get_value(lee_laneclear_min_mana) / 100
+	local wards = game.wards
 
 	if game:is_key_down(menu:get_value(lee_extra_flee_key)) then
-		if GrabLaneClearMana and spellbook:get_spell_slot(SLOT_Q).can_cast and spellbook:get_spell_slot(SLOT_E).can_cast and SoldiersWReady() > 0 then
+		if ml.Ready(SLOT_W) and ml.Ready(SLOT_WARD) then
 			FleeReady = true
 		end
+	end
 
-		if FleeReady and not flee_Efire and ml.Ready(SLOT_W) then
-			local mouse = game.mouse_pos
-			spellbook:cast_spell(SLOT_W, W.delay, mouse.x, mouse.y, mouse.z)
-			flee_Efire = true
+	for _, ward in ipairs(wards) do
+		if ml.Ready(SLOT_W) and ml.Ready(SLOT_WARD) and ward and ward:distance_to(game.mouse_pos) <= 300 then
+			FleeReady = true
+			flee_Wfire = true
 		end
+	end
 
-		for _, soldier in pairs(soldiers) do
-			if not flee_Qfire and flee_Efire and ml.Ready(SLOT_W) and myHero:distance_to(soldier.origin) <= 150 then
-				local qmouse = game.mouse_pos
-				spellbook:cast_spell(SLOT_Q, Q.delay, qmouse.x, qmouse.y, qmouse.z)
-				flee_Qfire = true
-			end
+	if FleeReady and not flee_Wfire and ml.Ready(SLOT_WARD) then
+		if myHero:distance_to(game.mouse_pos) <= Ward.range then
+			spellbook:cast_spell(SLOT_WARD, W.delay, game.mouse_pos.x, game.mouse_pos.y, game.mouse_pos.z)
+			flee_Wfire = true
+		end
+	end
 
-			if flee_Qfire and ml.Ready(SLOT_E) and myHero:distance_to(soldier.origin) >= 200 then
-				local emouse = game.mouse_pos
-				spellbook:cast_spell(SLOT_E, E.delay, emouse.x, emouse.y, emouse.z)
+	for _, ward in ipairs(wards) do
+		if FleeReady and flee_Wfire and ml.Ready(SLOT_W) then
+			if myHero:distance_to(ward.origin) <= W.range and ward:distance_to(game.mouse_pos) <= 300 then
+				origin = ward.origin
+				x, y, z = origin.x, origin.y, origin.z
+				spellbook:cast_spell(SLOT_W, W.delay, x, y, z)
 			end
 		end
 	end
@@ -994,19 +1000,20 @@ local function INSEC()
 
 	target = selector:find_target(2000, mode_cursor)
 
-	players = game.players
-	for _, ally in ipairs(players) do
+	local players = game.players
+	local wards = game.wards
+	if game:is_key_down(menu:get_value(lee_insec_key)) then
 
 		if menu:get_value(lee_insec_direction) == 0 then
-			if not ally.is_enemy and ally.object_id ~= myHero.object_id then
+			--[[if not ally.is_enemy and ally.object_id ~= myHero.object_id then
 				if ml.IsValid(target) and IsKillable(target) then
 				 	if ally:distance_to(target.origin) <= 2000 then
 						if LeeInsecReady() and ml.Ready(SLOT_WARD) then
 							InsecReady = true
 						elseif LeeInsecReady() and local ward, slot_ward = ControlWardCheck() and ward then
 						 InsecReady = true
-						 ControlWard = true
-					 	end
+							ControlWard = true
+						 end
 
 						if InsecReady and myHero:distance_to(target.origin) < Q.range and ml.Ready(SLOT_Q) then
 							CastQ(target)
@@ -1049,11 +1056,11 @@ local function INSEC()
 						end
 					end
 				end
-			end
+			end]]
 		end
 
 		if menu:get_value(lee_insec_direction) == 1 then
-			turrets = game.turrets
+			--[[turrets = game.turrets
 			for i, turret in ipairs(turrets) do
 				if turret and not turret.is_enemy and turret.is_alive then
 					if ml.IsValid(target) and IsKillable(target) then
@@ -1095,44 +1102,42 @@ local function INSEC()
 						end
 					end
 				end
-			end
+			end]]
 		end
 
 		if menu:get_value(lee_insec_direction) == 2 then
 			if ml.IsValid(target) and IsKillable(target) then
+				local wards = game.wards
 				if LeeInsecReady() then
 					InsecReady = true
 				end
 
-				if InsecReady and not Efire and not SoldiersInQRange() and myHero:distance_to(target.origin) < Q.range then
-					CastW(target)
-					Efire = true
+				if InsecReady and myHero:distance_to(target.origin) < Q.range and ml.Ready(SLOT_Q) then
+					CastQ(target)
+				elseif TargetHasQ1Buff(target) and ml.Ready(SLOT_Q) then
+					CastQ(target)
 				end
 
-				for _, soldier in pairs(soldiers) do
-					if InsecReady and ml.Ready(SLOT_W) and not Qfire and spellbook:get_spell_slot(SLOT_E).can_cast then
-						if myHero:distance_to(soldier.origin) <= E.range and myHero:distance_to(soldier.origin) >= 600 and target:distance_to(soldier.origin) <= Q.range then
-							CastE(soldier)
-							if soldier:distance_to(target.origin) > 250 then
-								Qfire = true
-							end
+				if InsecReady and TargetHasQ1Buff(target) then
+					if myHero:distance_to(target.origin) < 500 and ml.Ready(SLOT_WARD) and not WardCasted then
+						local wardpos = ml.Extend(myHero.origin, target.origin, 200)
+						spellbook:cast_spell(SLOT_WARD, W.delay, wardpos.x, wardpos.y, wardpos.z)
+						if not ml.Ready(SLOT_WARD) then
+						 WardCasted = true
 						end
 					end
-
-					if soldier:distance_to(target.origin) <= 250 and not Qfire and not Efire and myHero:distance_to(target.origin) <= 300 then
-						Rfire = true
+				end
+				for _, ward in ipairs(wards) do
+					if InsecReady and myHero:distance_to(ward.origin) <= W.range and ml.Ready(SLOT_W) then
+						origin = ward.origin
+						x, y, z = origin.x, origin.y, origin.z
+						spellbook:cast_spell(SLOT_W, W.delay, x, y, z)
 					end
 
-					if Qfire and not Rfire and soldier:distance_to(myHero.origin) <= 200 then
-						CastQ(target)
-						if not spellbook:get_spell_slot(SLOT_Q).can_cast then
-							Rfire = true
+					if InsecReady and myHero:distance_to(target.origin) <= R.range and not ml.Ready(SLOT_W) then
+						if ml.Ready(SLOT_R) then
+							CastR(target)
 						end
-					end
-
-					if InsecReady and Rfire and myHero:distance_to(target.origin) <= 300 and ml.Ready(SLOT_R) then
-						local mouse = game.mouse_pos
-						spellbook:cast_spell(SLOT_R, R.delay, mouse.x, mouse.y, mouse.z)
 					end
 				end
 			end
@@ -1169,9 +1174,15 @@ local function on_draw()
 		end
 	end
 
+	if menu:get_value(lee_draw_ward) == 1 then
+		if ml.Ready(SLOT_W) then
+			renderer:draw_circle(x, y, z, Ward.range, 0, 255, 255, 255)
+		end
+	end
+
 	if menu:get_value(lee_draw_e) == 1  then
 		if ml.Ready(SLOT_E) then
-			renderer:draw_circle(x, y, z, E.range, 255, 255, 255, 255)
+			renderer:draw_circle(x, y, z, E1.range, 255, 255, 255, 255)
 		end
 	end
 
@@ -1216,10 +1227,6 @@ local function on_tick()
 		Harass()
 	end
 
-	if combo:get_mode() == MODE_LASTHIT then
-		Qlasthit()
-	end
-
 	if combo:get_mode() == MODE_LANECLEAR then
 		Clear()
 		JungleClear()
@@ -1243,16 +1250,13 @@ local function on_tick()
 		orbwalker:move_to()
 	end
 
-	if not spellbook:get_spell_slot(SLOT_R).can_cast or not game:is_key_down(menu:get_value(lee_insec_key)) then
-		Qfire = false
-		Rfire = false
-		Efire = false
+	if not game:is_key_down(menu:get_value(lee_insec_key)) then
 		InsecReady = false
+		WardCasted = false
 	end
 
 	if not game:is_key_down(menu:get_value(lee_extra_flee_key)) then
-		flee_Qfire = false
-		flee_Efire = false
+		flee_Wfire = false
 		FleeReady = false
 	end
 
@@ -1262,4 +1266,3 @@ client:set_event_callback("on_tick", on_tick)
 client:set_event_callback("on_draw", on_draw)
 client:set_event_callback("on_dash", on_dash)
 client:set_event_callback("on_possible_interrupt", on_possible_interrupt)
-client:set_event_callback("on_object_created", on_object_created)
