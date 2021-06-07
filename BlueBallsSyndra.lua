@@ -16,7 +16,6 @@ end
             console:log("...Shaun's & Bens Sexy Syndra v1 Successfully Loaded...")
 						console:log(".......................................................")
 						console:log(".......................................................")
-
         else
 			http:download_file(url, file_name)
 			      console:log("Sexy Syndra Update available.....")
@@ -26,9 +25,7 @@ end
 						console:log("---------------------------------")
 						console:log("Please Reload via F5!............")
         end
-
     end
-
     AutoUpdate()
 end]]
 
@@ -114,140 +111,6 @@ local function GetDistanceSqr2(p1, p2)
     return dx*dx + dz*dz
 end
 
--- No lib Functions Start
-
-function IsKillable(unit)
-	if unit:has_buff_type(15) or unit:has_buff_type(17) or unit:has_buff("sionpassivezombie") then
-		return false
-	end
-	return true
-end
-
-local function IsUnderTurret(unit)
-  turrets = game.turrets
-  for i, v in ipairs(turrets) do
-    if v and v.is_enemy then
-      local range = (v.bounding_radius / 2 + 775 + unit.bounding_radius / 2)
-      if v.is_alive then
-        if v:distance_to(unit.origin) < range then
-          return true
-        end
-      end
-    end
-  end
-  return false
-end
-
-function EasyDistCompare(p1, p2)
-  p2x, p2y, p2z = p2.x, p2.y, p2.z
-  p1x, p1y, p1z = p1.x, p1.y, p1.z
-  local dx = p1x - p2x
-  local dz = (p1z or p1y) - (p2z or p2y)
-  return math.sqrt(dx*dx + dz*dz)
-end
-
-function GetDistanceSqr(unit, p2)
-	p2 = p2.origin or myHero.origin
-	p2x, p2y, p2z = p2.x, p2.y, p2.z
-	p1 = unit.origin
-	p1x, p1y, p1z = p1.x, p1.y, p1.z
-	local dx = p1x - p2x
-	local dz = (p1z or p1y) - (p2z or p2y)
-	return dx*dx + dz*dz
-end
-
-function GetMinionCount(range, unit)
-	count = 0
-	minions = game.minions
-	for i, minion in ipairs(minions) do
-	Range = range * range
-		if minion.is_enemy and ml.IsValid(minion) and unit.object_id ~= minion.object_id and GetDistanceSqr(unit, minion) < Range then
-			count = count + 1
-		end
-	end
-	return count
-end
-
-function MinionsAround(pos, range)
-    local Count = 0
-    minions = game.minions
-    for i, m in ipairs(minions) do
-        if m.object_id ~= 0 and m.is_enemy and m.is_alive and m:distance_to(pos) < range then
-            Count = Count + 1
-        end
-    end
-    return Count
-end
-
-function GetBestCircularFarmPos(unit, range, radius)
-    local BestPos = nil
-    local MostHit = 0
-    minions = game.minions
-    for i, m in ipairs(minions) do
-        if m.object_id ~= 0 and m.is_enemy and m.is_alive and unit:distance_to(m.origin) < range then
-            local Count = MinionsAround(m.origin, radius)
-            if Count > MostHit then
-                MostHit = Count
-                BestPos = m.origin
-            end
-        end
-    end
-    return BestPos, MostHit
-end
-
-function JungleMonstersAround(pos, range)
-    local Count = 0
-    minions = game.jungle_minions
-    for i, m in ipairs(minions) do
-        if m.object_id ~= 0 and m.is_enemy and m.is_alive and m:distance_to(pos) < range then
-            Count = Count + 1
-        end
-    end
-    return Count
-end
-
-function GetBestCircularJungPos(unit, range, radius)
-    local BestPos = nil
-    local MostHit = 0
-    minions = game.jungle_minions
-    for i, m in ipairs(minions) do
-        if m.object_id ~= 0 and m.is_enemy and m.is_alive and unit:distance_to(m.origin) < range then
-            local Count = JungleMonstersAround(m.origin, radius)
-            if Count > MostHit then
-                MostHit = Count
-                BestPos = m.origin
-            end
-        end
-    end
-    return BestPos, MostHit
-end
-
--- No lib Functions End
-
-local function SupressedSpellReady(spell)
-  return spellbook:can_cast_ignore_supressed(spell)
-end
-
-local function IsFlashSlotF()
-flash = spellbook:get_spell_slot(SLOT_F)
-FData = flash.spell_data
-FName = FData.spell_name
-if FName == "SummonerFlash" then
-  return true
-end
-return false
-end
-
-local function IsFlashSlotD()
-flash = spellbook:get_spell_slot(SLOT_D)
-FData = flash.spell_data
-FName = FData.spell_name
-if FName == "SummonerFlash" then
-  return true
-end
-return false
-end
-
 -- Ben's Syndra Shite
 
 local function VectorPointProjectionOnLineSegment(v1, v2, v)
@@ -291,21 +154,6 @@ local function GetLineTargetCount(source, aimPos, delay, speed, width)
         end
     end
     return Count
-end
-
-local function BallDistance(ball)
-    distance = ball:distance_to(local_player.origin)
-    if distance > 400 then
-        ball_distance = 1300 - local_player.bounding_radius
-    else
-        ball_distance = 1000
-    end
-    --[[
-    ratio = (distance / ERange) * 1300
-    delta = 1300 - ratio
-    ball_distance = 1000 + delta
-    --]]
-    return ball_distance
 end
 
 local function AngleNorm(angle)
@@ -409,23 +257,144 @@ local function AutoECastPos(balls, champs)
     return final_ball_pairs
 end
 
--- Damage Cals
+-- No lib Functions Start
 
-local function GetQDmg(unit)
-	local QDmg = getdmg("Q", unit, myHero, 1) + getdmg("Q", unit, myHero, 2)
-	return QDmg
+function IsKillable(unit)
+	if unit:has_buff_type(15) or unit:has_buff_type(17) or unit:has_buff("sionpassivezombie") then
+		return false
+	end
+	return true
 end
 
-local function GetEDmg(unit)
-	local EDmg = getdmg("E", unit, myHero, 1)
-	return EDmg
+local function IsUnderTurret(unit)
+  turrets = game.turrets
+  for i, v in ipairs(turrets) do
+    if v and v.is_enemy then
+      local range = (v.bounding_radius / 2 + 775 + unit.bounding_radius / 2)
+      if v.is_alive then
+        if v:distance_to(unit.origin) < range then
+          return true
+        end
+      end
+    end
+  end
+  return false
 end
 
-local function GetRDmg(unit)
-	local RDmg = getdmg("R", unit, myHero, 1)
-	return RDmg
+function EasyDistCompare(p1, p2)
+  p2x, p2y, p2z = p2.x, p2.y, p2.z
+  p1x, p1y, p1z = p1.x, p1.y, p1.z
+  local dx = p1x - p2x
+  local dz = (p1z or p1y) - (p2z or p2y)
+  return math.sqrt(dx*dx + dz*dz)
 end
 
+function GetMinionCount(range, unit)
+	count = 0
+	minions = game.minions
+	for i, minion in ipairs(minions) do
+	Range = range * range
+		if minion.is_enemy and ml.IsValid(minion) and unit.object_id ~= minion.object_id and GetDistanceSqr(unit, minion) < Range then
+			count = count + 1
+		end
+	end
+	return count
+end
+
+function MinionsAround(pos, range)
+    local Count = 0
+    minions = game.minions
+    for i, m in ipairs(minions) do
+        if m.object_id ~= 0 and m.is_enemy and m.is_alive and m:distance_to(pos) < range then
+            Count = Count + 1
+        end
+    end
+    return Count
+end
+
+function GetBestCircularFarmPos(unit, range, radius)
+    local BestPos = nil
+    local MostHit = 0
+    minions = game.minions
+    for i, m in ipairs(minions) do
+        if m.object_id ~= 0 and m.is_enemy and m.is_alive and unit:distance_to(m.origin) < range then
+            local Count = MinionsAround(m.origin, radius)
+            if Count > MostHit then
+                MostHit = Count
+                BestPos = m.origin
+            end
+        end
+    end
+    return BestPos, MostHit
+end
+
+function JungleMonstersAround(pos, range)
+    local Count = 0
+    minions = game.jungle_minions
+    for i, m in ipairs(minions) do
+        if m.object_id ~= 0 and m.is_enemy and m.is_alive and m:distance_to(pos) < range then
+            Count = Count + 1
+        end
+    end
+    return Count
+end
+
+function GetBestCircularJungPos(unit, range, radius)
+    local BestPos = nil
+    local MostHit = 0
+    minions = game.jungle_minions
+    for i, m in ipairs(minions) do
+        if m.object_id ~= 0 and m.is_enemy and m.is_alive and unit:distance_to(m.origin) < range then
+            local Count = JungleMonstersAround(m.origin, radius)
+            if Count > MostHit then
+                MostHit = Count
+                BestPos = m.origin
+            end
+        end
+    end
+    return BestPos, MostHit
+end
+
+-- No lib Functions End
+
+local function SupressedSpellReady(spell)
+  return spellbook:can_cast_ignore_supressed(spell)
+end
+
+local function IsFlashSlotF()
+flash = spellbook:get_spell_slot(SLOT_F)
+FData = flash.spell_data
+FName = FData.spell_name
+if FName == "SummonerFlash" then
+  return true
+end
+return false
+end
+
+local function IsFlashSlotD()
+flash = spellbook:get_spell_slot(SLOT_D)
+FData = flash.spell_data
+FName = FData.spell_name
+if FName == "SummonerFlash" then
+  return true
+end
+return false
+end
+
+function Ballcount()
+    local count = 0
+    for _, in pairs(ballHolder) do
+        count = count + 1
+    end
+    return count
+end
+
+function SyndraHasW()
+  if myHero:has_buff("syndrawtooltip") then
+    return true
+  end
+  return false
+end
 
 -- Damage Cals
 
@@ -447,14 +416,26 @@ end
 local function GetRDmg(unit)
 	local RDmg = getdmg("R", unit, myHero, 1)
 	local R2Dmg = getdmg("R", unit, myHero, 2)
-	return (RDmg + R2Dmg)*(3 + BallCount()))
+	return (RDmg + (R2Dmg*(3 + BallCount())))
 end
 
 -- Menu Config
 
-syndra_category = menu:add_category("Shaun's Sexy syndrasa")
+if not file_manager:directory_exists("Shaun's Sexy Common") then
+  file_manager:create_directory("Shaun's Sexy Common")
+end
+
+if file_manager:file_exists("Shaun's Sexy Common//Logo.png") then
+	syndra_category = menu:add_category_sprite("BlueBall Syndra", "Shaun's Sexy Common//Logo.png")
+else
+	http:download_file("https://raw.githubusercontent.com/TheShaunyboi/BruhWalkerEncrypted/main/Common/BS.png", "Shaun's Sexy Common//Logo.png")
+	syndra_category = menu:add_category("BlueBalls Syndra")
+end
+
 syndra_enabled = menu:add_checkbox("Enabled", syndra_category, 1)
 syndra_combokey = menu:add_keybinder("Combo Mode Key", syndra_category, 32)
+menu:add_label("BS Presents: BlueBalls Syndra", syndra_category)
+menu:add_label("#StopTeasingMe", syndra_category)
 
 syndra_ks_function = menu:add_subcategory("Kill Steal", syndra_category)
 syndra_ks_q = menu:add_subcategory("[Q] Settings", syndra_ks_function, 1)
@@ -577,6 +558,38 @@ end
 local function Combo()
 
 	target = selector:find_target(QE.range, mode_health)
+
+	function Combo()
+	  target = selector:find_target(1500, mode_health)
+
+	  if ml.Ready(SLOT_Q) then
+	    if myHero:distance_to(target.origin) <= 1150 then
+	      CastQ(target)
+	    end
+	  end
+
+	  for _, ball in pairs(ballHolder) do
+	    if myHero:distance_to(ball.origin) < 950 then
+	      if ml.Ready(SLOT_W) and not ml.Ready(SLOT_Q) and not SyndraHasW() then
+	        origin = ball.origin
+	        x, y, z = origin.x, origin.y, origin.z
+	        spellbook:cast_spell(SLOT_W, 0.25, x, y, z)
+	      end
+	    end
+	  end
+
+	  if ml.Ready(SLOT_W) and SyndraHasW() then
+	    origin = target.origin
+	    x, y, z = origin.x, origin.y, origin.z
+	    spellbook:cast_spell(SLOT_W, 0.25, x, y, z)
+	  end
+
+	  if not ml.Ready(SLOT_Q) and ml.Ready(SLOT_E) then
+	    origin = target.origin
+	    x, y, z = origin.x, origin.y, origin.z
+	    spellbook:cast_spell(SLOT_E, 0.25, x, y, z)
+	  end
+	end
 
 
 	if menu:get_value(syndra_combo_use_q) == 1 then
@@ -739,6 +752,39 @@ end
 -- Jungle Clear
 
 local function JungleClear()
+
+	local Q = { range = 800, delay = .1, width = 180, speed = math.huge }
+	local function CastQ(unit)
+		pred_output = pred:predict(Q.speed, Q.delay, 1150, Q.width, unit, false, false)
+		if pred_output.can_cast then
+			castPos = pred_output.cast_pos
+			spellbook:cast_spell(SLOT_Q, 0.1, castPos.x, castPos.y, castPos.z)
+		end
+	end
+
+	local function JungleClear()
+
+		minions = game.jungle_minions
+		for i, target in ipairs(minions) do
+	  	if myHero:distance_to(target.origin) <= 800 and ml.Ready(SLOT_Q) then
+	      CastQ(target)
+	    end
+
+	    if myHero:distance_to(target.origin) < 950 then
+	      if ml.Ready(SLOT_W) and not ml.Ready(SLOT_Q) and not SyndraHasW() then
+	        worigin = target.origin
+	        wx, wy, wz = worigin.x, worigin.y, worigin.z
+	        spellbook:cast_spell(SLOT_W, 0.25, wx, wy, wz)
+	      end
+	    end
+
+	    if ml.Ready(SLOT_W) and SyndraHasW() then
+	      --origin = target.origin
+	      --x, y, z = origin.x, origin.y, origin.z
+	      spellbook:cast_spell(SLOT_W, 0.25, wx, wy, wz)
+	    end
+	  end
+	end
 
 	local GrabJungleClearMana = myHero.mana/myHero.max_mana >= menu:get_value(syndra_jungleclear_min_mana) / 100
 
