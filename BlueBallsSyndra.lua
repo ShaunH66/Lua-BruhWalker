@@ -32,100 +32,69 @@ end
     AutoUpdate()
 end]]
 
+--Ensuring that the librarys are downloaded:
+local file_name = "VectorMath.lua"
+if not file_manager:file_exists(file_name) then
+   local url = "https://raw.githubusercontent.com/stoneb2/Bruhwalker/main/VectorMath/VectorMath.lua"
+   http:download_file(url, file_name)
+   console:log("VectorMath Library Downloaded")
+   console:log("Please Reload with F5")
+end
+
+if not file_manager:file_exists("PKDamageLib.lua") then
+	local file_name = "PKDamageLib.lua"
+	local url = "http://raw.githubusercontent.com/Astraanator/test/main/Champions/PKDamageLib.lua"
+	http:download_file(url, file_name)
+end
+
+local VIP = http:get("https://raw.githubusercontent.com/TheShaunyboi/BruhWalkerEncrypted/main/VIP_USER_LIST.lua.txt")
+VIP = VIP .. ','
+local LIST = {}
+for user in VIP:gmatch("(.-),") do
+	table.insert(LIST, user)
+end
+local USER = client.username
+local function VIP_USER_LIST()
+	for _, value in pairs(LIST) do
+		if string.find(tostring(value), client.username) then
+			return true
+		end
+	end
+return false
+end
+
+if not VIP_USER_LIST() then
+  console:log("You Are Not VIP! To Become a Supportor Please Contact Shaunyboi")
+  return
+end
+
+if VIP_USER_LIST() then
+  console:log("..................You Are VIP! Thanks For Supporting <3 #Family........................")
+end
+
+--Initialization lines:
+local ml = require "VectorMath"
 pred:use_prediction()
 require "PKDamageLib"
 
 local myHero = game.local_player
 local local_player = game.local_player
 
-local function Ready(spell)
-  return spellbook:can_cast(spell)
-end
-
 -- Ranges
 
 local Q = { range = 800, delay = .25, width = 180, speed = math.huge }
 local QE = { range = 1200, delay = .25, width = 60, speed = math.huge }
 local W = { range = 925, delay = .25, width = 225, speed = math.huge }
-local E = { range = 700 delay = .25, width = 100, speed = 2500 }
 local R = { range = 675 delay = .25, width = 0, speed = math.huge }
 
+spellE = {
+    range1 = 700,
+    range2 = 800,
+    angle1 = 40,
+    angle2 = 60
+}
+
 -- Return game data and maths
-
---Converts from Degrees to Radians
-local function D2R(degrees)
-  radians = degrees * (math.pi / 180)
-  return radians
-end
-
---Subtract two vectors
-local function Sub(vec1, vec2)
-  new_x = vec1.x - vec2.x
-  new_y = vec1.y - vec2.y
-  new_z = vec1.z - vec2.z
-  sub = vec3.new(new_x, new_y, new_z)
-  return sub
-end
-
---Multiplies vector by magnitude
-local function VectorMag(vec, mag)
-  x, y, z = vec.x, vec.y, vec.z
-  new_x = mag * x
-  new_y = mag * y
-  new_z = mag * z
-  output = vec3.new(new_x, new_y, new_z)
-  return output
-end
-
---Dot product of two vectors
-local function DotProduct(vec1, vec2)
-  dot = (vec1.x * vec2.x) + (vec1.y * vec2.y) + (vec1.z * vec2.z)
-  return dot
-end
-
---Vector Magnitude
-local function Magnitude(vec)
-  mag = math.sqrt(vec.x^2 + vec.y^2 + vec.z^2)
-  return mag
-end
-
---Returns the angle formed from a vector to both input vectors
-local function AngleBetween(vec1, vec2)
-  dot = DotProduct(vec1, vec2)
-  mag1 = Magnitude(vec1)
-  mag2 = Magnitude(vec2)
-  output = (math.acos(dot / (mag1 * mag2)))
-  return output
-end
-
-local function GetEnemyHeroes()
-	local _EnemyHeroes = {}
-	players = game.players
-	for i, unit in ipairs(players) do
-		if unit and unit.is_enemy then
-			table.insert(_EnemyHeroes, unit)
-		end
-	end
-	return _EnemyHeroes
-end
-
-local function GetAllyHeroes()
-	local _AllyHeroes = {}
-	players = game.players
-	for i, unit in ipairs(players) do
-		if unit and not unit.is_enemy and unit.object_id ~= myHero.object_id then
-			table.insert(_AllyHeroes, unit)
-		end
-	end
-	return _AllyHeroes
-end
-
-local function IsValid(unit)
-    if (unit and unit.is_targetable and unit.is_alive and unit.is_visible and unit.object_id and unit.health > 0) then
-        return true
-    end
-    return false
-end
 
 local function GetDistanceSqr(unit, p2)
     p2 = p2.origin or myHero.origin
@@ -145,255 +114,7 @@ local function GetDistanceSqr2(p1, p2)
     return dx*dx + dz*dz
 end
 
--- Best Prediction Start
-
-local function GetCenter(points)
-	local sum_x = 0
-	local sum_z = 0
-
-	for i = 1, #points do
-		sum_x = sum_x + points[i].origin.x
-		sum_z = sum_z + points[i].origin.z
-	end
-
-	local center = {x = sum_x / #points, y = 0, z = sum_z / #points}
-	return center
-end
-
-local function ContainsThemAll(circle, points)
-	local radius_sqr = circle.radi*circle.radi
-	local contains_them_all = true
-	local i = 1
-
-	while contains_them_all and i <= #points do
-		contains_them_all = GetDistanceSqr2(points[i].origin, circle.center) <= radius_sqr
-		i = i + 1
-	end
-	return contains_them_all
-end
-
-local function FarthestFromPositionIndex(points, position)
-	local index = 2
-	local actual_dist_sqr
-	local max_dist_sqr = GetDistanceSqr2(points[index].origin, position)
-
-	for i = 3, #points do
-		actual_dist_sqr = GetDistanceSqr2(points[i].origin, position)
-		if actual_dist_sqr > max_dist_sqr then
-			index = i
-			max_dist_sqr = actual_dist_sqr
-		end
-	end
-	return index
-end
-
-local function RemoveWorst(targets, position)
-	local worst_target = FarthestFromPositionIndex(targets, position)
-	table.remove(targets, worst_target)
-	return targets
-end
-
-local function GetInitialTargets(radius, main_target)
-	local targets = {main_target}
-	local diameter_sqr = 4 * radius * radius
-
-	for i, target in ipairs(GetEnemyHeroes()) do
-		if target.object_id ~= 0 and target.object_id ~= main_target.object_id and IsValid(target) and GetDistanceSqr(main_target, target) < diameter_sqr then
-			table.insert(targets, target)
-		end
-	end
-	return targets
-end
-
-local function GetPredictedInitialTargets(speed ,delay, range, radius, main_target, ColWindwall, ColMinion)
-	local predicted_main_target = pred:predict(speed ,delay, range, radius, main_target, ColWindwall, ColMinion)
-	if predicted_main_target.can_cast then
-		local predicted_targets = {main_target}
-		local diameter_sqr = 4 * radius * radius
-
-		for i, target in ipairs(GetEnemyHeroes()) do
-			if target.object_id ~= 0 and IsValid(target) then
-				predicted_target = pred:predict(math.huge, delay, 1800, radius, target, false, false)
-				if predicted_target.can_cast and target.object_id ~= main_target.object_id and GetDistanceSqr2(predicted_main_target.cast_pos, predicted_target.cast_pos) < diameter_sqr then
-					table.insert(predicted_targets, target)
-				end
-			end
-		end
-	return predicted_targets
-	end
-end
-
-local function GetBestAoEPosition(speed ,delay, range, radius, main_target, ColWindwall, ColMinion)
-	local targets = GetPredictedInitialTargets(speed ,delay, range, radius, main_target, ColWindwall, ColMinion) or GetInitialTargets(radius, main_target)
-	local position = GetCenter(targets)
-	local best_pos_found = true
-	local circle = {pos = position, radi = radius}
-	circle.center = position
-
-	if #targets >= 2 then best_pos_found = ContainsThemAll(circle, targets) end
-
-	while not best_pos_found do
-		targets = RemoveWorst(targets, position)
-		position = GetCenter(targets)
-		circle.center = position
-		best_pos_found = ContainsThemAll(circle, targets)
-	end
-	return vec3.new(position.x, position.y, position.z), #targets
-end
-
-local function AoEDraw()
-	for i, unit in ipairs(GetEnemyHeroes()) do
-		local Dist = myHero:distance_to(unit.origin)
-		if unit.object_id ~= 0 and IsValid(unit) and Dist < 1500 then
-			local CastPos, targets = GetBestAoEPosition(R.speed, R.delay, R.range, R.width, unit, false, false)
-			if CastPos then
-				renderer:draw_circle(CastPos.x, CastPos.y, CastPos.z, 50, 0, 137, 255, 255)
-				screen_pos = game:world_to_screen(CastPos.x, CastPos.y, CastPos.z)
-				x, y = screen_pos.x, screen_pos.y
-				renderer:draw_text_big(x, y, "Count = "..tostring(targets), 220, 20, 60, 255)
-			end
-		end
-	end
-end
-
--- Best Prediction End
-
-local function VectorPointProjectionOnLineSegment(v1, v2, v)
-	local cx, cy, ax, ay, bx, by = v.x, v.z, v1.x, v1.z, v2.x, v2.z
-	local rL = ((cx - ax) * (bx - ax) + (cy - ay) * (by - ay)) / ((bx - ax) ^ 2 + (by - ay) ^ 2)
-	local pointLine = { x = ax + rL * (bx - ax), y = ay + rL * (by - ay) }
-	local rS = rL < 0 and 0 or (rL > 1 and 1 or rL)
-	local isOnSegment = rS == rL
-	local pointSegment = isOnSegment and pointLine or { x = ax + rS * (bx - ax), y = ay + rS * (by - ay) }
-	return pointSegment, pointLine, isOnSegment
-end
-
-local function GetEnemyCount(range, unit)
-	count = 0
-	for i, hero in ipairs(GetEnemyHeroes()) do
-	Range = range * range
-		if unit.object_id ~= hero.object_id and GetDistanceSqr(unit, hero) < Range and IsValid(hero) then
-		count = count + 1
-		end
-	end
-	return count
-end
-
-local function GetEnemyCountCicular(range, p1)
-    count = 0
-    players = game.players
-    for _, unit in ipairs(players) do
-    Range = range * range
-        if unit.is_enemy and GetDistanceSqr2(p1, unit.origin) < Range and IsValid(unit) then
-        count = count + 1
-        end
-    end
-    return count
-end
-
-local function GetMinionCountCicular(range, p1)
-		count = 0
-		minions = game.minions
-		for i, minion in ipairs(minions) do
-				Range = range * range
-        if minion.is_enemy and IsValid(minion) and minion.object_id ~= minion.object_id and GetDistanceSqr(p1, minion.origin) < Range then
-        	count = count + 1
-        end
-    end
-    return count
-end
-
-local function GetMinionCount(range, unit)
-	count = 0
-	minions = game.minions
-	for i, minion in ipairs(minions) do
-	Range = range * range
-		if minion.is_enemy and IsValid(minion) and unit.object_id ~= minion.object_id and GetDistanceSqr(unit, minion) < Range then
-			count = count + 1
-		end
-	end
-	return count
-end
-
-local function HasPoison(unit)
-    if unit:has_buff_type(23) then
-        return true
-    end
-    return false
-end
-
-local function HasHealingBuff(unit)
-    if myHero:distance_to(unit.origin) < 3400 and unit:has_buff("Item2003") or unit:has_buff("ItemCrystalFlask") or unit:has_buff("ItemDarkCrystalFlask") then
-        return true
-    end
-    return false
-end
-
-local function HasCount(unit)
-    if unit:has_buff(buff) then
-        buff = unit:get_buff(buff)
-        if buff.count > 0 then
-            return buff
-        end
-    end
-    return {type = 0, name = "", startTime = 0, expireTime = 0, duration = 0, stacks = 0, count = 0}
-end
-
-
-local function HasBuff(unit)
-	if unit:has_buff(buff) then
-		return true
-	end
-	return false
-end
-
-local function GetGameTime()
-	return tonumber(game.game_time)
-end
-
-local function Is_Me(unit)
-	if unit.champ_name == myHero.champ_name then
-		return true
-	end
-	return false
-end
-
-local function IsImmobileTarget(unit)
-    if unit:has_buff_type(5) or unit:has_buff_type(8) or unit:has_buff_type(10) or unit:has_buff_type(11) or unit:has_buff_type(21) or unit:has_buff_type(22) or unit:has_buff_type(24) or unit:has_buff_type(29) then
-        return true
-    end
-    return false
-end
-
-
-local function EpicMonster(unit)
-	if unit.champ_name == "SRU_Baron"
-		or unit.champ_name == "SRU_RiftHerald"
-		or unit.champ_name == "SRU_Dragon_Water"
-		or unit.champ_name == "SRU_Dragon_Fire"
-		or unit.champ_name == "SRU_Dragon_Earth"
-		or unit.champ_name == "SRU_Dragon_Air"
-		or unit.champ_name == "SRU_Dragon_Elder" then
-		return true
-	else
-		return false
-	end
-end
-
-local function IsUnderTurret(unit)
-    turrets = game.turrets
-    for i, v in ipairs(turrets) do
-        if v and v.is_enemy then
-            local range = (v.bounding_radius / 2 + 775 + unit.bounding_radius / 2)
-            if v.is_alive then
-                if v:distance_to(unit.origin) < range then
-                    return true
-                end
-            end
-        end
-    end
-    return false
-end
+-- No lib Functions Start
 
 function IsKillable(unit)
 	if unit:has_buff_type(15) or unit:has_buff_type(17) or unit:has_buff("sionpassivezombie") then
@@ -402,15 +123,309 @@ function IsKillable(unit)
 	return true
 end
 
+local function IsUnderTurret(unit)
+  turrets = game.turrets
+  for i, v in ipairs(turrets) do
+    if v and v.is_enemy then
+      local range = (v.bounding_radius / 2 + 775 + unit.bounding_radius / 2)
+      if v.is_alive then
+        if v:distance_to(unit.origin) < range then
+          return true
+        end
+      end
+    end
+  end
+  return false
+end
+
+function EasyDistCompare(p1, p2)
+  p2x, p2y, p2z = p2.x, p2.y, p2.z
+  p1x, p1y, p1z = p1.x, p1.y, p1.z
+  local dx = p1x - p2x
+  local dz = (p1z or p1y) - (p2z or p2y)
+  return math.sqrt(dx*dx + dz*dz)
+end
+
+function GetDistanceSqr(unit, p2)
+	p2 = p2.origin or myHero.origin
+	p2x, p2y, p2z = p2.x, p2.y, p2.z
+	p1 = unit.origin
+	p1x, p1y, p1z = p1.x, p1.y, p1.z
+	local dx = p1x - p2x
+	local dz = (p1z or p1y) - (p2z or p2y)
+	return dx*dx + dz*dz
+end
+
+function GetMinionCount(range, unit)
+	count = 0
+	minions = game.minions
+	for i, minion in ipairs(minions) do
+	Range = range * range
+		if minion.is_enemy and ml.IsValid(minion) and unit.object_id ~= minion.object_id and GetDistanceSqr(unit, minion) < Range then
+			count = count + 1
+		end
+	end
+	return count
+end
+
+function MinionsAround(pos, range)
+    local Count = 0
+    minions = game.minions
+    for i, m in ipairs(minions) do
+        if m.object_id ~= 0 and m.is_enemy and m.is_alive and m:distance_to(pos) < range then
+            Count = Count + 1
+        end
+    end
+    return Count
+end
+
+function GetBestCircularFarmPos(unit, range, radius)
+    local BestPos = nil
+    local MostHit = 0
+    minions = game.minions
+    for i, m in ipairs(minions) do
+        if m.object_id ~= 0 and m.is_enemy and m.is_alive and unit:distance_to(m.origin) < range then
+            local Count = MinionsAround(m.origin, radius)
+            if Count > MostHit then
+                MostHit = Count
+                BestPos = m.origin
+            end
+        end
+    end
+    return BestPos, MostHit
+end
+
+function JungleMonstersAround(pos, range)
+    local Count = 0
+    minions = game.jungle_minions
+    for i, m in ipairs(minions) do
+        if m.object_id ~= 0 and m.is_enemy and m.is_alive and m:distance_to(pos) < range then
+            Count = Count + 1
+        end
+    end
+    return Count
+end
+
+function GetBestCircularJungPos(unit, range, radius)
+    local BestPos = nil
+    local MostHit = 0
+    minions = game.jungle_minions
+    for i, m in ipairs(minions) do
+        if m.object_id ~= 0 and m.is_enemy and m.is_alive and unit:distance_to(m.origin) < range then
+            local Count = JungleMonstersAround(m.origin, radius)
+            if Count > MostHit then
+                MostHit = Count
+                BestPos = m.origin
+            end
+        end
+    end
+    return BestPos, MostHit
+end
+
+-- No lib Functions End
+
+local function SupressedSpellReady(spell)
+  return spellbook:can_cast_ignore_supressed(spell)
+end
+
 local function IsFlashSlotF()
 flash = spellbook:get_spell_slot(SLOT_F)
 FData = flash.spell_data
 FName = FData.spell_name
 if FName == "SummonerFlash" then
-    return true
+  return true
 end
 return false
 end
+
+local function IsFlashSlotD()
+flash = spellbook:get_spell_slot(SLOT_D)
+FData = flash.spell_data
+FName = FData.spell_name
+if FName == "SummonerFlash" then
+  return true
+end
+return false
+end
+
+-- Ben's Syndra Shite
+
+local function VectorPointProjectionOnLineSegment(v1, v2, v)
+    local cx, cy, ax, ay, bx, by = v.x, (v.z or v.y), v1.x, (v1.z or v1.y), v2.x, (v2.z or v2.y)
+    local rL = ((cx - ax) * (bx - ax) + (cy - ay) * (by - ay)) / ((bx - ax) * (bx - ax) + (by - ay) * (by - ay))
+    local pointLine = { x = ax + rL * (bx - ax), y = ay + rL * (by - ay) }
+    local rS = rL < 0 and 0 or (rL > 1 and 1 or rL)
+    local isOnSegment = rS == rL
+    local pointSegment = isOnSegment and pointLine or { x = ax + rS * (bx - ax), y = ay + rS * (by - ay) }
+    return pointSegment, pointLine, isOnSegment
+end
+
+local function GetLineTargetCount_pos(StartPos, EndPos, delay, speed, width)
+    local castpos = nil
+    local count = 0
+    for _, ball in pairs(ballHolder) do
+        if ball.is_alive and ball:distance_to(local_player.origin) < ERange then
+            local pointSegment, pointLine, isOnSegment = VectorPointProjectionOnLineSegment(StartPos, EndPos, ball.origin)
+            if pointSegment and isOnSegment and (vec3m.GetDistanceSqr(ball, pointSegment) <= width * width) then
+                castpos = ball
+                count = count + 1
+            end
+        end
+    end
+    if count > 1 then
+        count = 1
+    end
+    return castpos, count
+end
+
+local function GetLineTargetCount(source, aimPos, delay, speed, width)
+    local Count = 0
+    players = game.players
+    for _, target in ipairs(players) do
+        local Range = 1100 * 1100
+        if target.object_id ~= 0 and vec3m.IsValid(target) and target.is_enemy and GetDistanceSqr(local_player, target) < Range then
+            local pointSegment, pointLine, isOnSegment = VectorPointProjectionOnLineSegment(source.origin, aimPos, target.origin)
+            if pointSegment and isOnSegment and (vec3m.GetDistanceSqr2(target.origin, pointSegment) <= (target.bounding_radius + width) * (target.bounding_radius + width)) then
+                Count = Count + 1
+            end
+        end
+    end
+    return Count
+end
+
+local function BallDistance(ball)
+    distance = ball:distance_to(local_player.origin)
+    if distance > 400 then
+        ball_distance = 1300 - local_player.bounding_radius
+    else
+        ball_distance = 1000
+    end
+    --[[
+    ratio = (distance / ERange) * 1300
+    delta = 1300 - ratio
+    ball_distance = 1000 + delta
+    --]]
+    return ball_distance
+end
+
+local function AngleNorm(angle)
+    if angle < 0 then
+        angle = angle + 360
+    elseif angle > 360 then
+        angle = angle - 360
+    end
+    return angle
+end
+
+local function AngleDelta(angle1, angle2)
+    local phi = math.fmod(math.abs(angle1 - angle2), 360)
+    local delta = 0
+    if phi > 180 then
+        delta = 360 - phi
+    else
+        delta = phi
+    end
+    return delta
+end
+
+local function AutoECastPos(balls, champs)
+    local main_table = {}
+    local set = {}
+    for index, ball in pairs(balls) do
+        set.ball = champs[index]
+        local inner_max = {}
+        local inner_min = {}
+        local center_ball = ball
+        level = spellbook:get_spell_slot(SLOT_E).level
+        if level == 5 then
+            ERange = 60
+        else
+            ERange = 40
+        end
+        local delta_x = ball.origin.x - local_player.origin.x
+        local delta_z = ball.origin.z - local_player.origin.z
+        local angle = vec3m.R2D(math.atan2(delta_z, delta_x)) + 180
+        local max_angle = AngleNorm(angle + ERange)
+        local min_angle = AngleNorm(angle - ERange)
+        for _, ball2 in pairs(balls) do
+            if ball2 ~= center_ball then
+                local delta_x = ball2.origin.x - local_player.origin.x
+                local delta_z = ball2.origin.z - local_player.origin.z
+                local angle2 = vec3m.R2D(math.atan2(delta_z, delta_x)) + 180
+                if angle + ERange > 360 then
+                    if angle2 < (ERange - (360 - angle)) then
+                        table.insert(inner_min, ball2)
+                    end
+                else
+                    if angle2 > min_angle and angle2 < angle then
+                        table.insert(inner_min, ball2)
+                    end
+                end
+                if angle - ERange < 0 then
+                    if angle2 > (360 - (ERange - angle)) then
+                        table.insert(inner_max, ball2)
+                    end
+                else
+                    if angle2 < max_angle and angle2 > angle then
+                        table.insert(inner_max, ball2)
+                    end
+                end
+            end
+        end
+        table.insert(inner_max, center_ball)
+        table.insert(inner_min, center_ball)
+        table.insert(main_table, inner_max)
+        table.insert(main_table, inner_min)
+    end
+    local size = 0
+    local max_balls = {}
+    for _, balls in pairs(main_table) do
+        if #balls > size then
+            size = #balls
+        end
+    end
+    for index, balls in pairs(main_table) do
+        if #balls == size then
+            table.insert(max_balls, balls)
+        end
+    end
+    local final_average_dist = 9999
+    local final_ball_pairs = {}
+    if #max_balls[1] > 1 then
+        for _, ball_pairs in pairs(max_balls) do
+            local champ_dist_avg = 0
+            for _, ball in pairs(ball_pairs) do
+                champ = set.ball
+                champ_distance = local_player:distance_to(champ.origin)
+                champ_dist_avg = champ_dist_avg + champ_distance
+            end
+            champ_dist_avg = (champ_dist_avg / #ball_pairs)
+            if champ_dist_avg < final_average_dist then
+                final_average_dist = champ_dist_avg
+                final_ball_pairs = ball_pairs
+            end
+        end
+    end
+    return final_ball_pairs
+end
+
+-- Damage Cals
+
+local function GetQDmg(unit)
+	local QDmg = getdmg("Q", unit, myHero, 1) + getdmg("Q", unit, myHero, 2)
+	return QDmg
+end
+
+local function GetEDmg(unit)
+	local EDmg = getdmg("E", unit, myHero, 1)
+	return EDmg
+end
+
+local function GetRDmg(unit)
+	local RDmg = getdmg("R", unit, myHero, 1)
+	return RDmg
+end
+
 
 -- Damage Cals
 
@@ -464,7 +479,7 @@ syndra_combo_use_q = menu:add_checkbox("Use [Q]", syndra_combo_q, 1)
 syndra_combo_w = menu:add_subcategory("[W] Settings", syndra_combo)
 syndra_combo_use_w = menu:add_checkbox("Use [W]", syndra_combo_w, 1)
 syndra_combo_e = menu:add_subcategory("[E] Settings", syndra_combo)
-syndra_combo_use_e = menu:add_checkbox("Use Stun [E]", syndra_combo_e, 1)
+syndra_combo_use_e = menu:add_checkbox("Use [E]", syndra_combo_e, 1)
 syndra_combo_r = menu:add_subcategory("[R] Smart Settings", syndra_combo)
 syndra_combo_use_r = menu:add_checkbox("Use Smart [R]", syndra_combo_r, 1)
 syndra_combo_r_blacklist = menu:add_subcategory("[R] Combo Blacklist", syndra_combo_r)
@@ -486,11 +501,14 @@ syndra_harass_use_e = menu:add_checkbox("Use [E]", syndra_harass_e, 1)
 syndra_harass_min_mana = menu:add_slider("Minimum Mana [%] To Harass", syndra_harass, 1, 100, 20)
 
 syndra_extra = menu:add_subcategory("Sexy Automated Features", syndra_category)
-syndra_combo_r_set_key = menu:add_keybinder("Semi Manual R Key", syndra_extra, 90)
-syndra_combo_qe_set_key = menu:add_keybinder("Semi Manual Stun Key - Closest To Mouse Position", syndra_extra, 65)
-syndra_auto_e_gap = menu:add_checkbox("Auto Stun - Gap Closing Targets", syndra_extra, 1)
-syndra_auto_e_interrupt = menu:add_checkbox("Auto Stun - Interrupt Major Channel Spells", syndra_extra, 1)
-syndra_auto_w = menu:add_checkbox("Auto Stun - Immobilised Targets", syndra_extra, 1)
+syndra_extra_r = menu:add_subcategory("[R] Settings", syndra_extra)
+syndra_combo_r_set_key = menu:add_keybinder("Semi Manual [R] Key", syndra_extra_r, 90)
+syndra_extra_qe = menu:add_subcategory("[QE] Settings", syndra_extra)
+syndra_combo_qe_set_key = menu:add_keybinder("Semi Manual [Stun] Key - Closest To Mouse Position", syndra_extra_qe, 65)
+syndra_auto_e_gap = menu:add_checkbox("Auto [Stun] - Gap Closing Targets", syndra_extra_qe, 1)
+syndra_auto_e_interrupt = menu:add_checkbox("Auto [Stun] - Interrupt Major Channel Spells", syndra_extra_qe, 1)
+syndra_auto_w = menu:add_checkbox("Auto [Stun] - Immobilised Targets", syndra_extra_qe, 1)
+Syndra_autoe_hits = menu:add_slider("Minimum Targets To Auto [Stun]", syndra_extra_qe, 1, 5, 3)
 
 syndra_laneclear = menu:add_subcategory("Lane Clear", syndra_category)
 syndra_laneclear_use_q = menu:add_checkbox("Use [Q]", syndra_laneclear, 1)
@@ -773,14 +791,54 @@ end
 
 -- Auto E
 
-local function AutoE()
-  target = selector:find_target(W.range, mode_health)
-
-  if Ready(SLOT_E) and menu:get_value(syndra_auto_e_toclose) == 1 then
-    if myHero:distance_to(target.origin) < target.attack_range and target.attack_range < 300 then
-      CastE()
+function AutoE()
+    cast_pos_table = {}
+    ball_table = {}
+    champ_table = {}
+    hit_req = menu:get_value(Syndra_autoe_hits)
+    ball_hit_count = 0
+    players = game.players
+    for _, target in ipairs(players) do
+        if target:distance_to(local_player.origin) < 1100 then
+            cast_pos, ball_count = GetLineTargetCount_pos(local_player.origin, target.origin, 0.25, 2500, 100 / 2)
+            if ball_count > 0 then
+                table.insert(cast_pos_table, cast_pos.origin)
+                table.insert(ball_table, cast_pos)
+                table.insert(champ_table, target)
+                ball_hit_count = ball_hit_count + 1
+            end
+        end
     end
-  end
+    if ball_hit_count >= hit_req then
+        ball_list = AutoECastPos(ball_table, champ_table)
+        if next(ball_list) ~= nil then
+            x_table = {}
+            z_table = {}
+            for _, pos in ipairs(ball_list) do
+                table.insert(x_table, pos.origin.x)
+                table.insert(z_table, pos.origin.z)
+            end
+            x = 0
+            count_x = 0
+            for i, value in ipairs(x_table) do
+                x = x + value
+                count_x = count_x + 1
+            end
+            x_avg = (tonumber(x) / count_x)
+            z = 0
+            count_z = 0
+            for i, value in ipairs(z_table) do
+                z = z + value
+                count_z = count_z + 1
+            end
+            z_avg = (tonumber(z) / count_z)
+            new_cast_pos = vec3.new(x_avg, 0, z_avg)
+            renderer:draw_circle(new_cast_pos.x, new_cast_pos.y, new_cast_pos.z, 50, 0, 255, 0, 255)
+            if vec3m.Ready(SLOT_E) then
+                spellbook:cast_spell(SLOT_E, 0.25, new_cast_pos.x, new_cast_pos.y, new_cast_pos.z)
+            end
+        end
+    end
 end
 
 -- Gap Close
@@ -845,7 +903,7 @@ local function on_draw()
 			if target.object_id ~= 0 and myHero:distance_to(target.origin) <= 1000 then
 				if menu:get_value(syndra_draw_kill) == 1 then
 					if fulldmg > target.health and IsValid(target) then
-						renderer:draw_text_big_centered(screen_size.width / 2, screen_size.height / 20 + 50, "Full Spell Rotation Can Kill Target")
+						renderer:draw_text_big_centered(screen_size.width / 2, screen_size.height / 20 + 50, "Can Kill Target")
 					end
 				end
 			end
@@ -857,6 +915,12 @@ local function on_draw()
 end
 
 local function on_tick()
+
+	if spellbook:get_spell_slot(SLOT_E).level == 5 then
+			ERange = spellE.range2
+	else
+			ERange = spellE.range1
+	end
 
 	if game:is_key_down(menu:get_value(syndra_combokey)) and menu:get_value(syndra_enabled) == 1 then
 		Combo()
@@ -875,6 +939,14 @@ local function on_tick()
   ManualQE()
 	AutoKill()
 	AutoQHarass()
+	AutoE()
+
+	for index, ball in pairs(ballHolder) do
+			if not ball.is_alive then
+					table.remove(ballHolder, index)
+					table.remove(ballTimer, index)
+			end
+	end
 
 
 end
