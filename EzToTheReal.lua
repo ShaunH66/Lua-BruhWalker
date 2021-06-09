@@ -4,7 +4,7 @@ end
 
 do
     local function AutoUpdate()
-		local Version = 2.3
+		local Version = 2.4
 		local file_name = "EzToTheReal.lua"
 		local url = "https://raw.githubusercontent.com/TheShaunyboi/BruhWalkerEncrypted/main/EzToTheReal.lua"
         local web_version = http:get("https://raw.githubusercontent.com/TheShaunyboi/BruhWalkerEncrypted/main/EzToTheReal.lua.version.txt")
@@ -556,11 +556,12 @@ end
 local function Combo()
 
 	local target = selector:find_target(R.range, mode_health)
+	local qtarget = selector:find_target(Q.range, mode_health)
 
 	if menu:get_value(ezreal_combo_use_w) == 1 then
 		if myHero:distance_to(target.origin) <= W.range and IsValid(target) and IsKillable(target) then
 			if Ready(SLOT_W) then
-				CastW(target)
+				CastW(qtarget)
 			end
 		end
 	end
@@ -568,7 +569,7 @@ local function Combo()
 	if menu:get_value(ezreal_combo_use_q) == 1 then
 		if myHero:distance_to(target.origin) <= Q.range and IsValid(target) and IsKillable(target) then
 			if Ready(SLOT_Q) then
-				CastQ(target)
+				CastQ(qtarget)
 			end
 		end
 	end
@@ -761,6 +762,7 @@ local function ManualWCast()
 end
 
 local function AutoRx()
+
 	if Ready(SLOT_R) and menu:get_value(ezreal_use_auto_r) == 1 then
 		for i, unit in ipairs(GetEnemyHeroes()) do
 			local Dist = myHero:distance_to(unit.origin)
