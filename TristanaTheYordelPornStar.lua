@@ -4,14 +4,14 @@ end
 
 do
     local function AutoUpdate()
-		local Version = 1.8
+		local Version = 1.9
 		local file_name = "TristanaTheYordelPornStar.lua"
 		local url = "https://raw.githubusercontent.com/TheShaunyboi/BruhWalkerEncrypted/main/TristanaTheYordelPornStar.lua"
         local web_version = http:get("https://raw.githubusercontent.com/TheShaunyboi/BruhWalkerEncrypted/main/TristanaTheYordelPornStar.lua.version.txt")
         console:log("TristanaTheYordelPornStar.lua Vers: "..Version)
 		console:log("TristanaTheYordelPornStar.Web Vers: "..tonumber(web_version))
 		if tonumber(web_version) == Version then
-            console:log(".................Shaun's Sexy Tristana Successfully Loaded........................")
+            console:log(".......Shaun's Sexy Tristana Successfully Loaded.......")
     else
 						http:download_file(url, file_name)
 			      console:log("Sexy Tristana Update available.....")
@@ -501,14 +501,14 @@ end
 
 trist_enabled = menu:add_checkbox("Enabled", trist_category, 1)
 trist_combokey = menu:add_keybinder("Combo Mode Key", trist_category, 32)
-menu:add_label("Welcome To Shaun's Sexy Tristana", trist_category)
 menu:add_label("#YordelPornStar", trist_category)
 menu:add_label("#BigGunSmall....Feet?", trist_category)
 
-trist_ks_function = menu:add_subcategory("Kill Steal", trist_category)
+trist_ks_function = menu:add_subcategory("[Kill Steal]", trist_category)
 trist_ks_use_er = menu:add_checkbox("Use [E] + [R]", trist_ks_function, 1)
 trist_ks_r = menu:add_subcategory("[R] Smart Settings", trist_ks_function, 1)
 trist_ks_use_r = menu:add_checkbox("Use [R]", trist_ks_r, 1)
+trist_ks_use_overkill = menu:add_toggle("Use [R] Overkill Protection", 1, trist_ks_r, 85, true)
 trist_ks_use_r_aa = menu:add_slider("Don't Use [R] IF 'X' AA Can Kill", trist_ks_r, 1, 10, 2)
 trist_ks_blacklist = menu:add_subcategory("Kill Steal Champ Whitelist", trist_ks_function)
 local players = game.players
@@ -518,7 +518,7 @@ for _, t in pairs(players) do
     end
 end
 
-trist_combo = menu:add_subcategory("Combo", trist_category)
+trist_combo = menu:add_subcategory("[Combo]", trist_category)
 trist_combo_q = menu:add_subcategory("[Q] Settings", trist_combo)
 trist_combo_use_q = menu:add_checkbox("Use [Q]", trist_combo_q, 1)
 trist_combo_use_q_charge = menu:add_checkbox("Use [Q] Only IF Target Has E Charge", trist_combo_q, 0)
@@ -537,7 +537,7 @@ for _, t in pairs(players) do
     end
 end
 
-trist_harass = menu:add_subcategory("Harass", trist_category)
+trist_harass = menu:add_subcategory("[Harass]", trist_category)
 trist_harass_q = menu:add_subcategory("[Q] Settings", trist_harass)
 trist_harass_use_q = menu:add_checkbox("Use [Q]", trist_harass_q, 1)
 trist_harass_use_q_charge = menu:add_checkbox("Use [Q] Only IF Target Has E Charge", trist_harass_q, 0)
@@ -552,13 +552,13 @@ for _, t in pairs(players) do
     end
 end
 
-trist_laneclear = menu:add_subcategory("Lane Clear", trist_category)
+trist_laneclear = menu:add_subcategory("[Lane Clear]", trist_category)
 trist_laneclear_use_q = menu:add_checkbox("Use [Q]", trist_laneclear, 1)
 trist_laneclear_use_e = menu:add_checkbox("Use [E] On Cannon Minion", trist_laneclear, 1)
 trist_laneclear_min_mana = menu:add_slider("Minimum Mana [%] To Lane Clear", trist_laneclear, 1, 100, 20)
 trist_laneclear_q_min = menu:add_slider("Number Of Minions To Use [Q]", trist_laneclear, 1, 10, 3)
 
-trist_jungleclear = menu:add_subcategory("Jungle Clear", trist_category)
+trist_jungleclear = menu:add_subcategory("[Jungle Clear]", trist_category)
 trist_jungleclear_use_q = menu:add_checkbox("Use [Q]", trist_jungleclear, 1)
 trist_jungleclear_use_e = menu:add_checkbox("Use [E]", trist_jungleclear, 1)
 trist_jungleclear_min_mana = menu:add_slider("Minimum Mana [%] To Jungle", trist_jungleclear, 1, 100, 20)
@@ -591,9 +591,10 @@ for _, t in pairs(players) do
     end
 end
 
-trist_draw = menu:add_subcategory("The Drawing Features", trist_category)
+trist_draw = menu:add_subcategory("[Drawing] Features", trist_category)
 trist_draw_w = menu:add_checkbox("Draw [W] Range", trist_draw, 1)
 trist_draw_gapclose = menu:add_checkbox("Draw [R] Anti Gap Closer Toggle Text", trist_draw, 1)
+trist_draw_overkill = menu:add_checkbox("Draw [R] Overkill Toggle Text", trist_draw, 1)
 trist_draw_kill = menu:add_checkbox("Draw Full Combo Can Kill Text", trist_draw, 1)
 trist_draw_kill_healthbar = menu:add_checkbox("Draw Full Combo Colours On Target Health Bar", trist_draw, 1)
 
@@ -735,9 +736,21 @@ local function AutoKill()
 
 		local AATotalDMG = (myHero.total_attack_damage * menu:get_value(trist_ks_use_r_aa))
 		if target.object_id ~= 0 and myHero:distance_to(target.origin) <= QERrange and IsValid(target) and IsKillable(target) then
-			if menu:get_value(trist_ks_use_r) == 1 then
+			if menu:get_value(trist_ks_use_r) == 1 and menu:get_toggle_state(trist_ks_use_overkill) then
 				if menu:get_value_string("Kill Steal Whitelist: "..tostring(target.champ_name)) == 1 then
 					if AATotalDMG < target.health and Ready(SLOT_R) then
+						if GetRDmg(target) > target.health then
+							CastR(target)
+						end
+					end
+				end
+			end
+		end
+
+		if target.object_id ~= 0 and myHero:distance_to(target.origin) <= QERrange and IsValid(target) and IsKillable(target) then
+			if menu:get_value(trist_ks_use_r) == 1 and not menu:get_toggle_state(trist_ks_use_overkill) then
+				if menu:get_value_string("Kill Steal Whitelist: "..tostring(target.champ_name)) == 1 then
+					if Ready(SLOT_R) then
 						if GetRDmg(target) > target.health then
 							CastR(target)
 						end
@@ -860,7 +873,7 @@ local function on_dash(obj, dash_info)
 	if menu:get_toggle_state(trist_extra_gapclose) then
     if IsValid(obj) then
 			if menu:get_value_string("Anti Gap Closer Whitelist: "..tostring(obj.champ_name)) == 1 then
-	      if obj:is_facing(myHero) and myHero:distance_to(dash_info.end_pos) < 400 and Ready(SLOT_R) then
+	      if obj:is_facing(myHero) and myHero:distance_to(dash_info.end_pos) < 400 and myHero:distance_to(obj.origin) < 400 and Ready(SLOT_R) then
 	        CastR(obj)
 				end
 			end
@@ -950,6 +963,12 @@ local function on_draw()
 	if menu:get_value(trist_draw_gapclose) == 1 then
 		if menu:get_toggle_state(trist_extra_gapclose) then
 			renderer:draw_text_centered(screen_size.width / 2, 0, "Toggle [R] Anti Gap Closer Enabled")
+		end
+	end
+
+	if menu:get_value(trist_draw_overkill) == 1 then
+		if menu:get_toggle_state(trist_ks_use_overkill) then
+			renderer:draw_text_centered(screen_size.width / 2, 30, "Toggle [R] Overkill Enabled")
 		end
 	end
 end
