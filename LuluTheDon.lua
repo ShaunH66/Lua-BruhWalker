@@ -4,7 +4,7 @@ end
 
 do
     local function AutoUpdate()
-		local Version = 1.2
+		local Version = 1.3
 		local file_name = "LuluTheDon.lua"
 		local url = "https://raw.githubusercontent.com/TheShaunyboi/BruhWalkerEncrypted/main/LuluTheDon.lua"
         local web_version = http:get("https://raw.githubusercontent.com/TheShaunyboi/BruhWalkerEncrypted/main/LuluTheDon.lua.version.txt")
@@ -345,7 +345,7 @@ lulu_combokey = menu:add_keybinder("Combo Mode Key", lulu_category, 32)
 menu:add_label("Welcome To Shaun's Sexy Lulu", lulu_category)
 menu:add_label("#LetsMakeYouBigBaby", lulu_category)
 
-lulu_combo = menu:add_subcategory("Combo", lulu_category)
+lulu_combo = menu:add_subcategory("[Combo]", lulu_category)
 lulu_combo_q = menu:add_subcategory("[Q] Settings", lulu_combo, 1)
 lulu_combo_use_q = menu:add_checkbox("Use [Q]", lulu_combo_q, 1)
 
@@ -380,17 +380,17 @@ for _, v in ipairs(players) do
 		menu:add_checkbox("Use R On : "..tostring(v.champ_name), lulu_r_allyblacklist, 1)
 	end
 end
-lulu_harass = menu:add_subcategory("Harass", lulu_category)
+lulu_harass = menu:add_subcategory("[Harass]", lulu_category)
 lulu_harass_q = menu:add_subcategory("[Q] Settings", lulu_harass, 1)
 lulu_harass_use_q = menu:add_checkbox("Use [Q]", lulu_harass_q, 1)
 lulu_harass_use_q_ext = menu:add_checkbox("Use [Q] Extended", lulu_harass_q, 1)
 lulu_harass_use_w = menu:add_checkbox("Use [W]", lulu_harass, 1)
 
-lulu_ks = menu:add_subcategory("Kill Steal", lulu_category)
+lulu_ks = menu:add_subcategory("[Kill Steal]", lulu_category)
 lulu_ks_use_q = menu:add_checkbox("Use [Q]", lulu_ks , 1)
 lulu_ks_use_e = menu:add_checkbox("Use [E]", lulu_ks , 1)
 
-lulu_extra = menu:add_subcategory("Automated Features", lulu_category)
+lulu_extra = menu:add_subcategory("[Automated] Features", lulu_category)
 lulu_manual_r_use = menu:add_subcategory("Semi Manual [R] Settings", lulu_extra)
 lulu_manual_r_key = menu:add_keybinder("Semi Manual [R] Key - Myself When Ally > R Range", lulu_manual_r_use, 90)
 lulu_manual_r_ally_hp = menu:add_slider("Semi Manual [R] - Ally HP is lower than [%]", lulu_manual_r_use, 1, 100, 30)
@@ -400,14 +400,14 @@ lulu_r_knockup_min = menu:add_slider("Minimum Number Of Targets To Knock Up", lu
 --lulu_aoe_q = menu:add_checkbox("Auto AoE Q", lulu_extra, 1)
 --lulu_aoe_q_min = menu:add_slider("Minimum Number Of Targets To AoE Q", lulu_extra, 1, 5, 3)
 lulu_w_interrupt = menu:add_checkbox("Auto [W] Interrupt Major Channel Spells", lulu_extra, 1)
-lulu_w_gap = menu:add_checkbox("Auto [W] Gap Closer", lulu_extra, 1)
+lulu_w_gap = menu:add_checkbox("Auto [W] Anti Gap Closer", lulu_extra, 1)
 
-lulu_laneclear = menu:add_subcategory("Lane Clear", lulu_category)
+lulu_laneclear = menu:add_subcategory("[Lane Clear]", lulu_category)
 lulu_laneclear_use_q = menu:add_checkbox("Use [Q]", lulu_laneclear, 1)
 lulu_laneclear_use_w = menu:add_checkbox("Use [W] Ally Or Self", lulu_laneclear, 1)
 lulu_laneclear_q_min = menu:add_slider("Number Of Minions To Use [Q] & [W]", lulu_laneclear, 1, 10, 3)
 
-lulu_draw = menu:add_subcategory("The Drawing Features", lulu_category)
+lulu_draw = menu:add_subcategory("[Drawing] Features", lulu_category)
 lulu_draw_q = menu:add_checkbox("Draw [Q] Range", lulu_draw, 1)
 lulu_draw_q_ext = menu:add_checkbox("Draw [Q] Extended Range", lulu_draw, 1)
 lulu_draw_w = menu:add_checkbox("Draw [W] & [E] Range", lulu_draw, 1)
@@ -801,12 +801,21 @@ end]]
 
 -- Anti W Gap
 
-local function on_gap_close(obj, data)
+local function on_dash(obj, dash_info)
 
-	if IsValid(obj) and menu:get_value(lulu_w_gap) == 1 then
-		if myHero:distance_to(obj.origin) <= W.range and Ready(SLOT_W) then
-			CastW(obj)
+	local justme = myHero.origin
+	local medraw = game:world_to_screen(justme.x, justme.y, justme.z)
+
+	if menu:get_value(lulu_w_gap) == 1 then
+		if ml.IsValid(obj) then
+			if obj:is_facing(myHero) and myHero:distance_to(dash_info.end_pos) < W.range and myHero:distance_to(obj.origin) < W.range and Ready(SLOT_W) then
+				Gapclose_text = true
+				CastW(obj)
+			end
 		end
+	end
+	if Gapclose_text then
+		renderer:draw_text_big_centered(medraw.x, medraw.y, "Performing Anti GapClose [W]")
 	end
 end
 
@@ -894,6 +903,10 @@ local function on_tick()
 		Clear()
 	end
 
+	if not Ready(SLOT_W) then
+		Gapclose_text = false
+	end
+
 	AutoR()
 	AutoKill()
 	ManualRCast()
@@ -903,7 +916,7 @@ end
 
 client:set_event_callback("on_tick", on_tick)
 client:set_event_callback("on_draw", on_draw)
-client:set_event_callback("on_gap_close", on_gap_close)
+client:set_event_callback("on_dash", on_dash)
 --client:set_event_callback("on_object_created", on_object_created)
 client:set_event_callback("on_buff_active", on_buff_active)
 client:set_event_callback("on_possible_interrupt", on_possible_interrupt)
