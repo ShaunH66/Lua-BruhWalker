@@ -4,14 +4,14 @@ end
 
 do
     local function AutoUpdate()
-		local Version = 2.5
+		local Version = 2.6
 		local file_name = "OhAyKaisa.lua"
 		local url = "https://raw.githubusercontent.com/TheShaunyboi/BruhWalkerEncrypted/main/OhAyKaisa.lua"
         local web_version = http:get("https://raw.githubusercontent.com/TheShaunyboi/BruhWalkerEncrypted/main/OhAyKaisa.lua.version.txt")
         console:log("OhAyKaisa.lua Vers: "..Version)
 				console:log("OhAyKaisa.Web Vers: "..tonumber(web_version))
 		if tonumber(web_version) == Version then
-            console:log("..................Shaun's Sexy Kaisa Successfully Loaded..........................")
+            console:log(".....Shaun's Sexy Kaisa Successfully Loaded.....")
 
     else
 						http:download_file(url, file_name)
@@ -60,6 +60,7 @@ require "PKDamageLib"
 
 local myHero = game.local_player
 local local_player = game.local_player
+local Gapclose_text = false
 
 local function Ready(spell)
   return spellbook:can_cast(spell)
@@ -377,6 +378,13 @@ local function HasBuff(unit)
 	return false
 end
 
+local function HasEBuff(unit)
+	if unit:has_buff("KaisaE") then
+		return true
+	end
+	return false
+end
+
 
 local function CheckQ()
 	if HasBuff(myHero) then
@@ -523,7 +531,7 @@ for _, t in pairs(players) do
     end
 end
 
-Kai_combo = menu:add_subcategory("Combo", Kai_category)
+Kai_combo = menu:add_subcategory("[Combo]", Kai_category)
 Kai_combo_q = menu:add_subcategory("[Q] Settings", Kai_combo)
 Kai_combo_use_q = menu:add_checkbox("Use [Q]", Kai_combo_q, 1)
 Kai_combo_q_iso = menu:add_checkbox("[Q] Isolated Target Only", Kai_combo_q, 0)
@@ -536,7 +544,7 @@ Kai_combo_e = menu:add_subcategory("[E] Settings", Kai_combo)
 Kai_combo_use_e = menu:add_checkbox("Use [E]", Kai_combo_e, 1)
 Kai_combo_e_aa = menu:add_checkbox("Only Use [E] Outside AA Range", Kai_combo_e, 1)
 
-Kai_harass = menu:add_subcategory("Harass", Kai_category)
+Kai_harass = menu:add_subcategory("[Harass]", Kai_category)
 Kai_harass_q = menu:add_subcategory("[Q] Settings", Kai_harass)
 Kai_harass_use_q = menu:add_checkbox("Use [Q]", Kai_harass_q, 1)
 Kai_harass_q_iso = menu:add_checkbox("[Q] Isolated Target Only", Kai_harass_q, 1)
@@ -547,25 +555,25 @@ Kai_harass_use_w_aa = menu:add_checkbox("Only Use [W] Outside AA Range", Kai_har
 Kai_harass_use_w_range = menu:add_slider("Max Range [W]", Kai_harass_w, 1, 3000, 2000)
 Kai_harass_min_mana = menu:add_slider("Minimum Mana [%] To Harass", Kai_harass, 1, 100, 20)
 
-Kai_extra = menu:add_subcategory("Sexy Automated Features", Kai_category)
+Kai_extra = menu:add_subcategory("[Automated] Features", Kai_category)
 Kai_auto_e_gap = menu:add_checkbox("Auto [E] Gap Close", Kai_extra, 1)
 Kai_auto_e_toclose = menu:add_checkbox("Auto [E] Escape Short Ranged Targets", Kai_extra, 1)
 Kai_auto_w = menu:add_checkbox("Auto [W] Immobilised Target", Kai_extra, 1)
 
-Kai_laneclear = menu:add_subcategory("Lane Clear", Kai_category)
+Kai_laneclear = menu:add_subcategory("[Lane Clear]", Kai_category)
 Kai_laneclear_use_q = menu:add_checkbox("Use [Q]", Kai_laneclear, 1)
 Kai_laneclear_use_e = menu:add_checkbox("Use [E]", Kai_laneclear, 1)
 Kai_laneclear_min_mana = menu:add_slider("Minimum Mana [%] To Lane Clear", Kai_laneclear, 1, 100, 20)
 Kai_laneclear_q_min = menu:add_slider("Number Of Minions To Use [Q]", Kai_laneclear, 1, 10, 3)
 Kai_laneclear_e_min = menu:add_slider("Number Of Minions To Use [E]", Kai_laneclear, 1, 10, 3)
 
-Kai_jungleclear = menu:add_subcategory("Jungle Clear", Kai_category)
+Kai_jungleclear = menu:add_subcategory("[Jungle Clear]", Kai_category)
 Kai_jungleclear_use_q = menu:add_checkbox("Use [Q]", Kai_jungleclear, 1)
 Kai_jungleclear_use_e = menu:add_checkbox("Use [E]", Kai_jungleclear, 1)
 Kai_jungleclear_use_w = menu:add_checkbox("Use [W]", Kai_jungleclear, 1)
 Kai_jungleclear_min_mana = menu:add_slider("Minimum Mana [%] To Jungle", Kai_jungleclear, 1, 100, 20)
 
-Kai_draw = menu:add_subcategory("The Drawing Features", Kai_category)
+Kai_draw = menu:add_subcategory("[Drawing] Features", Kai_category)
 Kai_draw_q = menu:add_checkbox("Draw [Q] Range", Kai_draw, 1)
 Kai_draw_w = menu:add_checkbox("Draw [W] Range", Kai_draw, 1)
 Kai_draw_r = menu:add_checkbox("Draw [R] Range", Kai_draw, 1)
@@ -596,7 +604,7 @@ local function CastR(unit)
 	pred_output = pred:predict(R.speed, R.delay, rRange[spellbook:get_spell_slot(SLOT_R).level], R.width, unit, false, false)
 	if pred_output.can_cast then
 		castPos = pred_output.cast_pos
-		spellbook:cast_spell(SLOT_R, R.delay, castPos.x - 300, castPos.y, castPos.z)
+		spellbook:cast_spell(SLOT_R, R.delay, castPos.x, castPos.y, castPos.z)
 	end
 end
 
@@ -749,12 +757,18 @@ local function AutoKill()
 
 		if target.object_id ~= 0 and myHero:distance_to(target.origin) <= rRange[spellbook:get_spell_slot(SLOT_R).level] and IsValid(target) and IsKillable(target) then
 			if menu:get_value(Kai_ks_use_r) == 1 then
-				if myHero:distance_to(target.origin) > Q.range then
+				if myHero:distance_to(target.origin) > 700 then
 					if not IsUnderTurret(target) and HasPassiveBuff(target) then
         		if QWDmg > target.health and GetEnemyCountCicular(1500, target.origin) <= 2 then
 				  		if menu:get_value_string("Use [R] Kill Steal On: "..tostring(target.champ_name)) == 1 then
 								if Ready(SLOT_R) and spellbook:get_spell_slot(SLOT_Q).can_cast then
-					  			CastR(target)
+									if not HasEBuff(myHero) and Ready(SLOT_E) then
+										CastE()
+									elseif HasEBuff(myHero) then
+					  				CastR(target)
+									elseif not Ready(SLOT_E) then
+										CastR(target)
+									end
 								end
 							end
 						end
@@ -873,6 +887,24 @@ local function on_gap_close(obj, data)
 	end
 end
 
+local function on_dash(obj, dash_info)
+
+	local justme = myHero.origin
+	local medraw = game:world_to_screen(justme.x, justme.y, justme.z)
+
+	if menu:get_value(Kai_auto_e_gap) == 1 then
+		if ml.IsValid(obj) then
+			if myHero:distance_to(dash_info.end_pos) < myHero.attack_range and myHero:distance_to(obj.origin) < myHero.attack_range and Ready(SLOT_E) then
+				Gapclose_text = true
+				CastE()
+			end
+		end
+	end
+	if Gapclose_text then
+		renderer:draw_text_big_centered(medraw.x, medraw.y, "Performing Anti GapClose [E]")
+	end
+end
+
 -- object returns, draw and tick usage
 
 local function on_draw()
@@ -955,6 +987,10 @@ local function on_tick()
 		JungleClear()
 	end
 
+	if not Ready(SLOT_E) then
+		Gapclose_text = false
+	end
+
 	AutoW()
   AutoE()
 	AutoKill()
@@ -965,4 +1001,4 @@ end
 
 client:set_event_callback("on_tick", on_tick)
 client:set_event_callback("on_draw", on_draw)
-client:set_event_callback("on_gap_close", on_gap_close)
+client:set_event_callback("on_dash", on_dash)
