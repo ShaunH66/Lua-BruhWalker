@@ -12,10 +12,8 @@ do
 		console:log("BlueBallsSyndra.Web Vers: "..tonumber(web_version))
 		if tonumber(web_version) == Version then
 						console:log(".......................................................")
-						console:log(".......................................................")
 						console:log("..................BS Studios Presents..................")
             console:log("..Shaun & Ben's BlueBalls Syndra Successfully Loaded...")
-						console:log(".......................................................")
 						console:log(".......................................................")
         else
 			http:download_file(url, file_name)
@@ -78,17 +76,19 @@ require "PKDamageLib"
 local myHero = game.local_player
 local local_player = game.local_player
 local BlockW = false
+local Interrupt_text = false
+local Gapclose_text = false
 
 -- Ranges
 
 local Q = { range = 800, delay = .25, width = 180, speed = math.huge }
 local W = { range = 925, delay = .25, width = 225, speed = math.huge }
-local E = { range = 1100, delay = .25, width = 180, speed = math.huge }
+local E = { range = 1100, delay = .25, width = 100, speed = math.huge }
 local R = { range = 675, delay = .25, width = 0, speed = math.huge }
 
 spellE = {
-    range1 = 1100,
-    range2 = 1100,
+    range1 = 700,
+    range2 = 800,
     angle1 = 40,
     angle2 = 60
 }
@@ -196,7 +196,7 @@ end
 local function GetLineTargetCount_Combo(StartPos, EndPos, delay, speed, width)
 	local castpos = nil
 	for _, ball in pairs(ballHolder) do
-		if ball.is_alive and ball:distance_to(local_player.origin) < E.range then
+		if ball.is_alive and ball:distance_to(local_player.origin) < Q.range then
 			local pointSegment, pointLine, isOnSegment = VectorPointProjectionOnLineSegment(StartPos, EndPos, ball.origin)
 			if pointSegment and isOnSegment and (GetDistanceSqr2(ball.origin, pointSegment) <= width * width) then
 				castpos = ball
@@ -578,7 +578,7 @@ syndra_extra = menu:add_subcategory("[Automated] Features", syndra_category)
 syndra_combo_r_set_key = menu:add_keybinder("Semi Manual [R] Key", syndra_extra, 90)
 syndra_combo_qe_set_key = menu:add_keybinder("Semi Manual [Stun] Key - Closest To Mouse Position", syndra_extra, 65)
 syndra_immobile_stun = menu:add_checkbox("Auto [Stun] Immobile Targets ", syndra_extra, 1)
-Syndra_autoe_hits = menu:add_slider("Minimum Targets Hit To Use Auto [Stun]", syndra_extra, 1, 5, 3)
+--Syndra_autoe_hits = menu:add_slider("Minimum Targets Hit To Use Auto [Stun]", syndra_extra, 1, 5, 3)
 
 syndra_extra_gap = menu:add_subcategory("[Stun] Anti Gap Closer", syndra_category)
 syndra_extra_gapclose = menu:add_toggle("[Stun] Toggle Anti Gap Closer key", 1, syndra_extra_gap, 84, true)
@@ -604,11 +604,11 @@ syndra_draw = menu:add_subcategory("[Drawing] Features", syndra_category)
 syndra_draw_q = menu:add_checkbox("Draw [Q] Range", syndra_draw, 1)
 syndra_draw_w = menu:add_checkbox("Draw [W] Range", syndra_draw, 1)
 syndra_draw_r = menu:add_checkbox("Draw [R] Range", syndra_draw, 1)
-syndra_draw_e = menu:add_checkbox("Draw [QE] Max Range", syndra_draw, 1)
+syndra_draw_e = menu:add_checkbox("Draw [QE Stun] Max Range", syndra_draw, 1)
 syndra_auto_q_draw = menu:add_checkbox("Draw Toggle Auto [Q] Harass", syndra_draw, 1)
 syndra_gap_draw = menu:add_checkbox("Draw Toggle Auto [Stun] Gap Closer", syndra_draw, 1)
 syndra_draw_kill = menu:add_checkbox("Draw Full Combo Can Kill Text", syndra_draw, 1)
-syndra_draw_kill_healthbar = menu:add_checkbox("Draw Full Combo On Target Health Bar", syndra_draw, 1, "Health Bar Damage Is Computed From R > Q > W")
+syndra_draw_kill_healthbar = menu:add_checkbox("Draw Full Combo On Target Health Bar", syndra_draw, 1)
 
 
 -- Casting
@@ -645,7 +645,7 @@ end
 
 local function Combo()
 
-	target = selector:find_target(1500, mode_health)
+	target = selector:find_target(E.range, mode_health)
 
 	if menu:get_value(syndra_combo_use_q) == 1 then
 	  if myHero:distance_to(target.origin) <= E.range and ml.IsValid(target) and IsKillable(target) and ml.Ready(SLOT_Q) and ml.Ready(SLOT_E) then
@@ -724,7 +724,7 @@ end
 
 local function Harass()
 
-	target = selector:find_target(1500, mode_health)
+	target = selector:find_target(E.range, mode_health)
 
 	local GrabHarassMana = myHero.mana/myHero.max_mana >= menu:get_value(syndra_harass_min_mana) / 100
 
@@ -805,7 +805,7 @@ end
 
 local function AutoQHarass()
 
-	target = selector:find_target(1500, mode_health)
+	target = selector:find_target(Q.range, mode_health)
 
 	local GrabHarassMana = myHero.mana/myHero.max_mana >= menu:get_value(syndra_harass_min_mana) / 100
 
@@ -882,12 +882,12 @@ local function Clear()
 
 	minions = game.minions
 	for i, target in ipairs(minions) do
-		local TargetNearMouse = target:distance_to(game.mouse_pos) <= 500
+		local TargetNearMouse = target:distance_to(game.mouse_pos) <= 650
 
 		if menu:get_value(syndra_laneclear_use_q) == 1 then
 			if ml.IsValid(target) and target.object_id ~= 0 and target.is_enemy and myHero:distance_to(target.origin) < Q.range then
 				if GrabLaneClearMana and ml.Ready(SLOT_Q) and TargetNearMouse then
-					local BestPos, MostHit = GetBestCircularFarmPos(target, Q.range, 90)
+					local BestPos, MostHit = GetBestCircularFarmPos(target, Q.range, 50)
 					if BestPos then
 						spellbook:cast_spell(SLOT_Q, Q.delay, BestPos.x, BestPos.y, BestPos.z)
 					end
@@ -918,7 +918,10 @@ local function Clear()
 		if menu:get_value(syndra_laneclear_use_e) == 1 then
 			if ml.IsValid(target) and target.object_id ~= 0 and target.is_enemy and myHero:distance_to(target.origin) < Q.range then
 				if GrabLaneClearMana and not ml.Ready(SLOT_W) and not ml.Ready(SLOT_Q) and ml.Ready(SLOT_E) and TargetNearMouse then
-					CastE(target)
+					local BestPos, MostHit = GetBestCircularFarmPos(target, 600, 50)
+					if BestPos then
+						spellbook:cast_spell(SLOT_E, E.delay, BestPos.x, BestPos.y, BestPos.z)
+					end
 				end
 			end
 		end
@@ -933,11 +936,11 @@ end
 	minions = game.jungle_minions
 
 	for i, target in ipairs(minions) do
-		local TargetNearMouse = target:distance_to(game.mouse_pos) <= 500
+		local TargetNearMouse = target:distance_to(game.mouse_pos) <= 650
 
 		if menu:get_value(syndra_jungleclear_use_q) == 1 then
 			if ml.IsValid(target) and target.object_id ~= 0 and target.is_enemy and myHero:distance_to(target.origin) < Q.range and ml.Ready(SLOT_Q) then
-				local BestPos, MostHit = GetBestCircularJungPos(target, Q.range, 90)
+				local BestPos, MostHit = GetBestCircularJungPos(target, Q.range, 50)
 				if BestPos then
 					if GrabJungleClearMana and TargetNearMouse then
 						spellbook:cast_spell(SLOT_Q, Q.delay, BestPos.x, BestPos.y, BestPos.z)
@@ -969,7 +972,10 @@ end
 		if menu:get_value(syndra_jungleclear_use_e) == 1 then
 			if ml.IsValid(target) and target.object_id ~= 0 and target.is_enemy and myHero:distance_to(target.origin) < Q.range then
 				if GrabJungleClearMana and not ml.Ready(SLOT_W) and not ml.Ready(SLOT_Q) and ml.Ready(SLOT_E) and TargetNearMouse then
-					CastE(target)
+					local BestPos, MostHit = GetBestCircularFarmPos(target, 600, 50)
+					if BestPos then
+						spellbook:cast_spell(SLOT_E, E.delay, BestPos.x, BestPos.y, BestPos.z)
+					end
 				end
 			end
 		end
@@ -978,7 +984,7 @@ end
 
 local function AutoStunImmobileTarget()
 
-	target = selector:find_target(1500, mode_health)
+	target = selector:find_target(E.range, mode_health)
 
 	if StunManaCheck() then
 	  if menu:get_value(syndra_immobile_stun) == 1 then
@@ -989,17 +995,17 @@ local function AutoStunImmobileTarget()
 					end
 		    end
 		  end
+		end
 
-			if menu:get_value(syndra_immobile_stun) == 1 then
-				if IsImmobileTarget(target) then
-					if myHero:distance_to(target.origin) < E.range then
-						if ml.IsValid(target) and IsKillable(target) and not ml.Ready(SLOT_Q) and ml.Ready(SLOT_E) then
-							local castpos = GetLineTargetCount_Combo(myHero.origin, target.origin, 0.25, 2500, 50)
-							if castpos then
-								eeorigin = castpos.origin
-								eex, eey, eez = eeorigin.x, eeorigin.y, eeorigin.z
-								spellbook:cast_spell(SLOT_E, E.delay, eex, eey, eez)
-							end
+		if menu:get_value(syndra_immobile_stun) == 1 then
+			if IsImmobileTarget(target) then
+				if myHero:distance_to(target.origin) < E.range then
+					if ml.IsValid(target) and IsKillable(target) and not ml.Ready(SLOT_Q) and ml.Ready(SLOT_E) then
+						local castpos = GetLineTargetCount_Combo(myHero.origin, target.origin, 0.25, 2500, 50)
+						if castpos then
+							eeorigin = castpos.origin
+							eex, eey, eez = eeorigin.x, eeorigin.y, eeorigin.z
+							spellbook:cast_spell(SLOT_E, E.delay, eex, eey, eez)
 						end
 			    end
 			  end
@@ -1012,7 +1018,7 @@ end
 
 local function ManualR()
 
-	target = selector:find_target(1500, mode_health)
+	target = selector:find_target(R.range, mode_health)
 
   if game:is_key_down(menu:get_value(syndra_combo_r_set_key)) then
     if myHero:distance_to(target.origin) < R.range then
@@ -1025,7 +1031,7 @@ end
 
 local function ManualQE()
 
-  target = selector:find_target(1500, mode_cursor)
+  target = selector:find_target(E.range, mode_cursor)
 
 	if StunManaCheck() then
 	  if game:is_key_down(menu:get_value(syndra_combo_qe_set_key)) then
@@ -1053,7 +1059,7 @@ end
 
 -- Auto E
 
-function AutoE()
+--[[function AutoE()
     cast_pos_table = {}
     ball_table = {}
     champ_table = {}
@@ -1101,67 +1107,49 @@ function AutoE()
             end
         end
     end
-end
+end]]
 
 -- Gap Close
 
 local function on_dash(obj, dash_info)
 
-	if StunManaCheck() then
-		if menu:get_toggle_state(syndra_extra_gapclose) then
-			if ml.IsValid(obj) then
-				if menu:get_value_string("Anti Gap Closer Whitelist: "..tostring(obj.champ_name)) == 1 then
-					if obj:is_facing(myHero) and myHero:distance_to(dash_info.end_pos) < Q.range and ml.Ready(SLOT_Q) and ml.Ready(SLOT_E) then
-						CastQ(obj)
-					end
-				end
-			end
-		end
-		if menu:get_toggle_state(syndra_extra_gapclose) then
-			if ml.IsValid(obj) then
-				if menu:get_value_string("Anti Gap Closer Whitelist: "..tostring(obj.champ_name)) == 1 then
-					if obj:is_facing(myHero) and myHero:distance_to(dash_info.end_pos) < Q.range and not ml.Ready(SLOT_Q) and ml.Ready(SLOT_E) then
-						local castpos = GetLineTargetCount_Combo(myHero.origin, obj.origin, 0.25, 2500, 50)
-						if castpos then
-							eeorigin = castpos.origin
-							eex, eey, eez = eeorigin.x, eeorigin.y, eeorigin.z
-							spellbook:cast_spell(SLOT_E, E.delay, eex, eey, eez)
-						end
-					end
+	local justme = myHero.origin
+	local medraw = game:world_to_screen(justme.x, justme.y, justme.z)
+
+	if menu:get_toggle_state(syndra_extra_gapclose) then
+		if ml.IsValid(obj) then
+			if menu:get_value_string("Anti Gap Closer Whitelist: "..tostring(obj.champ_name)) == 1 then
+				if obj:is_facing(myHero) and myHero:distance_to(dash_info.end_pos) < 400 and myHero:distance_to(obj.origin) < 400 and ml.Ready(SLOT_E) then
+					Gapclose_text = true
+					CastE(obj)
 				end
 			end
 		end
 	end
+	if Gapclose_text then
+		renderer:draw_text_big_centered(medraw.x, medraw.y, "Performing Anti GapClose [E]")
+	end	
 end
 
 -- Interrupt
 
 local function on_possible_interrupt(obj, spell_name)
 
-	if StunManaCheck() then
-		if ml.IsValid(obj) then
-	    if menu:get_value(syndra_extra_interrupt) == 1 then
-				if menu:get_value_string("Interrupt Whitelist: "..tostring(obj.champ_name)) == 1 then
-	      	if myHero:distance_to(obj.origin) < Q.range and ml.Ready(SLOT_Q) and ml.Ready(SLOT_E) then
-	        	CastQ(obj)
-					end
+	local justme = myHero.origin
+	local medraw = game:world_to_screen(justme.x, justme.y, justme.z)
+
+	if ml.IsValid(obj) and StunManaCheck() then
+		if menu:get_value(syndra_extra_interrupt) == 1 then
+			if menu:get_value_string("Interrupt Whitelist: "..tostring(obj.champ_name)) == 1 then
+		   	if myHero:distance_to(obj.origin) < 400 and ml.Ready(SLOT_E) then
+					Interrupt_text = true
+					CastE(obj)
 				end
 			end
 		end
-		if ml.IsValid(obj) then
-			if menu:get_value(syndra_extra_interrupt) == 1 then
-				if menu:get_value_string("Interrupt Whitelist: "..tostring(obj.champ_name)) == 1 then
-		    	if myHero:distance_to(obj.origin) < Q.range and not ml.Ready(SLOT_Q) and ml.Ready(SLOT_E) then
-						local castpos = GetLineTargetCount_Combo(myHero.origin, obj.origin, 0.25, 2500, 50)
-						if castpos then
-							eeorigin = castpos.origin
-							eex, eey, eez = eeorigin.x, eeorigin.y, eeorigin.z
-							spellbook:cast_spell(SLOT_E, E.delay, eex, eey, eez)
-						end
-					end
-				end
-			end
-		end
+	end
+	if Interrupt_text then
+		renderer:draw_text_big_centered(medraw.x, medraw.y, "Performing Interrupt [E]")
 	end
 end
 
@@ -1277,6 +1265,8 @@ local function on_tick()
 
 	if not ml.Ready(SLOT_E) then
 		BlockW = false
+		Interrupt_text = false
+		Gapclose_text = false
 	end
 
 	if game:is_key_down(menu:get_value(syndra_combo_qe_set_key)) then
