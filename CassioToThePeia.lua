@@ -5,7 +5,7 @@ end
 -- AutoUpdate
 do
     local function AutoUpdate()
-		local Version = 7.5
+		local Version = 7.6
 		local file_name = "CassioToThePeia.lua"
 		local url = "http://raw.githubusercontent.com/TheShaunyboi/BruhWalkerEncrypted/main/CassioToThePeia.lua"
         local web_version = http:get("https://raw.githubusercontent.com/TheShaunyboi/BruhWalkerEncrypted/main/CassioToThePeia.lua.version.txt")
@@ -41,7 +41,6 @@ end
 local USER = client.username
 local function VIP_USER_LIST()
 	for _, value in pairs(LIST) do
-		console:log(tostring(value))
 		if string.find(tostring(value), client.username) then
 			return true
 		end
@@ -60,10 +59,11 @@ end
 
 
 pred:use_prediction()
---require "LucifersPussyPrediction"
 
 local myHero = game.local_player
 local local_player = game.local_player
+local BlockW = false
+local e_cast = nil
 
 
 local function Ready(spell)
@@ -288,18 +288,13 @@ end
 
 Cass_enabled = menu:add_checkbox("Enabled", Cass_category, 1)
 Cass_combokey = menu:add_keybinder("Combo Mode Key", Cass_category, 32)
-menu:add_label("Welcome To Shaun's Sexy Cassiopeia", Cass_category)
-menu:add_label(tostring(USER), Cass_category)
+menu:add_label("Shaun's Sexy Cassiopeia", Cass_category)
 menu:add_label("#IPA-BeerIsMyPosion", Cass_category)
---[[s_table = {}
-s_table[1] = "PKPrediction"
-s_table[2] = "Bruh Internal"
-Cass_prediction = menu:add_combobox("Prediction Selector", Cass_category, s_table, 0)]]
 
-Cass_aa_mode = menu:add_subcategory("Auto Attacks Selector", Cass_category)
+Cass_aa_mode = menu:add_subcategory("[Auto Attacks] Selector", Cass_category)
 Cass_aa = menu:add_slider("Stop [AA] In Combo Mode >= Slider Level", Cass_aa_mode, 1, 18, 11)
 
-Cass_ks_function = menu:add_subcategory("Kill Steal", Cass_category)
+Cass_ks_function = menu:add_subcategory("[Kill Steal]", Cass_category)
 Cass_ks_use_q = menu:add_checkbox("Use [Q]", Cass_ks_function, 1)
 Cass_ks_use_w = menu:add_checkbox("Use [W]", Cass_ks_function, 1)
 Cass_ks_use_e = menu:add_checkbox("Use [E]", Cass_ks_function, 1)
@@ -312,12 +307,12 @@ for _, t in pairs(players) do
     end
 end
 
-Cass_lasthit = menu:add_subcategory("Last Hit", Cass_category)
+Cass_lasthit = menu:add_subcategory("[Last Hit]", Cass_category)
 Cass_lasthit_use = menu:add_checkbox("Use [E] Last Hit", Cass_lasthit, 1)
 Cass_lasthit_auto = menu:add_checkbox("Auto [E] Last Hit", Cass_lasthit, 1)
 Cass_lasthit_mana = menu:add_slider("Minimum Mana To [E] Last Hit", Cass_lasthit, 0, 200, 50)
 
-Cass_combo = menu:add_subcategory("Combo", Cass_category)
+Cass_combo = menu:add_subcategory("[Combo]", Cass_category)
 Cass_combo_use_q = menu:add_checkbox("Use [Q]", Cass_combo, 1)
 Cass_combo_use_w = menu:add_checkbox("Use [W]", Cass_combo, 1)
 Cass_combo_use_e = menu:add_checkbox("Use [E]", Cass_combo, 1)
@@ -335,21 +330,22 @@ end
 Cass_killkey = menu:add_keybinder("Engage [R] Combo Key", Cass_combo, 88, "Holding key Will Perform Enage [R] First Then Full Combo")
 Cass_combo_w_posbuff = menu:add_checkbox("Only [W] When [Q] Has Missed and Target Is Not Poisoned", Cass_combo, 1)
 Cass_combo_e_posbuff = menu:add_checkbox("Only [E] Combo When Posion Is Active", Cass_combo, 1)
+Cass_combo_e_cd = menu:add_checkbox("[E] When [Q] + [W] Are On Cooldown", Cass_combo, 1)
 
-Cass_harass = menu:add_subcategory("Harass", Cass_category)
+Cass_harass = menu:add_subcategory("[Harass]", Cass_category)
 Cass_harass_use_q = menu:add_checkbox("Use [Q]", Cass_harass, 1)
 Cass_harass_use_w = menu:add_checkbox("Use [W]", Cass_harass, 1)
 Cass_harass_use_e = menu:add_checkbox("use [E]", Cass_harass, 1)
 Cass_harass_mana = menu:add_slider("Minimum Mana To Harass", Cass_harass, 0, 200, 50)
 Cass_harass_posbuff = menu:add_checkbox("Only [E] Harass When Poison Is Active", Cass_harass, 1)
 
-Cass_laneclear = menu:add_subcategory("Lane Clear", Cass_category)
+Cass_laneclear = menu:add_subcategory("[Lane Clear]", Cass_category)
 Cass_laneclear_use_q = menu:add_checkbox("Use [Q]", Cass_laneclear, 1)
 Cass_laneclear_use_w = menu:add_checkbox("Use [W]", Cass_laneclear, 1)
 Cass_laneclear_use_e = menu:add_checkbox("use [E]", Cass_laneclear, 1)
 Cass_laneclear_mana = menu:add_slider("Minimum Mana To Lane Clear", Cass_laneclear, 0, 200, 50)
 
-Cass_jungleclear = menu:add_subcategory("Jungle Clear", Cass_category)
+Cass_jungleclear = menu:add_subcategory("[Jungle Clear]", Cass_category)
 Cass_jungleclear_use_q = menu:add_checkbox("Use [Q]", Cass_jungleclear, 1)
 Cass_jungleclear_use_w = menu:add_checkbox("Use [W]", Cass_jungleclear, 1)
 Cass_jungleclear_use_e = menu:add_checkbox("use [E]", Cass_jungleclear, 1)
@@ -362,7 +358,7 @@ Cass_combo_r_set_key = menu:add_keybinder("Semi Manual [R] Key", Cass_combo_r_op
 Cass_combo_r_auto = menu:add_checkbox("Use Auto [R]", Cass_combo_r_options, 1)
 Cass_combo_r_auto_x = menu:add_slider("Number Of Targets To Perform Auto R", Cass_combo_r_options, 1, 5, 3)
 
-Cass_draw = menu:add_subcategory("Drawing Features", Cass_category)
+Cass_draw = menu:add_subcategory("[Drawing] Features", Cass_category)
 Cass_draw_q = menu:add_checkbox("Draw [Q]", Cass_draw, 1)
 Cass_draw_e = menu:add_checkbox("Draw [E]", Cass_draw, 1)
 Cass_draw_r = menu:add_checkbox("Draw [R]", Cass_draw, 1)
@@ -445,32 +441,19 @@ local function GetRDmg(unit)
 end
 
 -- Casting
---[[local function CastQ_PK(unit)
-
-	local hitchance, PredPos = _G.PKPred.GetHitchance(myHero.origin, unit, Q.range, Q.delay, Q.speed, Q.width, false, false)
-	console:log(tostring("Hitchance Q: "..hitchance))
-	if PredPos and hitchance >= 1 then
-		spellbook:cast_spell(SLOT_Q, Q.delay, PredPos.x, PredPos.y, PredPos.z)
-	end
-end]]
 
 local function CastQ(unit)
-
+	if not pred_output.can_cast then
+		e_cast = nil
+	end
 	pred_output = pred:predict(Q.speed, Q.delay, Q.range, Q.width, unit, false, false)
 	if pred_output.can_cast then
 		castPos = pred_output.cast_pos
 		spellbook:cast_spell(SLOT_Q, Q.delay, castPos.x, castPos.y, castPos.z)
+		e_cast = (client:get_tick_count() + 1500)
+		BlockW = true
 	end
 end
-
---[[local function CastW_PK(unit)
-
-	local hitchance, PredPos = _G.PKPred.GetHitchance(myHero.origin, unit, W.range, W.delay, W.range, W.radius, false, false)
-	console:log(tostring("Hitchance W: "..hitchance))
-	if PredPos and hitchance >= 3 then
-		spellbook:cast_spell(SLOT_W, W.delay, PredPos.x, PredPos.y, PredPos.z)
-	end
-end]]
 
 local function CastW(unit)
 
@@ -485,14 +468,6 @@ local function CastE(unit)
 	spellbook:cast_spell_targetted(SLOT_E, unit, E.delay)
 end
 
---[[local function CastR_PK(unit)
-
-	local hitchance, PredPos = _G.PKPred.GetHitchance(myHero.origin, unit, R.range, R.delay, R.range, R.radius, false, false)
-	console:log(tostring("Hitchance R: "..hitchance))
-	if PredPos and hitchance >= 3 then
-		spellbook:cast_spell(SLOT_R, R.delay, PredPos.x, PredPos.y, PredPos.z)
-	end
-end]]
 
 local function CastR(unit)
 
@@ -520,11 +495,6 @@ local function Combo()
 		if myHero:distance_to(target.origin) <= Q.range and IsValid(target) and IsKillable(target) then
 			if Ready(SLOT_Q) then
 				CastQ(target)
-				--[[if menu:get_value(Cass_prediction) == 0 then
-					CastQ_PK(target)
-				else
-					CastQ(target)
-				end]]
 			end
 		end
 	end
@@ -533,24 +503,14 @@ local function Combo()
 		if menu:get_value(Cass_combo_w_posbuff) == 0 and Ready(SLOT_W) then
 			if myHero:distance_to(target.origin) <= W.range and IsValid(target) and IsKillable(target) then
 				CastW(target)
-				--[[if menu:get_value(Cass_prediction) == 0 then
-					CastW_PK(target)
-					CastQ(target)
-				else
-				end]]
 			end
 		end
 	end
 
-	if menu:get_value(Cass_combo_use_w) == 1 and not Ready(SLOT_Q) then
-		if menu:get_value(Cass_combo_w_posbuff) == 1 and not HasPoison(target) and Ready(SLOT_W) then
+	if menu:get_value(Cass_combo_use_w) == 1 and not Ready(SLOT_Q) and Ready(SLOT_W) then
+		if menu:get_value(Cass_combo_w_posbuff) == 1 and not BlockW and not HasPoison(target) then
 			if myHero:distance_to(target.origin) <= W.range and IsValid(target) and IsKillable(target) then
 				CastW(target)
-				--[[if menu:get_value(Cass_prediction) == 0 then
-					CastW_PK(target)
-				else
-					CastW(target)
-				end]]
 			end
 		end
 	end
@@ -571,17 +531,20 @@ local function Combo()
 		end
 	end
 
+	if menu:get_value(Cass_combo_use_e) == 1 then
+		if menu:get_value(Cass_combo_e_cd) == 1 and Ready(SLOT_E) and not Ready(SLOT_Q) and not Ready(SLOT_W) then
+			if myHero:distance_to(target.origin) <= E.range and IsValid(target) and IsKillable(target) then
+				CastE(target)
+			end
+		end
+	end
+
 	if menu:get_value(Cass_combo_use_r) == 1 then
 		if target:health_percentage() <= menu:get_value(Cass_combo_r_enemy_hp) and local_player:health_percentage() >= menu:get_value(Cass_combo_r_my_hp) then
 			if myHero:is_facing(target) and target:is_facing(myHero) and Ready(SLOT_R) then
 				if menu:get_value_string("Use [R] Combo On: "..tostring(target.champ_name)) == 1 then
 					if myHero:distance_to(target.origin) <= R.range and IsValid(target) and IsKillable(target) then
 						CastR(target)
-						--[[if menu:get_value(Cass_prediction) == 0 then
-							CastR_PK(target)
-						else
-							CastR(target)
-						end]]
 					end
 				end
 			end
@@ -987,6 +950,10 @@ local function on_tick()
 	if game:is_key_down(menu:get_value(Cass_killkey)) then
 		orbwalker:move_to()
 		Engage()
+	end
+
+	if BlockW and e_cast ~= nil and client:get_tick_count() > e_cast then
+		BlockW = false
 	end
 
 
