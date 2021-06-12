@@ -4,7 +4,7 @@ end
 
 do
     local function AutoUpdate()
-		local Version = 1.3
+		local Version = 1.4
 		local file_name = "LuluTheDon.lua"
 		local url = "https://raw.githubusercontent.com/TheShaunyboi/BruhWalkerEncrypted/main/LuluTheDon.lua"
         local web_version = http:get("https://raw.githubusercontent.com/TheShaunyboi/BruhWalkerEncrypted/main/LuluTheDon.lua.version.txt")
@@ -807,7 +807,7 @@ local function on_dash(obj, dash_info)
 	local medraw = game:world_to_screen(justme.x, justme.y, justme.z)
 
 	if menu:get_value(lulu_w_gap) == 1 then
-		if ml.IsValid(obj) then
+		if IsValid(obj) then
 			if obj:is_facing(myHero) and myHero:distance_to(dash_info.end_pos) < W.range and myHero:distance_to(obj.origin) < W.range and Ready(SLOT_W) then
 				Gapclose_text = true
 				CastW(obj)
