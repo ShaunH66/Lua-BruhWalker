@@ -4,7 +4,7 @@ end
 
 do
     local function AutoUpdate()
-		local Version = 0.5
+		local Version = 1.1
 		local file_name = "KarateKid-Lee.lua"
 		local url = "https://raw.githubusercontent.com/TheShaunyboi/BruhWalkerEncrypted/main/KarateKid-Lee.lua"
     local web_version = http:get("https://raw.githubusercontent.com/TheShaunyboi/BruhWalkerEncrypted/main/KarateKid-Lee.lua.version.txt")
@@ -84,6 +84,8 @@ local WardCasted = false
 local UseControlWard = false
 local	UseFlash = false
 local TrinketWard = false
+local wardpos = nil
+local flashpos = nil
 
 local FleeReady = false
 local Wfire = false
@@ -91,7 +93,7 @@ local Wfire = false
 -- Ranges
 local Q = { range = 1200, delay = .25, width = 120, speed = 1800 }
 local W = { range = 700, delay = .1, width = 0, speed = 0 }
-local E1 = { range = 350, delay = .25, width = 0, speed = 0 }
+local E1 = { range = 450, delay = .25, width = 0, speed = 0 }
 local E2 = { range = 500, delay = .25, width = 0, speed = 0 }
 local R = { range = 375, delay = .25, width = 0, speed = 0 }
 local Ward = { range = 625 }
@@ -294,6 +296,15 @@ local function ControlWardCheck()
   return control_ward, control_ward_slot
 end
 
+local function SweeperCheck()
+	local spell_slot = spellbook:get_spell_slot(SLOT_WARD)
+	if spell_slot.spell_data.name == "TrinketSweeperLevl3" then
+		return true
+	end
+	return false
+end
+
+
 local function FullComboManReady()
 	local spell_slot_q = spellbook:get_spell_slot(SLOT_Q)
 	local spell_slot_w = spellbook:get_spell_slot(SLOT_W)
@@ -308,7 +319,7 @@ end
 local function LeeInsecReady()
 	local spell_slot = spellbook:get_spell_slot(SLOT_WARD)
 	local control_ward, slot_ward = ControlWardCheck()
-	if FullComboManReady() and ml.Ready(SLOT_Q) and ml.Ready(SLOT_W) and ml.Ready(SLOT_R) and spell_slot.count > 0 and ml.Ready(SLOT_WARD) then
+	if FullComboManReady() and ml.Ready(SLOT_Q) and ml.Ready(SLOT_W) and ml.Ready(SLOT_R) and not SweeperCheck() and spell_slot.count > 0 and ml.Ready(SLOT_WARD) then
 		return true
 	end
 return false
@@ -317,7 +328,7 @@ end
 local function LeeInsecReadyControlWard()
 	local spell_slot = spellbook:get_spell_slot(SLOT_WARD)
 	local control_ward, slot_ward = ControlWardCheck()
-	if FullComboManReady() and ml.Ready(SLOT_Q) and ml.Ready(SLOT_W) and ml.Ready(SLOT_R) and spell_slot.count == 0 and control_ward then
+	if FullComboManReady() and ml.Ready(SLOT_Q) and ml.Ready(SLOT_W) and ml.Ready(SLOT_R) and spell_slot.count == 0 and not SweeperCheck() and control_ward then
 		return true
 	end
 return false
@@ -439,19 +450,13 @@ lee_jungleclear_min_mana = menu:add_slider("Minimum Mana [%] To Jungle", lee_jun
 
 lee_extra_insec = menu:add_subcategory("[INSEC] Settings", lee_category)
 lee_extra_insec_flash = menu:add_checkbox("Use [Flash] IF No [Ward] Is Available", lee_extra_insec, 1)
+lee_extra_insec_q_dist = menu:add_slider("Target Distance >= To Use [Q1]", lee_extra_insec, 1, 1200, 700)
 lee_insec_key = menu:add_keybinder("[INSEC] Hold Key - Target Nearest To Cursor", lee_extra_insec, 88)
 e_table = {}
 e_table[1] = "To Allys"
 e_table[2] = "To Screen Visable Ally Turret"
 e_table[3] = "Extended From Start Position"
 lee_insec_direction = menu:add_combobox("[R] INSEC Direction Preference", lee_extra_insec, e_table, 2)
-lee_extra_insec_blacklist = menu:add_subcategory("[INSEC] Champ Whitelist", lee_extra_insec)
-local players = game.players
-for _, t in pairs(players) do
-    if t and t.is_enemy then
-        menu:add_checkbox("[INSEC] Champ Whitelist: "..tostring(t.champ_name), lee_extra_insec_blacklist, 1)
-    end
-end
 
 lee_w_save = menu:add_subcategory("[W] Auto Shield Ally", lee_category)
 lee_w_save_use = menu:add_checkbox("Use [W] Ally Save", lee_w_save, 1)
@@ -460,7 +465,7 @@ lee_w_save_targets = menu:add_slider("Minimum Targets Around Ally >=", lee_w_sav
 lee_w_save_hp_blacklist = menu:add_subcategory("[W] Save Ally Whitelist", lee_w_save)
 local players = game.players
 for _, v in pairs(players) do
-    if v and not v.is_enemy then
+    if v and not v.is_enemy and ml.IsValid(v) and v.object_id ~= myHero.object_id then
         menu:add_checkbox("[W] Save Ally Whitelist"..tostring(v.champ_name), lee_w_save_hp_blacklist, 1)
     end
 end
@@ -477,7 +482,7 @@ lee_extra_gapclose = menu:add_toggle("[R] Toggle Anti Gap Closer key", 1, lee_ex
 lee_extra_gapclose_blacklist = menu:add_subcategory("[R] Anti Gap Closer Champ Whitelist", lee_extra_gap)
 local players = game.players
 for _, t in pairs(players) do
-    if t and t.is_enemy then
+    if t and t.is_enemy and ml.IsValid(t) then
         menu:add_checkbox("Anti Gap Closer Whitelist: "..tostring(t.champ_name), lee_extra_gapclose_blacklist, 1)
     end
 end
@@ -487,7 +492,7 @@ lee_extra_interrupt = menu:add_checkbox("Use [R] Interrupt Major Channel Spells"
 lee_extra_interrupt_blacklist = menu:add_subcategory("[R] Interrupt Champ Whitelist", lee_extra_int)
 local players = game.players
 for _, t in pairs(players) do
-    if t and t.is_enemy then
+    if t and t.is_enemy and ml.IsValid(t) then
         menu:add_checkbox("Interrupt Whitelist: "..tostring(t.champ_name), lee_extra_interrupt_blacklist, 1)
     end
 end
@@ -1148,17 +1153,21 @@ local function Flee()
 			end
 		end
 
-		if FleeReady and not flee_Wfire and not ml.Ready(SLOT_WARD) and control_ward then
+		if FleeReady and not flee_Wfire and control_ward and not ml.Ready(SLOT_WARD) or SweeperCheck() then
 			if myHero:distance_to(game.mouse_pos) <= Ward.range then
 				spellbook:cast_spell(control_ward_slot, W.delay, game.mouse_pos.x, game.mouse_pos.y, game.mouse_pos.z)
-				flee_Wfire = true
+				if not ml.Ready(control_ward_slot) then
+					flee_Wfire = true
+				end
 			end
 		end
 
-		if FleeReady and not flee_Wfire and ml.Ready(SLOT_WARD) then
+		if FleeReady and not flee_Wfire and not SweeperCheck() then
 			if myHero:distance_to(game.mouse_pos) <= Ward.range then
 				spellbook:cast_spell(SLOT_WARD, W.delay, game.mouse_pos.x, game.mouse_pos.y, game.mouse_pos.z)
-				flee_Wfire = true
+				if not ml.Ready(SLOT_WARD) then
+					flee_Wfire = true
+				end
 			end
 		end
 
@@ -1213,7 +1222,7 @@ local function INSEC()
 	local wards = game.wards
 	local turrets = game.turrets
 
-	if menu:get_value_string("[INSEC] Champ Whitelist: "..tostring(target.champ_name)) == 1 then
+	if game:is_key_down(menu:get_value(lee_insec_key)) then
 
 		if menu:get_value(lee_insec_direction) == 0 then
 			for _, ally in ipairs(players) do
@@ -1237,42 +1246,42 @@ local function INSEC()
 									UseFlash = true
 								end
 
-								if InsecReady and myHero:distance_to(target.origin) < Q.range and ml.Ready(SLOT_Q) then
+								if InsecReady and myHero:distance_to(target.origin) < Q.range and myHero:distance_to(target.origin) >= menu:get_value(lee_extra_insec_q_dist) and ml.Ready(SLOT_Q) then
 									CastQ(target)
 								elseif TargetHasQ1Buff(target) and ml.Ready(SLOT_Q) then
 									CastQ(target)
 								end
 
 								-- Ward INSEC
-
-								if InsecReady and not TrinketWard and control_ward and UseControlWard and not UseFlash and TargetHasQ1Buff(target) then
-									if myHero:distance_to(target.origin) < 425 and not WardCasted then
-										local wardpos = ml.Extend(ally.origin, target.origin, 200)
-										spellbook:cast_spell(control_ward_slot, W.delay, wardpos.x, wardpos.y, wardpos.z)
-										if not ml.Ready(control_ward_slot) then
-											WardCasted = true
+								wardpos = ml.Extend(ally.origin, target.origin, 200)
+								if wardpos and ml.Ready(SLOT_R) then
+									if InsecReady and not TrinketWard and control_ward and UseControlWard and not UseFlash then
+										if myHero:distance_to(target.origin) <= 425 and not WardCasted then
+											spellbook:cast_spell(control_ward_slot, W.delay, wardpos.x, wardpos.y, wardpos.z)
+											if not ml.Ready(control_ward_slot) then
+												WardCasted = true
+											end
 										end
 									end
-								end
 
-								if InsecReady and TrinketWard and ml.Ready(SLOT_WARD) and not UseFlash and TargetHasQ1Buff(target) then
-									if target:distance_to(myHero.origin) <= 425 and not WardCasted then
-										local wardpos = ml.Extend(ally.origin, target.origin, 200)
-										spellbook:cast_spell(SLOT_WARD, W.delay, wardpos.x, wardpos.y, wardpos.z)
-										if not ml.Ready(SLOT_WARD) then
-											WardCasted = true
+									if InsecReady and ml.Ready(SLOT_R) and TrinketWard and ml.Ready(SLOT_WARD) and not UseFlash then
+										if target:distance_to(myHero.origin) <= 425 and not WardCasted then
+											spellbook:cast_spell(SLOT_WARD, W.delay, wardpos.x, wardpos.y, wardpos.z)
+											if not ml.Ready(SLOT_WARD) then
+												WardCasted = true
+											end
 										end
 									end
 								end
 
 								for _, ward in ipairs(wards) do
-									if InsecReady and ward and myHero:distance_to(ward.origin) <= W.range and target:distance_to(ward.origin) < 300 and not UseFlash and ml.Ready(SLOT_W) then
+									if InsecReady and ml.Ready(SLOT_R) and ward and myHero:distance_to(ward.origin) <= W.range and target:distance_to(ward.origin) < 250 and not UseFlash and ml.Ready(SLOT_W) then
 										origin = ward.origin
 										x, y, z = origin.x, origin.y, origin.z
 										spellbook:cast_spell(SLOT_W, W.delay, x, y, z)
 									end
 
-									if InsecReady and myHero:distance_to(target.origin) <= R.range and myHero:distance_to(ward.origin) < 250 and not UseFlash then
+									if InsecReady and myHero:distance_to(target.origin) <= R.range and myHero:distance_to(ward.origin) < 200 and not UseFlash then
 										if ml.Ready(SLOT_R) then
 											CastR(target)
 										end
@@ -1280,9 +1289,8 @@ local function INSEC()
 								end
 
 								-- Flash Casting
-
-								if InsecReady and myHero:distance_to(target.origin) <= 200 and UseFlash then
-									local flashpos = ml.Extend(ally.origin, target.origin, 200)
+								flashpos = ml.Extend(ally.origin, target.origin, 200)
+								if InsecReady and flashpos and myHero:distance_to(target.origin) <= 200 and UseFlash then
 									if IsFlashSlotD() and ml.Ready(SLOT_D) then
 										spellbook:cast_spell(SLOT_D, 0.1, flashpos.x, flashpos.y, flashpos.z)
 									elseif IsFlashSlotF() and ml.Ready(SLOT_F) then
@@ -1327,42 +1335,42 @@ local function INSEC()
 								UseFlash = true
 							end
 
-							if InsecReady and myHero:distance_to(target.origin) < Q.range and ml.Ready(SLOT_Q) then
+							if InsecReady and myHero:distance_to(target.origin) < Q.range and myHero:distance_to(target.origin) >= menu:get_value(lee_extra_insec_q_dist) and ml.Ready(SLOT_Q) then
 								CastQ(target)
 							elseif TargetHasQ1Buff(target) and ml.Ready(SLOT_Q) then
 								CastQ(target)
 							end
 
 							-- Ward INSEC
-
-							if InsecReady and not TrinketWard and control_ward and UseControlWard and not UseFlash and TargetHasQ1Buff(target) then
-								if myHero:distance_to(target.origin) < 425 and not WardCasted then
-									local wardpos = ml.Extend(turret.origin, target.origin, 200)
-									spellbook:cast_spell(control_ward_slot, W.delay, wardpos.x, wardpos.y, wardpos.z)
-									if not ml.Ready(control_ward_slot) then
-										WardCasted = true
+							wardpos = ml.Extend(turret.origin, target.origin, 200)
+							if wardpos and ml.Ready(SLOT_R) then
+								if InsecReady and not TrinketWard and control_ward and UseControlWard and not UseFlash then
+									if myHero:distance_to(target.origin) <= 425 and not WardCasted then
+										spellbook:cast_spell(control_ward_slot, W.delay, wardpos.x, wardpos.y, wardpos.z)
+										if not ml.Ready(control_ward_slot) then
+											WardCasted = true
+										end
 									end
 								end
-							end
 
-							if InsecReady and TrinketWard and ml.Ready(SLOT_WARD) and not UseFlash and TargetHasQ1Buff(target) then
-								if target:distance_to(myHero.origin) <= 425 and not WardCasted then
-									local wardpos = ml.Extend(turret.origin, target.origin, 200)
-									spellbook:cast_spell(SLOT_WARD, W.delay, wardpos.x, wardpos.y, wardpos.z)
-									if not ml.Ready(SLOT_WARD) then
-										WardCasted = true
+								if InsecReady and ml.Ready(SLOT_R) and TrinketWard and ml.Ready(SLOT_WARD) and not UseFlash then
+									if target:distance_to(myHero.origin) <= 425 and not WardCasted then
+										spellbook:cast_spell(SLOT_WARD, W.delay, wardpos.x, wardpos.y, wardpos.z)
+										if not ml.Ready(SLOT_WARD) then
+											WardCasted = true
+										end
 									end
 								end
 							end
 
 							for _, ward in ipairs(wards) do
-								if InsecReady and ward and myHero:distance_to(ward.origin) <= W.range and target:distance_to(ward.origin) < 300 and not UseFlash and ml.Ready(SLOT_W) then
+								if InsecReady and ml.Ready(SLOT_R) and ward and myHero:distance_to(ward.origin) <= W.range and target:distance_to(ward.origin) < 250 and not UseFlash and ml.Ready(SLOT_W) then
 									origin = ward.origin
 									x, y, z = origin.x, origin.y, origin.z
 									spellbook:cast_spell(SLOT_W, W.delay, x, y, z)
 								end
 
-								if InsecReady and myHero:distance_to(target.origin) <= R.range and myHero:distance_to(ward.origin) < 250 and not UseFlash then
+								if InsecReady and myHero:distance_to(target.origin) <= R.range and myHero:distance_to(ward.origin) < 200 and not UseFlash then
 									if ml.Ready(SLOT_R) then
 										CastR(target)
 									end
@@ -1370,9 +1378,8 @@ local function INSEC()
 							end
 
 							-- Flash Casting
-
-							if InsecReady and myHero:distance_to(target.origin) <= 200 and UseFlash then
-								local flashpos = ml.Extend(turret.origin, target.origin, 200)
+							flashpos = ml.Extend(turret.origin, target.origin, 200)
+							if InsecReady and flashpos and myHero:distance_to(target.origin) <= 200 and UseFlash then
 								if IsFlashSlotD() and ml.Ready(SLOT_D) then
 									spellbook:cast_spell(SLOT_D, 0.1, flashpos.x, flashpos.y, flashpos.z)
 								elseif IsFlashSlotF() and ml.Ready(SLOT_F) then
@@ -1413,42 +1420,42 @@ local function INSEC()
 					UseFlash = true
 				end
 
-				if InsecReady and myHero:distance_to(target.origin) < Q.range and ml.Ready(SLOT_Q) then
+				if InsecReady and myHero:distance_to(target.origin) < Q.range and myHero:distance_to(target.origin) >= menu:get_value(lee_extra_insec_q_dist) and ml.Ready(SLOT_Q) then
 					CastQ(target)
 				elseif TargetHasQ1Buff(target) and ml.Ready(SLOT_Q) then
 					CastQ(target)
 				end
 
 				-- Ward INSEC
-
-				if InsecReady and not TrinketWard and control_ward and UseControlWard and not UseFlash and TargetHasQ1Buff(target) then
-					if myHero:distance_to(target.origin) < 425 and not WardCasted then
-						local wardpos = ml.Extend(myHero.origin, target.origin, 200)
-						spellbook:cast_spell(control_ward_slot, W.delay, wardpos.x, wardpos.y, wardpos.z)
-						if not ml.Ready(control_ward_slot) then
-							WardCasted = true
+				wardpos = ml.Extend(myHero.origin, target.origin, 200)
+				if wardpos and ml.Ready(SLOT_R) then
+					if InsecReady and not TrinketWard and control_ward and UseControlWard and not UseFlash then
+						if myHero:distance_to(target.origin) <= 425 and not WardCasted then
+							spellbook:cast_spell(control_ward_slot, W.delay, wardpos.x, wardpos.y, wardpos.z)
+							if not ml.Ready(control_ward_slot) then
+								WardCasted = true
+							end
 						end
 					end
-				end
 
-				if InsecReady and TrinketWard and ml.Ready(SLOT_WARD) and not UseFlash and TargetHasQ1Buff(target) then
-					if target:distance_to(myHero.origin) <= 425 and not WardCasted then
-						local wardpos = ml.Extend(myHero.origin, target.origin, 200)
-						spellbook:cast_spell(SLOT_WARD, W.delay, wardpos.x, wardpos.y, wardpos.z)
-						if not ml.Ready(SLOT_WARD) then
-							WardCasted = true
+					if InsecReady and ml.Ready(SLOT_R) and TrinketWard and ml.Ready(SLOT_WARD) and not UseFlash then
+						if target:distance_to(myHero.origin) <= 425 and not WardCasted then
+							spellbook:cast_spell(SLOT_WARD, W.delay, wardpos.x, wardpos.y, wardpos.z)
+							if not ml.Ready(SLOT_WARD) then
+								WardCasted = true
+							end
 						end
 					end
 				end
 
 				for _, ward in ipairs(wards) do
-					if InsecReady and ward and myHero:distance_to(ward.origin) <= W.range and target:distance_to(ward.origin) < 300 and not UseFlash and ml.Ready(SLOT_W) then
+					if InsecReady and ml.Ready(SLOT_R) and ward and myHero:distance_to(ward.origin) <= W.range and target:distance_to(ward.origin) < 250 and not UseFlash and ml.Ready(SLOT_W) then
 						origin = ward.origin
 						x, y, z = origin.x, origin.y, origin.z
 						spellbook:cast_spell(SLOT_W, W.delay, x, y, z)
 					end
 
-					if InsecReady and myHero:distance_to(target.origin) <= R.range and myHero:distance_to(ward.origin) < 250 and not UseFlash then
+					if InsecReady and myHero:distance_to(target.origin) <= R.range and myHero:distance_to(ward.origin) < 200 and not UseFlash then
 						if ml.Ready(SLOT_R) then
 							CastR(target)
 						end
@@ -1456,9 +1463,8 @@ local function INSEC()
 				end
 
 				-- Flash Casting
-
-				if InsecReady and myHero:distance_to(target.origin) <= 200 and UseFlash then
-					local flashpos = ml.Extend(myHero.origin, target.origin, 200)
+				flashpos = ml.Extend(myHero.origin, target.origin, 200)
+				if InsecReady and flashpos and myHero:distance_to(target.origin) <= 200 and UseFlash then
 					if IsFlashSlotD() and ml.Ready(SLOT_D) then
 						spellbook:cast_spell(SLOT_D, 0.1, flashpos.x, flashpos.y, flashpos.z)
 					elseif IsFlashSlotF() and ml.Ready(SLOT_F) then
@@ -1527,6 +1533,16 @@ local function on_draw()
 		end
 	end
 
+	if InsecReady then
+		if wardpos and ml.Ready(SLOT_W) and ml.Ready(SLOT_R) then
+			renderer:draw_circle(wardpos.x, wardpos.y, wardpos.z, 100, 255, 255, 0, 255)
+		end
+	end
+
+	if FleeReady and not flee_Wfire then
+		renderer:draw_circle(game.mouse_pos.x, game.mouse_pos.y, game.mouse_pos.z, 100, 255, 255, 0, 255)
+	end
+
 
 	local enemydraw = game:world_to_screen(targetvec.x, targetvec.y, targetvec.z)
 	for i, target in ipairs(ml.GetEnemyHeroes()) do
@@ -1591,14 +1607,19 @@ local function on_tick()
 		Flee()
 	end
 
-	AutoKill()
-	RSaveMe()
-	AutoWSave()
+	if not game:is_key_down(menu:get_value(lee_insec_key)) then
+		AutoKill()
+		RSaveMe()
+		AutoWSave()
+	end
 
 	if game:is_key_down(menu:get_value(lee_insec_key)) and not LeeInsecReady() and not LeeInsecReadyWithFlash() and not LeeInsecReadyControlWard() and not ml.Ready(SLOT_R) then
 		Combo()
+		target = selector:find_target(1500, mode_health)
 		orbwalker:move_to()
-		orbwalker:enable_auto_attacks()
+		if orbwalker:can_attack() then
+			orbwalker:attack_target(target)
+		end
 	end
 
 
