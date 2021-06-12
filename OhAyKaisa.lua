@@ -4,7 +4,7 @@ end
 
 do
     local function AutoUpdate()
-		local Version = 2.6
+		local Version = 2.9
 		local file_name = "OhAyKaisa.lua"
 		local url = "https://raw.githubusercontent.com/TheShaunyboi/BruhWalkerEncrypted/main/OhAyKaisa.lua"
         local web_version = http:get("https://raw.githubusercontent.com/TheShaunyboi/BruhWalkerEncrypted/main/OhAyKaisa.lua.version.txt")
@@ -354,14 +354,14 @@ local function HasHealingBuff(unit)
     return false
 end
 
-local function HasPassiveCount(unit)
+function HasPassiveCount(unit)
     if unit:has_buff("kaisapassivemarker") then
         buff = unit:get_buff("kaisapassivemarker")
         if buff.count > 0 then
-            return buff
+            return buff.count
         end
     end
-    return {type = 0, name = "", startTime = 0, expireTime = 0, duration = 0, stacks = 0, count = 0}
+    return 0
 end
 
 local function HasPassiveBuff(unit)
@@ -476,7 +476,7 @@ local function GetWDmg(unit)
 	local Wdmg = getdmg("W", unit, myHero, 1)
 	local W2dmg = getdmg("W", unit, myHero, 2)
 	local buff = HasPassiveCount(unit)
-	if buff and buff.count == 4 then
+	if buff and buff == 4 then
 		return (Wdmg+W2dmg)
 	else
 		return Wdmg
@@ -515,7 +515,7 @@ Kai_combokey = menu:add_keybinder("Combo Mode Key", Kai_category, 32)
 menu:add_label("Welcome To Shaun's Sexy Kaisa", Kai_category)
 menu:add_label("#TheVoidMakesMeTingle", Kai_category)
 
-Kai_ks_function = menu:add_subcategory("Kill Steal", Kai_category)
+Kai_ks_function = menu:add_subcategory("[Kill Steal]", Kai_category)
 Kai_ks_q = menu:add_subcategory("[Q] Settings", Kai_ks_function, 1)
 Kai_ks_use_q = menu:add_checkbox("Use [Q]", Kai_ks_q, 1)
 Kai_ks_w = menu:add_subcategory("[W] Settings", Kai_ks_function, 1)
@@ -612,11 +612,9 @@ end
 
 local function Combo()
 
-	target = selector:find_target(W.range, mode_health)
+	target = selector:find_target(Q.range, mode_health)
+	wtarget = selector:find_target(W.range, mode_health)
 
-	if IsValid(target) then
-		local buff = HasPassiveCount(target)
-	end
 
 	if menu:get_value(Kai_combo_use_q) == 1 and menu:get_value(Kai_combo_q_iso) == 1 then
 		if myHero:distance_to(target.origin) <= Q.range and IsValid(target) and IsKillable(target) then
@@ -635,19 +633,19 @@ local function Combo()
 	end
 
 	if menu:get_value(Kai_combo_use_w) == 1 and menu:get_value(Kai_combo_use_w_aa) == 1 then
-		if myHero:distance_to(target.origin) <= menu:get_value(Kai_combo_use_w_range) and IsValid(target) and IsKillable(target) then
-			if myHero:distance_to(target.origin) >= AA.range then
-	     	if buff and buff.count >= menu:get_value(Kai_combo_use_w_stack) and Ready(SLOT_W) then
-					CastW(target)
+		if myHero:distance_to(wtarget.origin) <= menu:get_value(Kai_combo_use_w_range) and IsValid(wtarget) and IsKillable(wtarget) then
+			if myHero:distance_to(wtarget.origin) >= myHero.attack_range then
+	     	if HasPassiveCount(wtarget) >= menu:get_value(Kai_combo_use_w_stack) and Ready(SLOT_W) then
+					CastW(wtarget)
 				end
 			end
 		end
 	end
 
 	if menu:get_value(Kai_combo_use_w) == 1 and menu:get_value(Kai_combo_use_w_aa) == 0 then
-		if myHero:distance_to(target.origin) <= menu:get_value(Kai_combo_use_w_range) and IsValid(target) and IsKillable(target) then
-	     if buff and buff.count >= menu:get_value(Kai_combo_use_w_stack) and Ready(SLOT_W) then
-				CastW(target)
+		if myHero:distance_to(wtarget.origin) <= menu:get_value(Kai_combo_use_w_range) and IsValid(wtarget) and IsKillable(wtarget) then
+	     if HasPassiveCount(wtarget) >= menu:get_value(Kai_combo_use_w_stack) and Ready(SLOT_W) then
+				CastW(wtarget)
 			end
 		end
 	end
@@ -695,7 +693,7 @@ local function Harass()
 
 	if menu:get_value(Kai_harass_use_w) == 1 and menu:get_value(Kai_harass_use_w_aa) == 1 and GrabHarassMana then
 		if myHero:distance_to(target.origin) <= menu:get_value(Kai_harass_use_w_range) and IsValid(target) and IsKillable(target) then
-			if myHero:distance_to(target.origin) >= AA.range then
+			if myHero:distance_to(target.origin) >= myHero.attack_range then
 	     	if Ready(SLOT_W) then
 					CastW(target)
 				end
@@ -716,7 +714,7 @@ end
 
 local function AutoQHarass()
 
-	target = selector:find_target(W.range, mode_health)
+	target = selector:find_target(Q.range, mode_health)
 
 	if menu:get_toggle_state(Kai_harass_use_auto_q) and menu:get_value(Kai_harass_use_q) == 1 then
 		if myHero:distance_to(target.origin) <= Q.range and IsValid(target) and IsKillable(target) then
@@ -876,24 +874,13 @@ end
 
 -- Gap Close
 
-local function on_gap_close(obj, data)
-
-	if menu:get_value(Kai_auto_e_gap) == 1 then
-    if IsValid(obj) then
-      if myHero:distance_to(obj.origin) < myHero.attack_range and Ready(SLOT_E) then
-        CastE()
-			end
-		end
-	end
-end
-
 local function on_dash(obj, dash_info)
 
 	local justme = myHero.origin
 	local medraw = game:world_to_screen(justme.x, justme.y, justme.z)
 
 	if menu:get_value(Kai_auto_e_gap) == 1 then
-		if ml.IsValid(obj) then
+		if IsValid(obj) then
 			if myHero:distance_to(dash_info.end_pos) < myHero.attack_range and myHero:distance_to(obj.origin) < myHero.attack_range and Ready(SLOT_E) then
 				Gapclose_text = true
 				CastE()
@@ -994,7 +981,10 @@ local function on_tick()
 	AutoW()
   AutoE()
 	AutoKill()
-	AutoQHarass()
+
+	if not game:is_key_down(menu:get_value(Kai_combokey)) then
+		AutoQHarass()
+	end
 
 
 end
