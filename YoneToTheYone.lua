@@ -5,14 +5,14 @@ end
 -- AutoUpdate
 do
     local function AutoUpdate()
-		local Version = 1.9
+		local Version = 2.3
 		local file_name = "YoneToTheYone.lua"
 		local url = "http://raw.githubusercontent.com/TheShaunyboi/BruhWalkerEncrypted/main/YoneToTheYone.lua"
         local web_version = http:get("https://raw.githubusercontent.com/TheShaunyboi/BruhWalkerEncrypted/main/YoneToTheYone.lua.version.txt")
         console:log("YoneToTheYone.Lua Vers: "..Version)
 		console:log("YoneToTheYone.Web Vers: "..tonumber(web_version))
 		if tonumber(web_version) == Version then
-            console:log("Sexy Yone Successfully Loaded.....")
+            console:log(".....Sexy Yone Successfully Loaded.....")
 
         else
 			http:download_file(url, file_name)
@@ -322,10 +322,10 @@ end
 
 yone_enabled = menu:add_checkbox("Enabled", yone_category, 1)
 yone_combokey = menu:add_keybinder("Combo Mode Key", yone_category, 32)
-menu:add_label("Welcome To Shaun's Sexy Yone", yone_category)
+menu:add_label("Shaun's Sexy Yone", yone_category)
 menu:add_label("#MassiveSword..Small Nose?", yone_category)
 
-yone_ks_function = menu:add_subcategory("Kill Steal", yone_category)
+yone_ks_function = menu:add_subcategory("[Kill Steal]", yone_category)
 yone_ks_use_q = menu:add_checkbox("Use [Q]", yone_ks_function, 1)
 yone_ks_use_w = menu:add_checkbox("Use [W]", yone_ks_function, 1)
 yone_ks_use_r = menu:add_checkbox("Use [R]", yone_ks_function, 1)
@@ -337,20 +337,25 @@ for _, v in pairs(players) do
     end
 end
 
-yone_lasthit = menu:add_subcategory("Last Hit", yone_category)
-yone_lasthit_use = menu:add_checkbox("Use [Q] Last Hit", yone_lasthit, 1)
-yone_lasthit_auto = menu:add_toggle("Toggle Auto [Q] Last Hit", 1, yone_lasthit, 90, true)
+yone_lasthit = menu:add_subcategory("[Last Hit]", yone_category)
+yone_lasthit_use = menu:add_checkbox("Use [Q1] Last Hit", yone_lasthit, 1)
+yone_lasthit_use_q3 = menu:add_checkbox("Use [Q3] Last Hit", yone_lasthit, 1)
+yone_lasthit_use_toggle = menu:add_toggle("Use [Q] Last Hit Toggle", 1, yone_lasthit, 85, false)
 
-yone_combo = menu:add_subcategory("Combo", yone_category)
-yone_combo_first_aa = menu:add_checkbox("Use [AA] Before First [Q] In Combo", yone_combo, 1)
-yone_combo_use_q = menu:add_checkbox("Use [Q]", yone_combo, 1)
-yone_combo_use_w = menu:add_checkbox("Use [W]", yone_combo, 1)
-yone_combo_use_e = menu:add_checkbox("Use Smart [E]", yone_combo, 1)
-yone_combo_r_setting = menu:add_subcategory("Combo [R] Settings", yone_combo)
-yone_combo_use_r = menu:add_checkbox("Use [R]", yone_combo_r_setting, 1)
-yone_combo_q3_turret = menu:add_checkbox("[Q3] Turret Check", yone_combo, 1)
-yone_combo_r_enemy_hp = menu:add_slider("Use Combo [R] if Enemy HP is lower than [%]", yone_combo_r_setting, 1, 100, 50)
-yone_combo_r_blacklist = menu:add_subcategory("Ultimate Combo Blacklist", yone_combo_r_setting)
+yone_combo = menu:add_subcategory("[Combo]", yone_category)
+yone_combo_q = menu:add_subcategory("[Q] Settings", yone_combo, 1)
+yone_combo_first_aa = menu:add_checkbox("Use [AA] Before First [Q] In Combo", yone_combo_q, 1)
+yone_combo_use_q = menu:add_checkbox("Use [Q]", yone_combo_q, 1)
+yone_combo_q3_turret = menu:add_checkbox("[Q3] Turret Check", yone_combo_q, 1)
+yone_combo_w = menu:add_subcategory("[W] Settings", yone_combo, 1)
+yone_combo_use_w = menu:add_checkbox("Use [W]", yone_combo_w, 1)
+yone_combo_use_w_aa = menu:add_checkbox("Use [W] Outside [AA] Range", yone_combo_w, 1)
+yone_combo_e = menu:add_subcategory("[E] Settings", yone_combo, 1)
+yone_combo_use_e = menu:add_checkbox("Use Smart [E]", yone_combo_e, 1)
+yone_combo_r = menu:add_subcategory("[R] Settings", yone_combo, 1)
+yone_combo_use_r = menu:add_checkbox("Use [R]", yone_combo_r, 1)
+yone_combo_r_enemy_hp = menu:add_slider("Use Combo [R] if Enemy HP is lower than [%]", yone_combo_r, 1, 100, 50)
+yone_combo_r_blacklist = menu:add_subcategory("Ultimate Combo Blacklist",yone_combo_r)
 local players = game.players
 for _, v in pairs(players) do
     if v and v.is_enemy then
@@ -358,35 +363,37 @@ for _, v in pairs(players) do
     end
 end
 
-yone_harass = menu:add_subcategory("Harass", yone_category)
+yone_harass = menu:add_subcategory("[Harass]", yone_category)
 yone_harass_use_q = menu:add_checkbox("Use [Q]", yone_harass, 1)
 yone_harass_use_w = menu:add_checkbox("Use [W]", yone_harass, 1)
 
-yone_laneclear = menu:add_subcategory("Lane Clear", yone_category)
-yone_laneclear_use_q = menu:add_checkbox("Use [Q]", yone_laneclear, 1)
+yone_laneclear = menu:add_subcategory("[Lane Clear]", yone_category)
+yone_laneclear_use_q = menu:add_checkbox("Use [Q1]", yone_laneclear, 1)
+yone_laneclear_use_q3 = menu:add_checkbox("Use [Q3]", yone_laneclear, 1)
 yone_laneclear_use_w = menu:add_checkbox("Use [W]", yone_laneclear, 1)
-yone_laneclear_min_q = menu:add_slider("Minimum Minion To [Q]", yone_laneclear, 1, 10, 1)
+yone_laneclear_min_q = menu:add_slider("Minimum Minion To [Q3]", yone_laneclear, 1, 10, 1)
 yone_laneclear_min_w = menu:add_slider("Minimum Minion To [W]", yone_laneclear, 1, 10, 3)
 
-yone_jungleclear = menu:add_subcategory("Jungle Clear", yone_category)
+yone_jungleclear = menu:add_subcategory("[Jungle Clear]", yone_category)
 yone_jungleclear_use_q = menu:add_checkbox("Use [Q]", yone_jungleclear, 1)
 yone_jungleclear_use_w = menu:add_checkbox("Use [W]", yone_jungleclear, 1)
 
-yone_engage = menu:add_subcategory("Yone Engage!", yone_category)
+yone_engage = menu:add_subcategory("[Yone Engage!]", yone_category)
 yone_engage_enable = menu:add_checkbox("Enable Engage Function", yone_engage, 1)
 yone_combo_F_E_R = menu:add_keybinder("Semi Manual [Flash] > [E] > [R] Key - Nearest To Cursor", yone_engage, 90)
 
-yone_combo_r_options = menu:add_subcategory("Ulitmate Features", yone_category)
+yone_combo_r_options = menu:add_subcategory("[R] Features", yone_category)
 yone_combo_r_turret = menu:add_checkbox("[R] All Usage Turret Check", yone_combo_r_options, 1)
 yone_combo_r_set_key = menu:add_keybinder("Semi Manual [R] Key - Nearest To Cursor", yone_combo_r_options, 65)
 yone_combo_r_auto = menu:add_checkbox("Use Auto [R]", yone_combo_r_options, 1)
 yone_combo_r_auto_x = menu:add_slider("Number Of Targets To Perform Auto [R]", yone_combo_r_options, 1, 5, 3)
 
-yone_draw = menu:add_subcategory("Drawing Features", yone_category)
+yone_draw = menu:add_subcategory("[Drawing] Features", yone_category)
 yone_draw_q = menu:add_checkbox("Draw [Q]", yone_draw, 1)
 yone_draw_w = menu:add_checkbox("Draw [W]", yone_draw, 1)
 yone_draw_r = menu:add_checkbox("Draw [R]", yone_draw, 1)
 yone_draw_RF = menu:add_checkbox("Draw [Flash] > [E] > [R] Range", yone_draw, 1)
+yone_lasthit_toggle_draw = menu:add_checkbox("Draw [Q] Toggle Last Hit Text", yone_draw, 1)
 yone_lasthit_draw = menu:add_checkbox("Draw Auto [Q] Last Hit", yone_draw, 1)
 yone_draw_kill = menu:add_checkbox("Draw Full Combo Can Kill", yone_draw, 1)
 yone_draw_kill_healthbar = menu:add_checkbox("Draw Full Combo On Target Health Bar", yone_draw, 1, "Health Bar Damage Is Computed From R, Q, W, E Return * 2 AA")
@@ -571,6 +578,14 @@ local function Combo()
 		end
 	end
 
+	if menu:get_value(yone_combo_use_w) == 1 and menu:get_value(yone_combo_use_w_aa) == 1 then
+		if myHero:distance_to(target.origin) <= W.range and IsValid(target) and IsKillable(target) then
+			if myHero:distance_to(target.origin) > myHero.attack_range then
+				CastW(target)
+			end
+		end
+	end
+
 	local EDmgCheck = GetQDmg(target) + GetWDmg(target) + GetRDmg(target) + myHero.total_attack_damage * 3
 	if menu:get_value(yone_combo_use_e) == 1 then
 		if myHero:distance_to(target.origin) <= R.range and IsValid(target) and IsKillable(target) then
@@ -682,23 +697,21 @@ local function Clear()
 	minions = game.minions
 	for i, target in ipairs(minions) do
 
-		if menu:get_value(yone_laneclear_use_q) == 1 and not menu:get_toggle_state(yone_lasthit_auto) and not IsYoneQ3(myHero)then
+		if menu:get_value(yone_laneclear_use_q) == 1 and not IsYoneQ3(myHero)then
 			if target.object_id ~= 0 and target.is_enemy and myHero:distance_to(target.origin) < Q.range and IsValid(target) then
-				if GetMinionCount(Q.range, target) >= menu:get_value(yone_laneclear_min_q) then
-					if not orbwalker:can_attack() or myHero:distance_to(target.origin) > myHero.attack_range then
-						if Ready(SLOT_Q) then
-							origin = target.origin
-							x, y, z = origin.x, origin.y, origin.z
-							spellbook:cast_spell(SLOT_Q, Q.delay, x, y, z)
-						end
+				if not orbwalker:can_attack() or myHero:distance_to(target.origin) > myHero.attack_range then
+					if Ready(SLOT_Q) then
+						origin = target.origin
+						x, y, z = origin.x, origin.y, origin.z
+						spellbook:cast_spell(SLOT_Q, Q.delay, x, y, z)
 					end
 				end
 			end
 		end
 
-		if menu:get_value(yone_laneclear_use_q) == 1 and not menu:get_toggle_state(yone_lasthit_auto) and IsYoneQ3(myHero)  then
+		if menu:get_value(yone_laneclear_use_q3) == 1 and menu:get_value(yone_laneclear_use_q) == 1 and IsYoneQ3(myHero) then
 			if target.object_id ~= 0 and target.is_enemy and myHero:distance_to(target.origin) < Q3.range and IsValid(target) then
-				if GetMinionCount(Q.range, target) >= menu:get_value(yone_laneclear_min_q) then
+				if GetMinionCount(300, target) >= menu:get_value(yone_laneclear_min_q) then
 					if not orbwalker:can_attack() or myHero:distance_to(target.origin) > myHero.attack_range then
 						if Ready(SLOT_Q) and not IsUnderTurretQ3(myHero) then
 							origin = target.origin
@@ -884,28 +897,22 @@ local function AutoQLastHit(target)
 		if target.object_id ~= 0 and target.is_enemy and myHero:distance_to(target.origin) < Q.range and IsValid(target) and not IsYoneQ3(myHero) then
 			if GetMinionCount(Q.range, target) >= 1 then
 				if GetQDmg(target) > target.health then
-					if combo:get_mode() ~= MODE_COMBO and combo:get_mode() ~= MODE_HARASS and not game:is_key_down(menu:get_value(yone_combokey)) then
-						if not orbwalker:can_attack() or myHero:distance_to(target.origin) > myHero.attack_range then
-							if Ready(SLOT_Q) then
-								origin = target.origin
-								x, y, z = origin.x, origin.y, origin.z
-								spellbook:cast_spell(SLOT_Q, Q.delay, x, y, z)
-							end
-						end
+					if Ready(SLOT_Q) then
+						origin = target.origin
+						x, y, z = origin.x, origin.y, origin.z
+						spellbook:cast_spell(SLOT_Q, Q.delay, x, y, z)
 					end
 				end
 			end
 		end
-		if target.object_id ~= 0 and target.is_enemy and myHero:distance_to(target.origin) < Q3.range and IsValid(target) and IsYoneQ3(myHero) then
+		if menu:get_value(yone_lasthit_use_q3) == 1 and target.object_id ~= 0 and target.is_enemy and myHero:distance_to(target.origin) < Q3.range and IsValid(target) and IsYoneQ3(myHero) then
 			if GetMinionCount(Q.range, target) >= 1 then
 				if GetQDmg(target) > target.health then
-					if combo:get_mode() ~= MODE_COMBO and combo:get_mode() ~= MODE_HARASS and not game:is_key_down(menu:get_value(yone_combokey)) then
-						if not orbwalker:can_attack() or myHero:distance_to(target.origin) > myHero.attack_range then
-							if Ready(SLOT_Q) and not IsUnderTurretQ3(target) then
-								origin = target.origin
-								x, y, z = origin.x, origin.y, origin.z
-								spellbook:cast_spell(SLOT_Q, Q.delay, x, y, z)
-							end
+					if myHero:distance_to(target.origin) > myHero.attack_range then
+						if Ready(SLOT_Q) and not IsUnderTurretQ3(target) then
+							origin = target.origin
+							x, y, z = origin.x, origin.y, origin.z
+							spellbook:cast_spell(SLOT_Q, Q.delay, x, y, z)
 						end
 					end
 				end
@@ -947,10 +954,9 @@ end
 
 -- object returns, draw and tick usage
 
-screen_size = game.screen_size
-
 local function on_draw()
 	local_player = game.local_player
+	screen_size = game.screen_size
 
 	target = selector:find_target(2000, mode_health)
 	targetvec = target.origin
@@ -958,60 +964,62 @@ local function on_draw()
 	if local_player.object_id ~= 0 then
 		origin = local_player.origin
 		x, y, z = origin.x, origin.y, origin.z
+	end
 
-		if menu:get_value(yone_draw_q) == 1 then
-			if Ready(SLOT_Q) and not IsYoneQ3(myHero) then
-				renderer:draw_circle(x, y, z, Q.range, 255, 255, 255, 255)
-			end
+	if menu:get_value(yone_draw_q) == 1 then
+		if Ready(SLOT_Q) and not IsYoneQ3(myHero) then
+			renderer:draw_circle(x, y, z, Q.range, 255, 255, 255, 255)
 		end
+	end
 
-		if menu:get_value(yone_draw_q) == 1 then
-			if Ready(SLOT_Q) and IsYoneQ3(myHero) then
-				renderer:draw_circle(x, y, z, Q3.range, 255, 255, 255, 255)
-			end
+	if menu:get_value(yone_draw_q) == 1 then
+		if Ready(SLOT_Q) and IsYoneQ3(myHero) then
+			renderer:draw_circle(x, y, z, Q3.range, 255, 255, 255, 255)
 		end
+	end
 
-		if menu:get_value(yone_draw_w) == 1 then
-			if Ready(SLOT_W) then
-				renderer:draw_circle(x, y, z, W.range, 0, 0, 255, 255)
-			end
+	if menu:get_value(yone_draw_w) == 1 then
+		if Ready(SLOT_W) then
+			renderer:draw_circle(x, y, z, W.range, 0, 0, 255, 255)
 		end
+	end
 
-		if menu:get_value(yone_draw_RF) == 1 then
-			if Ready(SLOT_R) and Ready(SLOT_F) and Ready(SLOT_E) then
-				renderer:draw_circle(x, y, z, RF.range, 225, 255, 0, 255)
-			end
+	if menu:get_value(yone_draw_RF) == 1 then
+		if Ready(SLOT_R) and Ready(SLOT_F) and Ready(SLOT_E) then
+			renderer:draw_circle(x, y, z, RF.range, 225, 255, 0, 255)
 		end
+	end
 
-		if menu:get_value(yone_draw_r) == 1 then
-			if Ready(SLOT_R) then
-				renderer:draw_circle(x, y, z, R.range, 225, 0, 0, 255)
-			end
+	if menu:get_value(yone_draw_r) == 1 then
+		if Ready(SLOT_R) then
+			renderer:draw_circle(x, y, z, R.range, 225, 0, 0, 255)
 		end
+	end
 
-		local enemydraw = game:world_to_screen(targetvec.x, targetvec.y, targetvec.z)
-		for i, target in ipairs(GetEnemyHeroes()) do
-			local fulldmg = GetQDmg(target) + GetWDmg(target) + GetRDmg(target) + myHero.total_attack_damage * 2
-			if Ready(SLOT_Q) and Ready(SLOT_R) then
-				if target.object_id ~= 0 and myHero:distance_to(target.origin) <= 1000 then
-					if menu:get_value(yone_draw_kill) == 1 then
-						if fulldmg > target.health and IsValid(target) then
-							if enemydraw.is_valid then
-								renderer:draw_text_big_centered(enemydraw.x, enemydraw.y, "Can Kill Target")
-							end
-						end
-					end
-				end
-			end
-			if IsValid(target) and menu:get_value(yone_draw_kill_healthbar) == 1 then
-				target:draw_damage_health_bar(fulldmg)
+	if menu:get_value(yone_lasthit_toggle_draw) == 1 then
+		if menu:get_value(yone_lasthit_use) == 1 then
+			if menu:get_toggle_state(yone_lasthit_use_toggle) then
+				renderer:draw_text_centered(screen_size.width / 2, 0, "Toggle Auto [Q] Last Hit Enabled")
 			end
 		end
 	end
 
-	if menu:get_value(yone_lasthit_draw) == 1 then
-		if menu:get_toggle_state(yone_lasthit_auto) then
-			renderer:draw_text_centered(screen_size.width / 2, 0, "Toggle Auto [Q] Last Hit Enabled")
+	local enemydraw = game:world_to_screen(targetvec.x, targetvec.y, targetvec.z)
+	for i, target in ipairs(GetEnemyHeroes()) do
+		local fulldmg = GetQDmg(target) + GetWDmg(target) + GetRDmg(target) + myHero.total_attack_damage * 2
+		if Ready(SLOT_Q) and Ready(SLOT_R) then
+			if target.object_id ~= 0 and myHero:distance_to(target.origin) <= 1000 then
+				if menu:get_value(yone_draw_kill) == 1 then
+					if fulldmg > target.health and IsValid(target) then
+						if enemydraw.is_valid then
+							renderer:draw_text_big_centered(enemydraw.x, enemydraw.y, "Can Kill Target")
+						end
+					end
+				end
+			end
+		end
+		if IsValid(target) and menu:get_value(yone_draw_kill_healthbar) == 1 then
+			target:draw_damage_health_bar(fulldmg)
 		end
 	end
 end
@@ -1043,11 +1051,16 @@ local function on_tick()
 		AutoR()
 	end
 
-	if combo:get_mode() == MODE_LASTHIT and menu:get_value(yone_lasthit_use) == 1 and not menu:get_toggle_state(yone_lasthit_auto) then
-		AutoQLastHit()
+	if combo:get_mode() == MODE_LASTHIT and not menu:get_toggle_state(yone_lasthit_use_toggle) and menu:get_value(yone_lasthit_use) == 1 then
+		if not game:is_key_down(menu:get_value(yone_combokey)) then
+			AutoQLastHit()
+		end
 	end
-	if menu:get_toggle_state(yone_lasthit_auto) and menu:get_value(yone_lasthit_use) == 1 then
-		AutoQLastHit()
+
+	if menu:get_toggle_state(yone_lasthit_use_toggle) and menu:get_value(yone_lasthit_use) == 1 then
+		if not game:is_key_down(menu:get_value(yone_combokey)) then
+			AutoQLastHit()
+		end
 	end
 
 	KillSteal()

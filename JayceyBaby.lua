@@ -1045,11 +1045,12 @@ end
 
 -- Auto Hammer E Gap
 
-local function on_gap_close(obj, data)
-	if IsValid(obj) then
-    if menu:get_value(jayce_e_gapclose) == 1 and not IsRangedForm() then
-      if myHero:distance_to(obj.origin) < HammerE.range and Ready(SLOT_E) then
-        CastHammerE(obj)
+local function on_dash(obj, dash_info)
+
+	if menu:get_value(jayce_e_gapclose) == 1 and not IsRangedForm() then
+		if IsValid(obj) then
+			if myHero:distance_to(dash_info.end_pos) < HammerE.range and myHero:distance_to(obj.origin) < HammerE.range and Ready(SLOT_E) then
+				CastHammerE(obj)
 			end
 		end
 	end
@@ -1212,5 +1213,5 @@ end
 client:set_event_callback("on_tick", on_tick)
 client:set_event_callback("on_draw", on_draw)
 client:set_event_callback("on_possible_interrupt", on_possible_interrupt)
-client:set_event_callback("on_gap_close", on_gap_close)
+client:set_event_callback("on_dash", on_dash)
 client:set_event_callback("on_active_spell", on_active_spell)

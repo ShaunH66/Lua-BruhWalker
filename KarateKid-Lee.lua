@@ -4,7 +4,7 @@ end
 
 do
     local function AutoUpdate()
-		local Version = 1.1
+		local Version = 1.2
 		local file_name = "KarateKid-Lee.lua"
 		local url = "https://raw.githubusercontent.com/TheShaunyboi/BruhWalkerEncrypted/main/KarateKid-Lee.lua"
     local web_version = http:get("https://raw.githubusercontent.com/TheShaunyboi/BruhWalkerEncrypted/main/KarateKid-Lee.lua.version.txt")
@@ -374,11 +374,11 @@ end
 
 lee_enabled = menu:add_checkbox("Enabled", lee_category, 1)
 lee_combokey = menu:add_keybinder("Combo Mode Key", lee_category, 32)
-lee_extra_flee_key = menu:add_keybinder("[Ward] Hop key - To Mouse Position", lee_category, 90)
-menu:add_label("Welcome To Shaun's Sexy Lee Sin", lee_category)
+lee_extra_flee_key = menu:add_keybinder("[Ward] Hop key", lee_category, 90)
+menu:add_label("Shaun's Sexy Lee Sin", lee_category)
 menu:add_label("#SummerBodyReadyBaby", lee_category)
 
-lee_ks_function = menu:add_subcategory("Kill Steal", lee_category)
+lee_ks_function = menu:add_subcategory("[Kill Steal]", lee_category)
 lee_ks_q = menu:add_subcategory("[Q] Settings", lee_ks_function, 1)
 lee_ks_use_q = menu:add_checkbox("Use [Q]", lee_ks_q, 1)
 lee_ks_use_qr = menu:add_checkbox("Use [R] + [Q2] or [Q2] + [R]", lee_ks_q, 1)
@@ -394,7 +394,7 @@ for _, t in pairs(players) do
     end
 end
 
-lee_combo = menu:add_subcategory("Combo", lee_category)
+lee_combo = menu:add_subcategory("[Combo]", lee_category)
 lee_combo_q = menu:add_subcategory("[Q] Settings", lee_combo)
 lee_combo_use_q1 = menu:add_checkbox("Use [Q1]", lee_combo_q, 1)
 lee_combo_use_q2 = menu:add_checkbox("Use [Q2]", lee_combo_q, 1)
@@ -408,7 +408,7 @@ lee_combo_e = menu:add_subcategory("[E] Settings", lee_combo)
 lee_combo_use_e1 = menu:add_checkbox("Use [E1]", lee_combo_e, 1)
 lee_combo_use_e2 = menu:add_checkbox("Use [E2]", lee_combo_e, 1)
 
-lee_harass = menu:add_subcategory("Harass", lee_category)
+lee_harass = menu:add_subcategory("[Harass]", lee_category)
 lee_harass_q = menu:add_subcategory("[Q] Settings", lee_harass)
 lee_harass_use_q1 = menu:add_checkbox("Use [Q]", lee_harass_q, 1)
 lee_harass_use_q2 = menu:add_checkbox("Use [Q2]", lee_harass_q, 1)
@@ -421,7 +421,7 @@ lee_harass_use_e1 = menu:add_checkbox("Use [E1]", lee_harass_e, 1)
 lee_harass_use_e2 = menu:add_checkbox("Use [E2]", lee_harass_e, 1)
 lee_harass_min_mana = menu:add_slider("Minimum Energy [%] To Harass", lee_harass, 1, 100, 20)
 
-lee_laneclear = menu:add_subcategory("Lane Clear", lee_category)
+lee_laneclear = menu:add_subcategory("[Lane Clear]", lee_category)
 lee_laneclear_use_q = menu:add_subcategory("Use [Q] Settings", lee_laneclear, 1)
 lee_laneclear_use_q1 = menu:add_checkbox("Use [Q1]", lee_laneclear_use_q, 1)
 lee_laneclear_use_q2 = menu:add_checkbox("Use [Q2]", lee_laneclear_use_q, 1)
@@ -435,7 +435,7 @@ lee_laneclear_use_e2 = menu:add_checkbox("Use [E2]", lee_laneclear_use_e, 1)
 lee_laneclear_min_mana = menu:add_slider("Minimum Energy [%] To Lane Clear", lee_laneclear, 1, 100, 20)
 lee_laneclear_e_min = menu:add_slider("Number Of Minions To Use [E]", lee_laneclear, 1, 10, 3)
 
-lee_jungleclear = menu:add_subcategory("Jungle Clear", lee_category)
+lee_jungleclear = menu:add_subcategory("[Jungle Clear]", lee_category)
 lee_jungleclear_use_q = menu:add_subcategory("Use [Q] Settings", lee_jungleclear, 1)
 lee_jungleclear_use_q1 = menu:add_checkbox("Use [Q1]", lee_jungleclear_use_q, 1)
 lee_jungleclear_use_q2 = menu:add_checkbox("Use [Q2]", lee_jungleclear_use_q, 1)
@@ -497,7 +497,7 @@ for _, t in pairs(players) do
     end
 end
 
-lee_draw = menu:add_subcategory("The Drawing Features", lee_category)
+lee_draw = menu:add_subcategory("[Drawing] Features", lee_category)
 lee_draw_q = menu:add_checkbox("Draw [Q] Range", lee_draw, 1)
 lee_draw_w = menu:add_checkbox("Draw [W] Range", lee_draw, 1)
 lee_draw_e = menu:add_checkbox("Draw [E] Range", lee_draw, 1)
@@ -907,7 +907,7 @@ local function Clear()
 		if GrabHarassMana then
 
 			if menu:get_value(lee_laneclear_use_q1) == 1 then
-				if ml.IsValid(target) and IsKillable(target) then
+				if ml.IsValid(target) and target.object_id ~= 0 and target.is_enemy and IsKillable(target) then
 					if myHero:distance_to(target.origin) <= Q.range then
 						if not TargetHasQ1Buff(target) then
 							if ml.Ready(SLOT_Q) and TargetNearMouse then
@@ -919,7 +919,7 @@ local function Clear()
 			end
 
 			if menu:get_value(lee_laneclear_use_q2) == 1 then
-				if ml.IsValid(target) and IsKillable(target) then
+				if ml.IsValid(target) and target.object_id ~= 0 and target.is_enemy and IsKillable(target) then
 					if myHero:distance_to(target.origin) <= Q.range then
 						if TargetHasQ1Buff(target) then
 							if ml.Ready(SLOT_Q) and TargetNearMouse then
@@ -931,7 +931,7 @@ local function Clear()
 			end
 
 			if menu:get_value(lee_laneclear_use_w1) == 1 then
-				if ml.IsValid(target) and IsKillable(target) then
+				if ml.IsValid(target) and target.object_id ~= 0 and target.is_enemy and IsKillable(target) then
 					if myHero:distance_to(target.origin) <= 500 then
 						if MyHeroHP then
 							if ml.Ready(SLOT_W) and TargetNearMouse then
@@ -943,7 +943,7 @@ local function Clear()
 			end
 
 			if menu:get_value(lee_laneclear_use_w2) == 1 then
-				if ml.IsValid(target) and IsKillable(target) then
+				if ml.IsValid(target) and target.object_id ~= 0 and target.is_enemy and IsKillable(target) then
 					if myHero:distance_to(target.origin) <= 500 then
 						if MyHeroHP and LeeHasW2(myHero) and TargetNearMouse then
 							if ml.Ready(SLOT_W) then
@@ -955,7 +955,7 @@ local function Clear()
 			end
 
 			if menu:get_value(lee_laneclear_use_e1) == 1 then
-				if myHero:distance_to(target.origin) <= E1.range and ml.IsValid(target) and IsKillable(target) then
+				if myHero:distance_to(target.origin) <= E1.range and ml.IsValid(target) and target.object_id ~= 0 and target.is_enemy and IsKillable(target) then
 					if ml.Ready(SLOT_E) and GetMinionCount(E1.range, myHero) <= menu:get_value(lee_laneclear_e_min) and TargetNearMouse then
 						CastE()
 					end
@@ -963,7 +963,7 @@ local function Clear()
 			end
 
 			if menu:get_value(lee_laneclear_use_e2) == 1 then
-				if myHero:distance_to(target.origin) <= E2.range and ml.IsValid(target) and IsKillable(target) then
+				if myHero:distance_to(target.origin) <= E2.range and ml.IsValid(target) and target.object_id ~= 0 and target.is_enemy and IsKillable(target) then
 					if LeeHasE2(myHero) then
 						if ml.Ready(SLOT_E) and TargetNearMouse then
 							CastE()

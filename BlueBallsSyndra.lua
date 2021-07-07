@@ -4,7 +4,7 @@ end
 
 do
     local function AutoUpdate()
-		local Version = 1.4
+		local Version = 1.6
 		local file_name = "BlueBallsSyndra.lua"
 		local url = "https://raw.githubusercontent.com/TheShaunyboi/BruhWalkerEncrypted/main/BlueBallsSyndra.lua"
         local web_version = http:get("https://raw.githubusercontent.com/TheShaunyboi/BruhWalkerEncrypted/main/BlueBallsSyndra.lua.version.txt")
@@ -424,11 +424,10 @@ local function GetRDmg(unit)
 	return TotalRDmg
 end
 
-function OverKillCheck()
-	target = selector:find_target(E.range, mode_health)
-  local QWDMG = GetQDmg(target) + GetWDmg(target)
+function OverKillCheck(unit)
+  local QWDMG = GetQDmg(unit) + GetWDmg(unit)
 	if ml.Ready(SLOT_Q) and ml.Ready(SLOT_W) then
-		if QWDMG > target.health then
+		if QWDMG > unit.health then
     	return true
 		end
   end
@@ -450,7 +449,7 @@ end
 
 syndra_enabled = menu:add_checkbox("Enabled", syndra_category, 1)
 syndra_combokey = menu:add_keybinder("Combo Mode Key", syndra_category, 32)
-menu:add_label("BS Presents: BlueBalls Syndra", syndra_category)
+menu:add_label("BlueBalls Syndra", syndra_category)
 menu:add_label("#StopTeasingMyBalls", syndra_category)
 
 syndra_ks_function = menu:add_subcategory("[Kill Steal]", syndra_category)
@@ -517,7 +516,7 @@ for _, p in pairs(players) do
     end
 end
 
-syndra_extra_int = menu:add_subcategory("[Stun] Interrupt Major Channel Spells", syndra_category, 1)
+syndra_extra_int = menu:add_subcategory("[Stun] Interrupt Channels", syndra_category, 1)
 syndra_extra_interrupt = menu:add_checkbox("Use [Stun] Interrupt Major Channel Spells", syndra_extra_int, 1)
 syndra_extra_interrupt_blacklist = menu:add_subcategory("[Stun] Interrupt Champ Whitelist", syndra_extra_int)
 local players = game.players
@@ -846,7 +845,7 @@ local function AutoKill()
 			if menu:get_value(syndra_ks_use_r) == 1 then
 				if myHero:distance_to(target.origin) <= R.range then
 					if GetRDmg(target) > target.health then
-						if not OverKillCheck() then
+						if not OverKillCheck(target) then
 				  		if menu:get_value_string("Use [R] Kill Steal On: "..tostring(target.champ_name)) == 1 then
 								if ml.Ready(SLOT_R) then
 					  			CastR(target)
@@ -1020,8 +1019,7 @@ local function on_dash(obj, dash_info)
 	if menu:get_toggle_state(syndra_extra_gapclose) then
 		if ml.IsValid(obj) then
 			if menu:get_value_string("Anti Gap Closer Whitelist: "..tostring(obj.champ_name)) == 1 then
-				if obj:is_facing(myHero) and myHero:distance_to(dash_info.end_pos) < 400 and myHero:distance_to(obj.origin) < 400 and ml.Ready(SLOT_E) then
-					Gapclose_text = true
+				if obj:is_facing(myHero) and myHero:distance_to(dash_info.end_pos) < 500 and myHero:distance_to(obj.origin) < 500 and ml.Ready(SLOT_E) then
 					CastE(obj)
 				end
 			end
@@ -1036,8 +1034,7 @@ local function on_possible_interrupt(obj, spell_name)
 	if ml.IsValid(obj) and StunManaCheck() then
 		if menu:get_value(syndra_extra_interrupt) == 1 then
 			if menu:get_value_string("Interrupt Whitelist: "..tostring(obj.champ_name)) == 1 then
-		   	if myHero:distance_to(obj.origin) < 400 and ml.Ready(SLOT_E) then
-					Interrupt_text = true
+		   	if myHero:distance_to(obj.origin) < 500 and ml.Ready(SLOT_E) then
 					CastE(obj)
 				end
 			end
@@ -1055,7 +1052,7 @@ local function ESaveMe()
 	local TargetHP = target.health/target.max_health >= menu:get_value(syndra_extra_saveme_target) / 100
 
 	if menu:get_value(trist_extra_saveme) == 1 then
-    if myHero:distance_to(target.origin) < 400 then
+    if myHero:distance_to(target.origin) < 500 then
 			if myHero:distance_to(target.origin) < target.attack_range then
 				if target:is_facing(myHero) then
 					if SaveMeHP and TargetHP then
@@ -1126,14 +1123,6 @@ local function on_draw()
 		end
 	end
 
-	if Interrupt_text then
-		renderer:draw_text_big_centered(medraw.x, medraw.y, "Performing Interrupt [E]")
-	end
-
-	if Gapclose_text then
-		renderer:draw_text_big_centered(medraw.x, medraw.y, "Performing Anti GapClose [E]")
-	end
-
 	for i, target in ipairs(ml.GetEnemyHeroes()) do
 		local fulldmg = GetQDmg(target) + GetEDmg(target) + GetWDmg(target) + GetRDmg(target)
 		if ml.Ready(SLOT_R) and target.object_id ~= 0 and myHero:distance_to(target.origin) <= 1500 then
@@ -1188,11 +1177,6 @@ local function on_tick()
 
 	if BlockW and e_cast ~= nil and client:get_tick_count() > e_cast then
 		BlockW = false
-	end
-
-	if not ml.Ready(SLOT_E) then
-		Interrupt_text = false
-		Gapclose_text = false
 	end
 
 

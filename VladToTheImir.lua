@@ -4,14 +4,14 @@ end
 
 do
   local function AutoUpdate()
-		local Version = 1.8
+		local Version = 1.9
 		local file_name = "VladToTheImir.lua"
 		local url = "https://raw.githubusercontent.com/TheShaunyboi/BruhWalkerEncrypted/main/VladToTheImir.lua"
 	  local web_version = http:get("https://raw.githubusercontent.com/TheShaunyboi/BruhWalkerEncrypted/main/VladToTheImir.lua.version.txt")
 	  console:log("VladToTheImir.Lua Vers: "..Version)
 		console:log("VladToTheImir.Web Vers: "..tonumber(web_version))
 		if tonumber(web_version) == Version then
-			console:log("..................Shaun's Sexy Vlad Successfully Loaded..........................")
+			console:log(".....Shaun's Sexy Vlad Successfully Loaded.....")
 
   	else
 			http:download_file(url, file_name)
@@ -420,10 +420,10 @@ end
 
 vlad_enabled = menu:add_checkbox("Enabled", vlad_category, 1)
 vlad_combokey = menu:add_keybinder("Combo Mode Key", vlad_category, 32)
-menu:add_label("Welcome To Shaun's Sexy Vladimir", vlad_category)
+menu:add_label("Shaun's Sexy Vladimir", vlad_category)
 menu:add_label("#TrueBlood Baby", vlad_category)
 
-vlad_ks_function = menu:add_subcategory("Kill Steal", vlad_category)
+vlad_ks_function = menu:add_subcategory("[Kill Steal]", vlad_category)
 vlad_ks_use_q = menu:add_checkbox("Use [Q]", vlad_ks_function, 1)
 vlad_ks_use_e = menu:add_checkbox("Use [E]", vlad_ks_function, 1)
 vlad_ks_use_r = menu:add_checkbox("Use [R]", vlad_ks_function, 1)
@@ -436,7 +436,7 @@ for _, t in pairs(players) do
 end
 
 
-vlad_combo = menu:add_subcategory("Combo", vlad_category)
+vlad_combo = menu:add_subcategory("[Combo]", vlad_category)
 vlad_combo_use_q = menu:add_checkbox("Use [Q]", vlad_combo, 1)
 vlad_combo_use_w = menu:add_checkbox("Use [W]", vlad_combo, 1)
 vlad_combo_use_e = menu:add_checkbox("Use [E]", vlad_combo, 1)
@@ -451,21 +451,21 @@ for _, v in pairs(players) do
     end
 end
 
-vlad_harass = menu:add_subcategory("Harass", vlad_category)
+vlad_harass = menu:add_subcategory("[Harass]", vlad_category)
 vlad_harass_use_q = menu:add_checkbox("Use [Q]", vlad_harass, 1)
 vlad_harass_use_e = menu:add_checkbox("Use [E]", vlad_harass, 1)
 vlad_harass_use_auto_q = menu:add_toggle("Toggle Auto [Q] Harass", 1, vlad_harass, 90, true)
 
-vlad_laneclear = menu:add_subcategory("Lane Clear", vlad_category)
+vlad_laneclear = menu:add_subcategory("[Lane Clear]", vlad_category)
 vlad_laneclear_use_q = menu:add_checkbox("Use [Q]", vlad_laneclear, 1)
 vlad_laneclear_use_e = menu:add_checkbox("Use [E]", vlad_laneclear, 1)
 vlad_laneclear_e_min = menu:add_slider("Number Of Minions To Use [E]", vlad_laneclear, 1, 10, 3)
 
-vlad_jungleclear = menu:add_subcategory("Jungle Clear", vlad_category)
+vlad_jungleclear = menu:add_subcategory("[Jungle Clear]", vlad_category)
 vlad_jungleclear_use_q = menu:add_checkbox("Use [Q]", vlad_jungleclear, 1)
 vlad_jungleclear_use_e = menu:add_checkbox("Use [E]", vlad_jungleclear, 1)
 
-vlad_lasthit = menu:add_subcategory("Last Hit", vlad_category)
+vlad_lasthit = menu:add_subcategory("[Last Hit]", vlad_category)
 vlad_lasthit_use_q = menu:add_checkbox("Use [Q]", vlad_lasthit, 1)
 
 vlad_auto_w = menu:add_subcategory("[EPIC] Pool Features", vlad_category)
@@ -474,17 +474,17 @@ vlad_misc_life = menu:add_checkbox("Enable [W] Life Saver", vlad_auto_w, 1)
 vlad_misc_life_hp = menu:add_slider("Vlad Health [%] To use W Life Saver", vlad_auto_w, 1, 100, 15)
 
 vlad_r_misc_options = menu:add_subcategory("[INSANE] Ulitmate Features", vlad_category)
-vlad_combo_r_set_key = menu:add_keybinder("Semi Manual [R] Key - Closest To Cursor Target", vlad_r_misc_options, 65)
-vlad_combo_r_auto = menu:add_checkbox("Auto [R] - Using Best AoE Prediction", vlad_r_misc_options, 1)
+vlad_combo_r_set_key = menu:add_keybinder("Semi Manual [R] Key - Closest To Cursor", vlad_r_misc_options, 65)
+vlad_combo_r_auto = menu:add_checkbox("Auto [R] - Best AoE Prediction", vlad_r_misc_options, 1)
 vlad_combo_r_auto_x = menu:add_slider("Minimum Of Targets To Perform Auto [R]", vlad_r_misc_options, 1, 5, 3)
 
-vlad_draw = menu:add_subcategory("The Drawing Features", vlad_category)
+vlad_draw = menu:add_subcategory("[Drawing] Features", vlad_category)
 vlad_draw_q = menu:add_checkbox("Draw [Q]", vlad_draw, 1)
 vlad_draw_r = menu:add_checkbox("Draw [R]", vlad_draw, 1)
 vlad_r_best_draw = menu:add_checkbox("Draw Auto [R] Best Position Circle + Count", vlad_draw, 1)
 vlad_auto_q_draw = menu:add_checkbox("Toggle Auto [Q] Harass Draw", vlad_draw, 1)
 vlad_draw_kill = menu:add_checkbox("Draw Full Combo Can Kill", vlad_draw, 1)
-vlad_draw_kill_healthbar = menu:add_checkbox("Draw Full Combo On Target Health Bar", vlad_draw, 1, "Health Bar Damage Is Computed From R > Q > E")
+vlad_draw_kill_healthbar = menu:add_checkbox("Draw Full Combo On Target Health Bar", vlad_draw, 1)
 
 
 local function GetQDmg(unit)
@@ -819,11 +819,15 @@ end
 
 -- Anti E Gap
 
-local function on_gap_close(obj, data)
+local function on_dash(obj, dash_info)
 
-	if IsValid(obj) and menu:get_value(vlad_misc_anti_w) == 1 then
-		if myHero:distance_to(obj.origin) <= R.range and Ready(SLOT_W) then
-			CastW()
+	if menu:get_value(vlad_misc_anti_w) == 1 then
+		if IsValid(obj) then
+			if obj:is_facing(myHero) and myHero:distance_to(dash_info.end_pos) < Q.range then
+				if myHero:distance_to(obj.origin) < Q.range and Ready(SLOT_W) then
+					CastW()
+				end
+			end
 		end
 	end
 end
@@ -958,4 +962,4 @@ end
 
 client:set_event_callback("on_tick", on_tick)
 client:set_event_callback("on_draw", on_draw)
-client:set_event_callback("on_gap_close", on_gap_close)
+client:set_event_callback("on_dash", on_dash)

@@ -4,7 +4,7 @@ end
 
 do
     local function AutoUpdate()
-		local Version = 2.9
+		local Version = 3.0
 		local file_name = "OhAyKaisa.lua"
 		local url = "https://raw.githubusercontent.com/TheShaunyboi/BruhWalkerEncrypted/main/OhAyKaisa.lua"
         local web_version = http:get("https://raw.githubusercontent.com/TheShaunyboi/BruhWalkerEncrypted/main/OhAyKaisa.lua.version.txt")
@@ -601,11 +601,9 @@ local function CastE()
 end
 
 local function CastR(unit)
-	pred_output = pred:predict(R.speed, R.delay, rRange[spellbook:get_spell_slot(SLOT_R).level], R.width, unit, false, false)
-	if pred_output.can_cast then
-		castPos = pred_output.cast_pos
-		spellbook:cast_spell(SLOT_R, R.delay, castPos.x, castPos.y, castPos.z)
-	end
+	origin = unit.origin
+	x, y, z = origin.x, origin.y, origin.z
+	spellbook:cast_spell(SLOT_R, R.delay, x, y, z)
 end
 
 -- Combo
@@ -882,13 +880,9 @@ local function on_dash(obj, dash_info)
 	if menu:get_value(Kai_auto_e_gap) == 1 then
 		if IsValid(obj) then
 			if myHero:distance_to(dash_info.end_pos) < myHero.attack_range and myHero:distance_to(obj.origin) < myHero.attack_range and Ready(SLOT_E) then
-				Gapclose_text = true
 				CastE()
 			end
 		end
-	end
-	if Gapclose_text then
-		renderer:draw_text_big_centered(medraw.x, medraw.y, "Performing Anti GapClose [E]")
 	end
 end
 
@@ -972,10 +966,6 @@ local function on_tick()
 	if combo:get_mode() == MODE_LANECLEAR then
 		Clear()
 		JungleClear()
-	end
-
-	if not Ready(SLOT_E) then
-		Gapclose_text = false
 	end
 
 	AutoW()

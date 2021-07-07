@@ -531,7 +531,7 @@ end
 lucian_enabled = menu:add_checkbox("Enabled", lucian_category, 1)
 lucian_combokey = menu:add_keybinder("Combo Mode Key", lucian_category, 32)
 menu:add_label("Welcome To Shaun's Sexy Lucian", lucian_category)
-menu:add_label("#BlackLivesMatter v1.3", lucian_category)
+menu:add_label("#BlackLivesMatter v1.5", lucian_category)
 
 lucian_ks_function = menu:add_subcategory("Kill Steal", lucian_category)
 lucian_ks_q = menu:add_subcategory("[Q] Settings", lucian_ks_function, 1)

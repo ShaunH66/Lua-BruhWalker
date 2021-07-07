@@ -4,7 +4,7 @@ end
 
 do
     local function AutoUpdate()
-		local Version = 2.4
+		local Version = 3.1
 		local file_name = "EzToTheReal.lua"
 		local url = "https://raw.githubusercontent.com/TheShaunyboi/BruhWalkerEncrypted/main/EzToTheReal.lua"
         local web_version = http:get("https://raw.githubusercontent.com/TheShaunyboi/BruhWalkerEncrypted/main/EzToTheReal.lua.version.txt")
@@ -322,7 +322,7 @@ function VectorPointProjectionOnLineSegment(v1, v2, v)
     return pointSegment, pointLine, isOnSegment
 end
 
-function GetLineTargetCount(source, aimPos, delay, speed, width)
+function GetLineTargetCount_LastHit(source, aimPos, delay, speed, width)
     local Count = 0
     minion = game.minions
     for _, target in ipairs(minion) do
@@ -336,6 +336,22 @@ function GetLineTargetCount(source, aimPos, delay, speed, width)
     end
     return Count
 end
+
+function GetLineTargetCount_Combo(source, aimPos, delay, speed, width)
+    local Count = 0
+    minion = game.minions
+    for _, target in ipairs(minion) do
+        local Range = 1100 * 1100
+        if target.object_id ~= 0 and IsValid(target) and target.is_enemy and GetDistanceSqr(myHero, target) < Range then
+            local pointSegment, pointLine, isOnSegment = VectorPointProjectionOnLineSegment(source.origin, aimPos.origin, target.origin)
+            if pointSegment and isOnSegment and (GetDistanceSqr2(target.origin, pointSegment) <= (target.bounding_radius + width) * (target.bounding_radius + width)) then
+                Count = Count + 1
+            end
+        end
+    end
+    return Count
+end
+
 
 -- Best Prediction End
 
@@ -437,10 +453,10 @@ end
 
 ezreal_enabled = menu:add_checkbox("Enabled", ezreal_category, 1)
 ezreal_combokey = menu:add_keybinder("Combo Mode Key", ezreal_category, 32)
-menu:add_label("Welcome To Shaun's Sexy Ezreal", ezreal_category)
+menu:add_label("Shaun's Sexy Ezreal", ezreal_category)
 menu:add_label("#PrettyBoyEz", ezreal_category)
 
-ezreal_ks_function = menu:add_subcategory("Kill Steal", ezreal_category)
+ezreal_ks_function = menu:add_subcategory("[Kill Steal]", ezreal_category)
 ezreal_ks_use_q = menu:add_checkbox("Use [Q]", ezreal_ks_function, 1)
 ezreal_ks_use_w = menu:add_checkbox("Use [W]", ezreal_ks_function, 1)
 ezreal_ks_use_r = menu:add_checkbox("Use [R]", ezreal_ks_function, 1)
@@ -454,7 +470,7 @@ for _, t in pairs(players) do
 end
 
 
-ezreal_combo = menu:add_subcategory("Combo", ezreal_category)
+ezreal_combo = menu:add_subcategory("[Combo]", ezreal_category)
 ezreal_combo_use_q = menu:add_checkbox("Use [Q]", ezreal_combo, 1)
 ezreal_combo_use_w = menu:add_checkbox("Use [W]", ezreal_combo, 1)
 ezreal_combo_r = menu:add_subcategory("[R] Combo Settings", ezreal_combo)
@@ -469,39 +485,38 @@ for _, v in pairs(players) do
     end
 end
 
-ezreal_harass = menu:add_subcategory("Harass", ezreal_category)
+ezreal_harass = menu:add_subcategory("[Harass]", ezreal_category)
 ezreal_harass_use_q = menu:add_checkbox("Use [Q]", ezreal_harass, 1)
 ezreal_harass_use_w = menu:add_checkbox("Use [W]", ezreal_harass, 1)
 ezreal_harass_use_auto_q = menu:add_toggle("Toggle Auto [Q] Harass", 1, ezreal_harass, 90, true)
 ezreal_harass_min_mana = menu:add_slider("Minimum Mana To Harass", ezreal_harass, 1, 500, 100)
 
-ezreal_laneclear = menu:add_subcategory("Lane Clear", ezreal_category)
+ezreal_laneclear = menu:add_subcategory("[Lane Clear]", ezreal_category)
 ezreal_laneclear_use_q = menu:add_checkbox("Use [Q]", ezreal_laneclear, 1)
 ezreal_laneclear_min_mana = menu:add_slider("Minimum Mana To Lane Clear", ezreal_laneclear, 1, 500, 200)
 
-ezreal_jungleclear = menu:add_subcategory("Jungle Clear", ezreal_category)
+ezreal_jungleclear = menu:add_subcategory("[Jungle Clear]", ezreal_category)
 ezreal_jungleclear_use_q = menu:add_checkbox("Use [Q]", ezreal_jungleclear, 1)
 ezreal_jungleclear_use_w = menu:add_checkbox("Use [W]", ezreal_jungleclear, 1)
 ezreal_jungleclear_min_mana = menu:add_slider("Minimum Mana To jungle Clear", ezreal_jungleclear, 1, 500, 200)
 
-ezreal_lasthit = menu:add_subcategory("Last Hit", ezreal_category)
+ezreal_lasthit = menu:add_subcategory("[Last Hit]", ezreal_category)
 ezreal_lasthit_q = menu:add_checkbox("Use [Q] Outside [AA] Range", ezreal_lasthit, 1)
 
-ezreal_misc_options = menu:add_subcategory("Extra Features", ezreal_category)
+ezreal_misc_options = menu:add_subcategory("[Extra] Features", ezreal_category)
 ezreal_combo_r_set_key = menu:add_keybinder("Semi Manual [R] Key", ezreal_misc_options, 65)
 ezreal_misc_w_turret = menu:add_toggle("Toggle Auto [W] Turret", 1, ezreal_misc_options, 85, true)
 
-ezreal_auto_r = menu:add_subcategory("Auto [R] - Using Best AoE Position", ezreal_category)
+ezreal_auto_r = menu:add_subcategory("Auto AoE [R]", ezreal_category)
 ezreal_use_auto_r = menu:add_checkbox("Use Auto [R]", ezreal_auto_r, 1)
 ezreal_auto_r_range = menu:add_slider("Greater Than Range To Use Auto [R]", ezreal_auto_r, 1, 5000, 2500)
 ezreal_auto_r_x = menu:add_slider("Minimum Targets To Use Auto R", ezreal_auto_r, 1, 5, 3)
 
-ezreal_draw = menu:add_subcategory("Drawing Features", ezreal_category)
+ezreal_draw = menu:add_subcategory("[Drawing] Features", ezreal_category)
 ezreal_draw_q = menu:add_checkbox("Draw [Q]", ezreal_draw, 1)
 ezreal_draw_e = menu:add_checkbox("Draw [E]", ezreal_draw, 1)
 ezreal_auto_q_draw = menu:add_checkbox("Toggle Auto [Q] Harass Draw", ezreal_draw, 1)
 ezreal_auto_turret_draw = menu:add_checkbox("Toggle Auto [W] Turret Draw", ezreal_draw, 1)
-ezreal_r_best_draw = menu:add_checkbox("Draw Auto [R] Best Position Circle + Count", ezreal_draw, 1)
 ezreal_draw_kill = menu:add_checkbox("Draw Full Combo Can Kill", ezreal_draw, 1)
 ezreal_draw_kill_healthbar = menu:add_checkbox("Draw Full Combo On Target Health Bar", ezreal_draw, 1, "Health Bar Damage Is Computed From R, Q, W")
 
@@ -559,23 +574,42 @@ local function Combo()
 	local qtarget = selector:find_target(Q.range, mode_health)
 
 	if menu:get_value(ezreal_combo_use_w) == 1 then
-		if myHero:distance_to(target.origin) <= W.range and IsValid(target) and IsKillable(target) then
-			if Ready(SLOT_W) then
-				CastW(qtarget)
+		if IsValid(qtarget) and IsKillable(qtarget) then
+			if myHero:distance_to(qtarget.origin) <= W.range then
+				if myHero:distance_to(qtarget.origin) > myHero.attack_range then
+					local count = GetLineTargetCount_Combo(myHero, qtarget, Q.delay, Q.speed, Q.width / 2)
+					if count and count < 1 then
+						if Ready(SLOT_Q) and Ready(SLOT_W) then
+							CastW(qtarget)
+						end
+					end
+				end
+			end
+		end
+	end
+
+	if menu:get_value(ezreal_combo_use_w) == 1 then
+		if myHero:distance_to(qtarget.origin) <= W.range and IsValid(qtarget) and IsKillable(qtarget) then
+			if myHero:distance_to(qtarget.origin) <= myHero.attack_range then
+				if Ready(SLOT_W) then
+					CastW(qtarget)
+				end
 			end
 		end
 	end
 
 	if menu:get_value(ezreal_combo_use_q) == 1 then
-		if myHero:distance_to(target.origin) <= Q.range and IsValid(target) and IsKillable(target) then
-			if Ready(SLOT_Q) then
-				CastQ(qtarget)
+		if IsValid(qtarget) and IsKillable(qtarget) then
+			if myHero:distance_to(qtarget.origin) <= Q.range then
+				if Ready(SLOT_Q) then
+					CastQ(qtarget)
+				end
 			end
 		end
 	end
 
 	if menu:get_value(ezreal_combo_use_r) == 1 then
-		if myHero:distance_to(target.origin) > menu:get_value(ezreal_combo_use_range) and IsValid(target) and IsKillable(target) then
+		if myHero:distance_to(target.origin) >= menu:get_value(ezreal_combo_use_range) and IsValid(target) and IsKillable(target) then
 			if target:health_percentage() <= menu:get_value(ezreal_combo_r_enemy_hp) then
 				if menu:get_value_string("Use R Combo On: "..tostring(target.champ_name)) == 1 then
 					if Ready(SLOT_R) then
@@ -591,13 +625,13 @@ end
 
 local function Harass()
 
-	local target = selector:find_target(Q.range, mode_health)
+	local qtarget = selector:find_target(Q.range, mode_health)
 
 	if menu:get_value(ezreal_harass_use_q) == 1 then
 		if myHero.mana >= menu:get_value(ezreal_harass_min_mana) then
-			if myHero:distance_to(target.origin) <= Q.range and IsValid(target) and IsKillable(target) then
+			if myHero:distance_to(qtarget.origin) <= Q.range and IsValid(qtarget) and IsKillable(qtarget) then
 				if Ready(SLOT_Q) then
-					CastQ(target)
+					CastQ(qtarget)
 				end
 			end
 		end
@@ -605,9 +639,28 @@ local function Harass()
 
 	if menu:get_value(ezreal_harass_use_w) == 1 then
 		if myHero.mana >= menu:get_value(ezreal_harass_min_mana) then
-			if myHero:distance_to(target.origin) <= W.range and IsValid(target) and IsKillable(target) then
-				if Ready(SLOT_W) then
-					CastW(target)
+			if myHero:distance_to(qtarget.origin) <= W.range and IsValid(qtarget) and IsKillable(qtarget) then
+				if myHero:distance_to(qtarget.origin) <= myHero.attack_range then
+					if Ready(SLOT_W) then
+						CastW(qtarget)
+					end
+				end
+			end
+		end
+	end
+
+	if menu:get_value(ezreal_harass_use_w) == 1 then
+		if myHero.mana >= menu:get_value(ezreal_harass_min_mana) then
+			if IsValid(qtarget) and IsKillable(qtarget) then
+				if myHero:distance_to(qtarget.origin) <= W.range then
+					if myHero:distance_to(qtarget.origin) > myHero.attack_range then
+						local count = GetLineTargetCount_Combo(myHero, qtarget, Q.delay, Q.speed, Q.width / 2)
+						if count and count < 1 then
+							if Ready(SLOT_Q) and Ready(SLOT_W) then
+								CastW(qtarget)
+							end
+						end
+					end
 				end
 			end
 		end
@@ -622,8 +675,8 @@ local function AutoQHarass()
 
 	if menu:get_value(ezreal_harass_use_q) == 1 then
 		if myHero.mana >= menu:get_value(ezreal_harass_min_mana) then
-			if combo:get_mode() ~= MODE_COMBO and not game:is_key_down(menu:get_value(ezreal_combokey)) then
-				if myHero:distance_to(target.origin) <= Q.range and IsValid(target) and IsKillable(target) then
+			if not game:is_key_down(menu:get_value(ezreal_combokey)) then
+				if myHero:distance_to(target.origin) <= 1180 and IsValid(target) and IsKillable(target) then
 					if Ready(SLOT_Q) and not IsUnderTurret(myHero) then
 						CastQ(target)
 					end
@@ -789,7 +842,7 @@ local function QLasthit()
 						pred_output = pred:predict(Q.speed, Q.delay, Q.range, Q.width, minion, false, false)
 						if pred_output.can_cast then
 							castPos = pred_output.cast_pos
-							count = GetLineTargetCount(myHero, castPos, Q.delay, Q.speed, Q.width / 2)
+							local count = GetLineTargetCount_LastHit(myHero, castPos, Q.delay, Q.speed, Q.width / 2)
 							if count and count == 1 then
 								spellbook:cast_spell(SLOT_Q, Q.delay, castPos.x, castPos.y, castPos.z)
 							end
@@ -805,7 +858,7 @@ local function QLasthit()
 						pred_output = pred:predict(Q.speed, Q.delay, Q.range, Q.width, minion, false, false)
 						if pred_output.can_cast then
 							castPos = pred_output.cast_pos
-							count = GetLineTargetCount(myHero, castPos, Q.delay, Q.speed, Q.width / 2)
+							local count = GetLineTargetCount_LastHit(myHero, castPos, Q.delay, Q.speed, Q.width / 2)
 							if count and count == 1 then
 								spellbook:cast_spell(SLOT_Q, Q.delay, castPos.x, castPos.y, castPos.z)
 							end
@@ -847,10 +900,10 @@ local function on_draw()
 		local fulldmg = (GetQDmg(target) + GetWDmg(target) + GetRDmg(target))
 		if Ready(SLOT_R) then
 			if target.object_id ~= 0 and myHero:distance_to(target.origin) <= Q.range then
-				if menu:get_value(ezreal_draw_kill) == 1 then
+				if menu:get_value(ezreal_draw_kill) == 1 and target.is_on_screen then
 					if fulldmg > target.health and IsValid(target) then
 						if enemydraw.is_valid then
-							renderer:draw_text_big_centered(enemydraw.x, enemydraw.y, "Can Kill Target")
+							renderer:draw_text_big_centered(enemydraw.x, enemydraw.y, "Can Kill Target!")
 						end
 					end
 				end
@@ -887,7 +940,7 @@ local function on_tick()
 		Harass()
 	end
 
-	if menu:get_toggle_state(ezreal_harass_use_auto_q) and combo:get_mode() ~= MODE_COMBO and not game:is_key_down(menu:get_value(ezreal_combokey)) then
+	if menu:get_toggle_state(ezreal_harass_use_auto_q) and not game:is_key_down(menu:get_value(ezreal_combokey)) then
 		AutoQHarass()
 	end
 
@@ -897,7 +950,7 @@ local function on_tick()
 	end
 
 	if combo:get_mode() == MODE_LASTHIT then
-	QLasthit()
+		QLasthit()
 	end
 
 	if game:is_key_down(menu:get_value(ezreal_combo_r_set_key)) then
@@ -906,10 +959,6 @@ local function on_tick()
 
 	if menu:get_toggle_state(ezreal_misc_w_turret) and not game:is_key_down(menu:get_value(ezreal_combokey)) then
 		ManualWCast()
-	end
-
-	if menu:get_value(ezreal_r_best_draw) == 1 then
-		AoEDraw()
 	end
 
 	AutoRx()
