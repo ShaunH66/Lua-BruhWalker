@@ -4,7 +4,7 @@ end
 
 do
     local function AutoUpdate()
-		local Version = 1.9
+		local Version = 2.0
 		local file_name = "TristanaTheYordelPornStar.lua"
 		local url = "https://raw.githubusercontent.com/TheShaunyboi/BruhWalkerEncrypted/main/TristanaTheYordelPornStar.lua"
         local web_version = http:get("https://raw.githubusercontent.com/TheShaunyboi/BruhWalkerEncrypted/main/TristanaTheYordelPornStar.lua.version.txt")
@@ -613,9 +613,7 @@ local function CastW(unit)
 end
 
 local function CastE(unit)
-	origin = unit.origin
-	x, y, z = origin.x, origin.y, origin.z
-	spellbook:cast_spell(SLOT_E, E.delay, x, y, z)
+	spellbook:cast_spell_targetted(SLOT_E, unit, E.delay)
 end
 
 local function CastR(unit)
