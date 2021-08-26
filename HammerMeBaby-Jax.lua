@@ -4,7 +4,7 @@ end
 
 do
     local function AutoUpdate()
-		local Version = 1.3
+		local Version = 1.4
 		local file_name = "HammerMeBaby-Jax.lua"
 		local url = "https://raw.githubusercontent.com/TheShaunyboi/BruhWalkerEncrypted/main/HammerMeBaby-Jax.lua"
         local web_version = http:get("https://raw.githubusercontent.com/TheShaunyboi/BruhWalkerEncrypted/main/HammerMeBaby-Jax.lua.version.txt")
@@ -464,9 +464,7 @@ jax_draw_kill_healthbar = menu:add_checkbox("Draw [Full Combo Damage] On Target 
 -- Casting
 
 local function CastQ(unit)
-	origin = unit.origin
-	x, y, z = origin.x, origin.y, origin.z
-	spellbook:cast_spell(SLOT_Q, Q.delay, x, y, z)
+	spellbook:cast_spell_targetted(SLOT_Q, unit, Q.delay)
 end
 
 local function CastW()
@@ -855,21 +853,15 @@ local function Flee()
 		for _, minion in ipairs(minions) do
 			for _, jungle in ipairs(jungles) do
 				if myHero:distance_to(ally.origin) <= Q.range and ally:distance_to(game.mouse_pos) <= 100 and ml.Ready(SLOT_Q) and ally.object_id ~= myHero.object_id then
-					origin = ally.origin
-					x, y, z = origin.x, origin.y, origin.z
-					spellbook:cast_spell(SLOT_Q, Q.delay, x, y, z)
+					spellbook:cast_spell_targetted(SLOT_Q, ally, Q.delay)
 					Blockward = true
 				end
 				if myHero:distance_to(minion.origin) <= Q.range and minion:distance_to(game.mouse_pos) <= 100 and ml.Ready(SLOT_Q) then
-					origin = minion.origin
-					x, y, z = origin.x, origin.y, origin.z
-					spellbook:cast_spell(SLOT_Q, Q.delay, x, y, z)
+					spellbook:cast_spell_targetted(SLOT_Q, minion, Q.delay)
 					Blockward = true
 				end
 				if myHero:distance_to(jungle.origin) <= Q.range and jungle:distance_to(game.mouse_pos) <= 100 and ml.Ready(SLOT_Q) then
-					origin = jungle.origin
-					x, y, z = origin.x, origin.y, origin.z
-					spellbook:cast_spell(SLOT_Q, Q.delay, x, y, z)
+					spellbook:cast_spell_targetted(SLOT_Q, jungle, Q.delay)
 					Blockward = true
 				end
 			end
@@ -879,9 +871,7 @@ local function Flee()
 	for _, ward in ipairs(wards) do
 		if not Blockward and ml.Ready(SLOT_Q) and ward and ward:distance_to(game.mouse_pos) <= 100 then
 			if ward:distance_to(myHero.origin) <= Q.range then
-				origin = ward.origin
-				x, y, z = origin.x, origin.y, origin.z
-				spellbook:cast_spell(SLOT_Q, Q.delay, x, y, z)
+				spellbook:cast_spell_targetted(SLOT_Q, ward, Q.delay)
 			end
 		end
 	end
@@ -915,9 +905,7 @@ local function Flee()
 	for _, ward in ipairs(wards) do
 		if FleeReady and flee_Wfire and ml.Ready(SLOT_Q) then
 			if myHero:distance_to(ward.origin) <= Q.range and ward:distance_to(game.mouse_pos) <= 100 then
-				origin = ward.origin
-				x, y, z = origin.x, origin.y, origin.z
-				spellbook:cast_spell(SLOT_Q, Q.delay, x, y, z)
+				spellbook:cast_spell_targetted(SLOT_Q, ward, Q.delay)
 			end
 		end
 	end

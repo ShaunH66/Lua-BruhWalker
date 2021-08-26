@@ -4,7 +4,7 @@ end
 
 do
     local function AutoUpdate()
-		local Version = 1.2
+		local Version = 1.4
 		local file_name = "KarateKid-Lee.lua"
 		local url = "https://raw.githubusercontent.com/TheShaunyboi/BruhWalkerEncrypted/main/KarateKid-Lee.lua"
     local web_version = http:get("https://raw.githubusercontent.com/TheShaunyboi/BruhWalkerEncrypted/main/KarateKid-Lee.lua.version.txt")
@@ -46,6 +46,15 @@ if not file_manager:file_exists("PKDamageLib.lua") then
 	http:download_file(url, file_name)
 end
 
+local file_name = "Prediction.lib"
+if not file_manager:file_exists(file_name) then
+   local url = "https://raw.githubusercontent.com/Ark223/Bruhwalker/main/Prediction.lib"
+   http:download_file(url, file_name)
+   console:log("Ark223 Prediction Library Downloaded")
+   console:log("Please Reload with F5")
+end
+
+
 local VIP = http:get("https://raw.githubusercontent.com/TheShaunyboi/BruhWalkerEncrypted/main/VIP_USER_LIST.lua.txt")
 VIP = VIP .. ','
 local LIST = {}
@@ -74,6 +83,7 @@ end
 --Initialization lines:
 local ml = require "VectorMath"
 pred:use_prediction()
+arkpred = _G.Prediction
 require "PKDamageLib"
 
 local myHero = game.local_player
@@ -378,6 +388,20 @@ lee_extra_flee_key = menu:add_keybinder("[Ward] Hop key", lee_category, 90)
 menu:add_label("Shaun's Sexy Lee Sin", lee_category)
 menu:add_label("#SummerBodyReadyBaby", lee_category)
 
+lee_prediction = menu:add_subcategory("[Pred Selection]", lee_category)
+e_table = {}
+e_table[1] = "Bruh Internal"
+e_table[2] = "Ark Pred"
+lee_pred_useage = menu:add_combobox("[Pred Selection]", lee_prediction, e_table, 1)
+
+lee_ark_pred = menu:add_subcategory("[Ark Pred Settings]", lee_prediction)
+
+lee_ark_pred_q = menu:add_subcategory("[Q] Settings", lee_ark_pred, 1)
+lee_q_hitchance = menu:add_slider("[Q] Lee Hit Chance [%]", lee_ark_pred_q, 1, 99, 55)
+lee_q_speed = menu:add_slider("[Q] Lee Speed Input", lee_ark_pred_q, 1, 2500, 1800)
+lee_q_range = menu:add_slider("[Q] Lee Range Input", lee_ark_pred_q, 1, 1200, 1150)
+lee_q_radius = menu:add_slider("[Q] Lee Radius Input", lee_ark_pred_q, 1, 500, 60)
+
 lee_ks_function = menu:add_subcategory("[Kill Steal]", lee_category)
 lee_ks_q = menu:add_subcategory("[Q] Settings", lee_ks_function, 1)
 lee_ks_use_q = menu:add_checkbox("Use [Q]", lee_ks_q, 1)
@@ -521,14 +545,32 @@ local function LeeInsecReadyWithFlash()
 return false
 end
 
+local Q_input = {
+    source = myHero,
+    speed = menu:get_value(lee_q_speed), range = menu:get_value(lee_q_range),
+    delay = 0.25, radius = menu:get_value(lee_q_radius),
+    collision = {"minion", "wind_wall"},
+    type = "linear", hitbox = true
+}
+
 
 -- Casting
 
 local function CastQ(unit)
-	pred_output = pred:predict(Q.speed, Q.delay, Q.range, Q.width, unit, true, true)
-	if pred_output.can_cast then
-		castPos = pred_output.cast_pos
-		spellbook:cast_spell(SLOT_Q, Q.delay, castPos.x, castPos.y, castPos.z)
+	if menu:get_value(lee_pred_useage) == 0 then
+		pred_output = pred:predict(Q.speed, Q.delay, Q.range, Q.width, unit, true, true)
+		if pred_output.can_cast then
+			castPos = pred_output.cast_pos
+			spellbook:cast_spell(SLOT_Q, Q.delay, castPos.x, castPos.y, castPos.z)
+		end
+	end
+	if menu:get_value(lee_pred_useage) == 1 then
+		local output = arkpred:get_prediction(Q_input, unit)
+		local inv = arkpred:get_invisible_duration(unit)
+		if output.hit_chance >= menu:get_value(lee_q_hitchance) / 100 and inv < 0.125 then
+			local p = output.cast_pos
+			spellbook:cast_spell(SLOT_Q, Q.delay, p.x, p.y, p.z)
+		end
 	end
 end
 
@@ -541,13 +583,15 @@ local function CastQMonsters(unit)
 end
 
 local function CastW(unit)
-	origin = unit.origin
+	--[[origin = unit.origin
 	x, y, z = origin.x, origin.y, origin.z
-	spellbook:cast_spell(SLOT_W, W.delay, x, y, z)
+	spellbook:cast_spell(SLOT_W, W.delay, x, y, z)]]
+	spellbook:cast_spell_targetted(SLOT_W, unit, W.delay)
 end
 
 local function CastW2Self()
-	spellbook:cast_spell(SLOT_W, W.delay, x, y, z)
+	--spellbook:cast_spell(SLOT_W, W.delay, x, y, z)
+	spellbook:cast_spell_targetted(SLOT_W, myHero, W.delay)
 end
 
 local function CastE()
@@ -555,9 +599,7 @@ local function CastE()
 end
 
 local function CastR(unit)
-	origin = unit.origin
-	x, y, z = origin.x, origin.y, origin.z
-	spellbook:cast_spell(SLOT_R, R.delay, x, y, z)
+	spellbook:cast_spell_targetted(SLOT_R, unit, R.delay)
 end
 
 -- Combo
@@ -1135,9 +1177,10 @@ local function Flee()
 
 	for _, ally in ipairs(players) do
 		if myHero:distance_to(ally.origin) <= W.range and ally:distance_to(game.mouse_pos) <= 300 and ml.Ready(SLOT_W) then
-			origin = ally.origin
+			--[[origin = ally.origin
 			x, y, z = origin.x, origin.y, origin.z
-			spellbook:cast_spell(SLOT_W, W.delay, x, y, z)
+			spellbook:cast_spell(SLOT_W, W.delay, x, y, z)]]
+			spellbook:cast_spell_targetted(SLOT_W, ally, W.delay)
 		end
 
 		if game:is_key_down(menu:get_value(lee_extra_flee_key)) then
@@ -1174,9 +1217,10 @@ local function Flee()
 		for _, ward in ipairs(wards) do
 			if FleeReady and flee_Wfire and ml.Ready(SLOT_W) then
 				if myHero:distance_to(ward.origin) <= W.range and ward:distance_to(game.mouse_pos) <= 300 then
-					origin = ward.origin
+					--[[origin = ward.origin
 					x, y, z = origin.x, origin.y, origin.z
-					spellbook:cast_spell(SLOT_W, W.delay, x, y, z)
+					spellbook:cast_spell(SLOT_W, W.delay, x, y, z)]]
+					spellbook:cast_spell_targetted(SLOT_W, ward, W.delay)
 				end
 			end
 		end
@@ -1276,9 +1320,10 @@ local function INSEC()
 
 								for _, ward in ipairs(wards) do
 									if InsecReady and ml.Ready(SLOT_R) and ward and myHero:distance_to(ward.origin) <= W.range and target:distance_to(ward.origin) < 250 and not UseFlash and ml.Ready(SLOT_W) then
-										origin = ward.origin
+										--[[origin = ward.origin
 										x, y, z = origin.x, origin.y, origin.z
-										spellbook:cast_spell(SLOT_W, W.delay, x, y, z)
+										spellbook:cast_spell(SLOT_W, W.delay, x, y, z)]]
+										spellbook:cast_spell_targetted(SLOT_W, ward, W.delay)
 									end
 
 									if InsecReady and myHero:distance_to(target.origin) <= R.range and myHero:distance_to(ward.origin) < 200 and not UseFlash then
@@ -1365,9 +1410,10 @@ local function INSEC()
 
 							for _, ward in ipairs(wards) do
 								if InsecReady and ml.Ready(SLOT_R) and ward and myHero:distance_to(ward.origin) <= W.range and target:distance_to(ward.origin) < 250 and not UseFlash and ml.Ready(SLOT_W) then
-									origin = ward.origin
+									--[[origin = ward.origin
 									x, y, z = origin.x, origin.y, origin.z
-									spellbook:cast_spell(SLOT_W, W.delay, x, y, z)
+									spellbook:cast_spell(SLOT_W, W.delay, x, y, z)]]
+									spellbook:cast_spell_targetted(SLOT_W, ward, W.delay)
 								end
 
 								if InsecReady and myHero:distance_to(target.origin) <= R.range and myHero:distance_to(ward.origin) < 200 and not UseFlash then
@@ -1450,9 +1496,10 @@ local function INSEC()
 
 				for _, ward in ipairs(wards) do
 					if InsecReady and ml.Ready(SLOT_R) and ward and myHero:distance_to(ward.origin) <= W.range and target:distance_to(ward.origin) < 250 and not UseFlash and ml.Ready(SLOT_W) then
-						origin = ward.origin
+						--[[origin = ward.origin
 						x, y, z = origin.x, origin.y, origin.z
-						spellbook:cast_spell(SLOT_W, W.delay, x, y, z)
+						spellbook:cast_spell(SLOT_W, W.delay, x, y, z)]]
+						spellbook:cast_spell_targetted(SLOT_W, ward, W.delay)
 					end
 
 					if InsecReady and myHero:distance_to(target.origin) <= R.range and myHero:distance_to(ward.origin) < 200 and not UseFlash then
@@ -1548,7 +1595,7 @@ local function on_draw()
 	for i, target in ipairs(ml.GetEnemyHeroes()) do
 		local fulldmg = GetQDmg(target) + GetEDmg(target) + GetRDmg(target)
 		if target.object_id ~= 0 and myHero:distance_to(target.origin) <= 1500 then
-			if menu:get_value(lee_draw_kill) == 1 then
+			if menu:get_value(lee_draw_kill) == 1 and target.is_on_screen then
 				if fulldmg > target.health and ml.IsValid(target) then
 					if enemydraw.is_valid and not InsecReady then
 						renderer:draw_text_big_centered(enemydraw.x, enemydraw.y, "Can Kill Target!")
@@ -1563,13 +1610,13 @@ local function on_draw()
 	end
 
 	if menu:get_value(lee_draw_insec_ready) == 1 then
-	 	if LeeInsecReady() or LeeInsecReadyControlWard() and not InsecReady then
+	 	if LeeInsecReady() or LeeInsecReadyControlWard() and not InsecReady and myHero.is_on_screen then
 		 	renderer:draw_text_big_centered(myherodraw.x, myherodraw.y + 50, "Ward [INSEC] Ready!")
 	 	end
  	end
 
  	if menu:get_value(lee_draw_insec_ready) == 1 then
-		if LeeInsecReadyWithFlash() and not InsecReady then
+		if LeeInsecReadyWithFlash() and not InsecReady and myHero.is_on_screen then
 			renderer:draw_text_big_centered(myherodraw.x, myherodraw.y + 50, "Flash [INSEC] Ready!")
 		end
 	end

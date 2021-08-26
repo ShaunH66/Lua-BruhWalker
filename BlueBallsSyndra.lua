@@ -4,17 +4,16 @@ end
 
 do
     local function AutoUpdate()
-		local Version = 1.6
+		local Version = 2.1
 		local file_name = "BlueBallsSyndra.lua"
 		local url = "https://raw.githubusercontent.com/TheShaunyboi/BruhWalkerEncrypted/main/BlueBallsSyndra.lua"
         local web_version = http:get("https://raw.githubusercontent.com/TheShaunyboi/BruhWalkerEncrypted/main/BlueBallsSyndra.lua.version.txt")
         console:log("BlueBallsSyndra.lua Vers: "..Version)
 		console:log("BlueBallsSyndra.Web Vers: "..tonumber(web_version))
 		if tonumber(web_version) == Version then
-						console:log(".......................................................")
-						console:log("..................BS Studios Presents..................")
-            console:log("..Shaun & Ben's BlueBalls Syndra Successfully Loaded...")
-						console:log(".......................................................")
+						console:log("......................................................................")
+            console:log("...BlueBalls Syndra Successfully Loaded...")
+						console:log("......................................................................")
         else
 			http:download_file(url, file_name)
 			      console:log("BlueBalls Syndra Update available.....")
@@ -41,6 +40,14 @@ if not file_manager:file_exists("PKDamageLib.lua") then
 	local file_name = "PKDamageLib.lua"
 	local url = "http://raw.githubusercontent.com/Astraanator/test/main/Champions/PKDamageLib.lua"
 	http:download_file(url, file_name)
+end
+
+local file_name = "Prediction.lib"
+if not file_manager:file_exists(file_name) then
+   local url = "https://raw.githubusercontent.com/Ark223/Bruhwalker/main/Prediction.lib"
+   http:download_file(url, file_name)
+   console:log("Ark223 Prediction Library Downloaded")
+   console:log("Please Reload with F5")
 end
 
 local VIP = http:get("https://raw.githubusercontent.com/TheShaunyboi/BruhWalkerEncrypted/main/VIP_USER_LIST.lua.txt")
@@ -71,6 +78,7 @@ end
 --Initialization lines:
 local ml = require "VectorMath"
 pred:use_prediction()
+arkpred = _G.Prediction
 require "PKDamageLib"
 
 local myHero = game.local_player
@@ -95,6 +103,30 @@ spellE = {
     range2 = 800,
     angle1 = 40,
     angle2 = 60
+}
+
+local Q_input = {
+    source = myHero,
+    speed = math.huge, range = 1100,
+    delay = 0.65, radius = 180,
+    collision = {},
+    type = "circular", hitbox = false
+}
+
+local W_input = {
+    source = myHero,
+    speed = 1450, range = 950,
+    delay = 0.25, radius = 225,
+    collision = {},
+    type = "circular", hitbox = false
+}
+
+local E_input = {
+    source = myHero,
+    speed = 2500, range = 1100,
+    delay = 0.25, angle = 60,
+    collision = {"wind_wall"},
+    type = "conic", hitbox = false
 }
 
 -- Return game data and maths
@@ -452,6 +484,17 @@ syndra_combokey = menu:add_keybinder("Combo Mode Key", syndra_category, 32)
 menu:add_label("BlueBalls Syndra", syndra_category)
 menu:add_label("#StopTeasingMyBalls", syndra_category)
 
+syndra_prediction = menu:add_subcategory("[Pred Selection]", syndra_category)
+e_table = {}
+e_table[1] = "Bruh Internal"
+e_table[2] = "Ark Pred"
+syndra_pred_useage = menu:add_combobox("[Pred Selection]", syndra_prediction, e_table, 1)
+
+syndra_ark_pred = menu:add_subcategory("[Ark Pred Settings]", syndra_prediction)
+syndra_q_hitchance = menu:add_slider("[Q] Hit Chance [%]", syndra_ark_pred, 1, 99, 50)
+syndra_w_hitchance = menu:add_slider("[W] Hit Chance [%]", syndra_ark_pred, 1, 99, 50)
+syndra_e_hitchance = menu:add_slider("[E] Hit Chance [%]", syndra_ark_pred, 1, 99, 50)
+
 syndra_ks_function = menu:add_subcategory("[Kill Steal]", syndra_category)
 syndra_ks_q = menu:add_subcategory("[Q] Settings", syndra_ks_function, 1)
 syndra_ks_use_q = menu:add_checkbox("Use [Q]", syndra_ks_q, 1)
@@ -540,18 +583,39 @@ syndra_draw_kill_healthbar = menu:add_checkbox("Draw Full Combo On Target Health
 -- Casting
 
 local function CastQ(unit)
-	if not pred_output.can_cast then
-		e_cast = nil
-		qe_cast = nil
+
+	if menu:get_value(syndra_pred_useage) == 0 then
+		if not pred_output.can_cast then
+			e_cast = nil
+			qe_cast = nil
+		end
+		pred_output = pred:predict(Q.speed, Q.delay, E.range, Q.width, unit, false, false)
+		if pred_output.can_cast then
+			castPos = pred_output.cast_pos
+			spellbook:cast_spell(SLOT_Q, Q.delay, castPos.x, castPos.y, castPos.z)
+			e_cast = (client:get_tick_count() + 900)
+			qe_cast = (client:get_tick_count() + 1)
+			BlockW = true
+			CastQE = true
+		end
 	end
-	pred_output = pred:predict(Q.speed, Q.delay, E.range, Q.width, unit, false, false)
-	if pred_output.can_cast then
-		castPos = pred_output.cast_pos
-		spellbook:cast_spell(SLOT_Q, Q.delay, castPos.x, castPos.y, castPos.z)
-		e_cast = (client:get_tick_count() + 900)
-		qe_cast = (client:get_tick_count() + 1)
-		BlockW = true
-		CastQE = true
+
+	if menu:get_value(syndra_pred_useage) == 1 then
+		local output = arkpred:get_aoe_prediction(Q_input, unit)
+	  local inv = arkpred:get_invisible_duration(unit)
+		if output.hit_chance < menu:get_value(syndra_q_hitchance) / 100 then
+			e_cast = nil
+			qe_cast = nil
+		end
+
+		if output.hit_chance >= menu:get_value(syndra_q_hitchance) / 100 and inv < 0.125 then
+			local p = output.cast_pos
+	    spellbook:cast_spell(SLOT_Q, Q.delay, p.x, p.y, p.z)
+			e_cast = (client:get_tick_count() + 900)
+			qe_cast = (client:get_tick_count() + 1)
+			BlockW = true
+			CastQE = true
+		end
 	end
 end
 
@@ -563,14 +627,46 @@ local function CastQMouse()
 end
 
 local function CastW(unit)
-	pred_output = pred:predict(W.speed, W.delay, W.range, W.width, unit, false, false)
-	if pred_output.can_cast then
-		castPos = pred_output.cast_pos
-		spellbook:cast_spell(SLOT_W, W.delay, castPos.x, castPos.y, castPos.z)
+	if menu:get_value(syndra_pred_useage) == 0 then
+		pred_output = pred:predict(W.speed, W.delay, W.range, W.width, unit, false, false)
+		if pred_output.can_cast then
+			castPos = pred_output.cast_pos
+			spellbook:cast_spell(SLOT_W, W.delay, castPos.x, castPos.y, castPos.z)
+		end
+	end
+
+	if menu:get_value(syndra_pred_useage) == 1 then
+		local output = arkpred:get_aoe_prediction(W_input, unit)
+		local inv = arkpred:get_invisible_duration(unit)
+		if output.hit_chance >= menu:get_value(syndra_w_hitchance) / 100 and inv < 0.125 then
+			local p = output.cast_pos
+			spellbook:cast_spell(SLOT_W, W.delay, p.x, p.y, p.z)
+		end
 	end
 end
 
 local function CastE(unit)
+
+	if menu:get_value(syndra_pred_useage) == 0 then
+		pred_output = pred:predict(E.speed, E.delay, E.range, E.width, unit, false, false)
+		if pred_output.can_cast then
+			castPos = pred_output.cast_pos
+			spellbook:cast_spell(SLOT_E, E.delay, castPos.x, castPos.y, castPos.z)
+		end
+	end
+
+	if menu:get_value(syndra_pred_useage) == 1 then
+		local output = arkpred:get_prediction(E_input, unit)
+		local inv = arkpred:get_invisible_duration(unit)
+		local immobile = arkpred:get_immobile_duration(unit)
+		if output.hit_chance >= menu:get_value(syndra_e_hitchance) / 100 and inv < 0.125 then
+			local p = output.cast_pos
+			spellbook:cast_spell(SLOT_E, E.delay, p.x, p.y, p.z)
+		end
+	end
+end
+
+local function CastEQuick(target)
 	pred_output = pred:predict(E.speed, E.delay, E.range, E.width, unit, false, false)
 	if pred_output.can_cast then
 		castPos = pred_output.cast_pos
@@ -608,6 +704,12 @@ local function Combo()
 			CastE(target)
 		end
 	end
+
+	if menu:get_value(syndra_combo_use_q) == 1 and menu:get_value(syndra_combo_use_e) == 0 then
+		if myHero:distance_to(target.origin) <= Q.range and ml.IsValid(target) and IsKillable(target) and ml.Ready(SLOT_Q) then
+	    CastQ(target)
+	 	end
+ 	end
 
 	if menu:get_value(syndra_combo_use_q) == 1 and not CastQE then
 	  if myHero:distance_to(target.origin) <= E.range and myHero:distance_to(target.origin) > Q.range and ml.IsValid(target) and IsKillable(target) and ml.Ready(SLOT_Q) and ml.Ready(SLOT_E) then
@@ -713,6 +815,12 @@ local function Harass()
  	end
 
 	if menu:get_value(syndra_harass_use_q) == 1 and not CastQE and GrabHarassMana then
+	  if myHero:distance_to(target.origin) <= Q.range and ml.IsValid(target) and IsKillable(target) and ml.Ready(SLOT_Q) then
+	    CastQ(target)
+	 	end
+ 	end
+
+	if menu:get_value(syndra_harass_use_q) == 1 and menu:get_value(syndra_harass_use_e) == 0 and GrabHarassMana then
 	  if myHero:distance_to(target.origin) <= Q.range and ml.IsValid(target) and IsKillable(target) and ml.Ready(SLOT_Q) then
 	    CastQ(target)
 	 	end
@@ -1149,7 +1257,27 @@ local function on_active_spell(obj, active_spell)
 	end
 end
 
+--[[local timer, health = 0, 0
+
+local function on_process_spell(unit, args)
+    if unit ~= game.local_player or timer >
+        args.cast_time - 1 then return end
+    timer = args.cast_time
+end]]
+
 local function on_tick()
+
+	--[[for _, unit in ipairs(game.players) do
+		if unit.champ_name:find("Practice") then
+			if unit.is_valid and unit.is_enemy and
+				unit.is_alive and unit.is_visible and health ~=
+				unit.health and game.game_time - timer < 1 then
+				local delay = game.game_time - timer - 0.0167
+				console:log(tostring(delay))
+				health = unit.health
+			end
+		end
+	end]]
 
 	for index, ball in pairs(ballHolder) do
 			if not ball.is_alive then
@@ -1196,6 +1324,7 @@ local function on_tick()
 
 end
 
+--client:set_event_callback("on_process_spell", on_process_spell)
 client:set_event_callback("on_tick", on_tick)
 client:set_event_callback("on_draw", on_draw)
 client:set_event_callback("on_dash", on_dash)

@@ -4,7 +4,7 @@ end
 
 do
     local function AutoUpdate()
-		local Version = 1.1
+		local Version = 1.3
 		local file_name = "SwainTheSexyMofo.lua"
 		local url = "https://raw.githubusercontent.com/TheShaunyboi/BruhWalkerEncrypted/main/SwainTheSexyMofo.lua"
         local web_version = http:get("https://raw.githubusercontent.com/TheShaunyboi/BruhWalkerEncrypted/main/SwainTheSexyMofo.lua.version.txt")
@@ -55,7 +55,24 @@ if VIP_USER_LIST() then
   console:log("..................You Are VIP! Thanks For Supporting <3 #Family........................")
 end
 
+local file_name = "VectorMath.lua"
+if not file_manager:file_exists(file_name) then
+   local url = "https://raw.githubusercontent.com/stoneb2/Bruhwalker/main/VectorMath/VectorMath.lua"
+   http:download_file(url, file_name)
+   console:log("VectorMath Library Downloaded")
+   console:log("Please Reload with F5")
+end
+
+local file_name = "Prediction.lib"
+if not file_manager:file_exists(file_name) then
+   local url = "https://raw.githubusercontent.com/Ark223/Bruhwalker/main/Prediction.lib"
+   http:download_file(url, file_name)
+   console:log("Ark223 Prediction Library Downloaded")
+   console:log("Please Reload with F5")
+end
+
 pred:use_prediction()
+arkpred = _G.Prediction
 
 local myHero = game.local_player
 local local_player = game.local_player
@@ -364,6 +381,13 @@ local function SwainRActive(unit)
 	return false
 end
 
+local function SwainPassiveBuff(unit)
+	if unit:has_buff("SwainPassive") then
+		return true
+	end
+	return false
+end
+
 local function GetGameTime()
 	return tonumber(game.game_time)
 end
@@ -375,8 +399,8 @@ local function Is_Me(unit)
 	return false
 end
 
-local function IsImmobileTarget(unit)
-    if unit:has_buff_type(5) or unit:has_buff_type(8) or unit:has_buff_type(10) or unit:has_buff_type(11) or unit:has_buff_type(21) or unit:has_buff_type(22) or unit:has_buff_type(24) or unit:has_buff_type(29) then
+function IsImmobile(unit)
+    if unit:has_buff_type(5) or unit:has_buff_type(12) or unit:has_buff_type(30) or unit:has_buff_type(25) or unit:has_buff_type(11) then
         return true
     end
     return false
@@ -413,7 +437,7 @@ local function IsUnderTurret(unit)
 end
 
 function IsKillable(unit)
-	if unit:has_buff_type(15) or unit:has_buff_type(17) or unit:has_buff("sionpassivezombie") then
+	if unit:has_buff_type(16) or unit:has_buff_type(18) or unit:has_buff("sionpassivezombie") then
 		return false
 	end
 	return true
@@ -444,15 +468,32 @@ end
 
 swain_enabled = menu:add_checkbox("Enabled", swain_category, 1)
 swain_combokey = menu:add_keybinder("Combo Mode Key", swain_category, 32)
-menu:add_label("Welcome To Shaun's Sexy Swain", swain_category)
+menu:add_label("Shaun's Sexy Swain", swain_category)
 menu:add_label("#WheresMyBirdsYouDick..", swain_category)
 
-swain_ks_function = menu:add_subcategory("Kill Steal", swain_category)
+swain_prediction = menu:add_subcategory("[Pred Selection]", swain_category)
+e_table = {}
+e_table[1] = "Bruh Internal"
+e_table[2] = "Ark Pred"
+swain_pred_useage = menu:add_combobox("[Pred Selection]", swain_prediction, e_table, 1)
+
+swain_ark_pred = menu:add_subcategory("[Ark Pred Settings]", swain_prediction)
+
+swain_ark_pred_q = menu:add_subcategory("[Q] Settings", swain_ark_pred, 1)
+swain_q_hitchance = menu:add_slider("[Q] Hit Chance [%]", swain_ark_pred_q, 1, 99, 50)
+
+swain_ark_pred_w = menu:add_subcategory("[W] Settings", swain_ark_pred, 1)
+swain_w_hitchance = menu:add_slider("[W] Hit Chance [%]", swain_ark_pred_w, 1, 99, 50)
+
+swain_ark_pred_e = menu:add_subcategory("[E] Settings", swain_ark_pred, 1)
+swain_e_hitchance = menu:add_slider("[E] Hit Chance [%]", swain_ark_pred_e, 1, 99, 50)
+
+swain_ks_function = menu:add_subcategory("[Kill Steal]", swain_category)
 swain_ks_use_q = menu:add_checkbox("Use [Q]", swain_ks_function, 1)
 swain_ks_use_w = menu:add_checkbox("Use [W]", swain_ks_function, 1)
 swain_ks_use_e = menu:add_checkbox("Use [E]", swain_ks_function, 1)
 swain_ks_use_r = menu:add_checkbox("Use [R]", swain_ks_function, 1)
-swain_ks_r_blacklist = menu:add_subcategory("Ultimate Kill Steal Blacklist", swain_ks_function)
+swain_ks_r_blacklist = menu:add_subcategory("Ultimate Kill Steal Whitelist", swain_ks_function)
 local players = game.players
 for _, t in pairs(players) do
     if t and t.is_enemy then
@@ -460,7 +501,7 @@ for _, t in pairs(players) do
     end
 end
 
-swain_combo = menu:add_subcategory("Combo", swain_category)
+swain_combo = menu:add_subcategory("[Combo]", swain_category)
 swain_combo_q = menu:add_subcategory("[Q] Settings", swain_combo)
 swain_combo_use_q = menu:add_checkbox("Use [Q]", swain_combo_q, 1)
 swain_combo_w = menu:add_subcategory("[W] Settings", swain_combo)
@@ -473,7 +514,7 @@ swain_combo_e_range = menu:add_slider("Max [E] Range In Combo", swain_combo_e, 1
 swain_combo_r = menu:add_subcategory("[R] Combo Settings", swain_combo)
 swain_combo_use_r = menu:add_checkbox("Use [R]", swain_combo_r, 1)
 swain_combo_r_enemy_hp = menu:add_slider("Combo [R] if Enemy HP is lower than [%]", swain_combo_r, 1, 100, 30)
-swain_combo_r_blacklist = menu:add_subcategory("Ultimate Combo Blacklist", swain_combo_r)
+swain_combo_r_blacklist = menu:add_subcategory("Ultimate Combo Whitelist", swain_combo_r)
 local players = game.players
 for _, v in pairs(players) do
     if v and v.is_enemy then
@@ -481,20 +522,23 @@ for _, v in pairs(players) do
     end
 end
 
-swain_harass = menu:add_subcategory("Harass", swain_category)
+swain_harass = menu:add_subcategory("[Harass]", swain_category)
 swain_harass_use_q = menu:add_checkbox("Use [Q]", swain_harass, 1)
 swain_harass_use_e = menu:add_checkbox("Use [E]", swain_harass, 1)
 swain_harass_min_mana = menu:add_slider("Minimum Mana [%] To Harass", swain_harass, 1, 100, 20)
 
-swain_extra = menu:add_subcategory("Sexy Automated Features", swain_category)
-swain_auto_w = menu:add_checkbox("Auto [W] Immobilised Targets", swain_extra, 1)
-swain_auto_r = menu:add_subcategory("Auto [R] Settings", swain_extra, 1)
+swain_autmated_features = menu:add_subcategory("[Automated Features]", swain_category)
+swain_auto_passive = menu:add_checkbox("Auto [Passive] Usage", swain_autmated_features, 1)
+swain_extra_w = menu:add_subcategory("Auto [W] Settings", swain_autmated_features)
+swain_auto_w = menu:add_checkbox("Auto [W] Immobilised Targets", swain_extra_w, 1)
+swain_extra_e = menu:add_subcategory("Auto [E] Settings", swain_autmated_features)
+swain_auto_gapclose = menu:add_checkbox("[E] Anti Gap Close", swain_extra_e, 1)
+swain_auto_interrupt = menu:add_checkbox("[E] Interrupt Major Channel Spells", swain_extra_e, 1)
+swain_auto_r = menu:add_subcategory("Auto [R] Settings", swain_autmated_features, 1)
 swain_auto_r_use = menu:add_checkbox("Use Auto [R]", swain_auto_r, 1)
 swain_auto_r_min = menu:add_slider("Minimum Targets To Perform Auto [R]", swain_auto_r, 1, 5, 3)
-swain_auto_gapclose = menu:add_checkbox("[E] Anti Gap Close", swain_extra, 1)
-swain_auto_interrupt = menu:add_checkbox("[E] Interrupt Major Channel Spells", swain_extra, 1)
 
-swain_laneclear = menu:add_subcategory("Lane Clear", swain_category)
+swain_laneclear = menu:add_subcategory("[Lane Clear]", swain_category)
 swain_laneclear_use_q = menu:add_checkbox("Use [Q]", swain_laneclear, 1)
 swain_laneclear_use_w = menu:add_checkbox("Use [W]", swain_laneclear, 1)
 swain_laneclear_use_e = menu:add_checkbox("Use [E]", swain_laneclear, 1)
@@ -503,17 +547,18 @@ swain_laneclear_q_min = menu:add_slider("Number Of Minions To Use [Q]", swain_la
 swain_laneclear_w_min = menu:add_slider("Number Of Minions To Use [W]", swain_laneclear, 1, 10, 3)
 swain_laneclear_e_min = menu:add_slider("Number Of Minions To Use [E]", swain_laneclear, 1, 10, 3)
 
-swain_jungleclear = menu:add_subcategory("Jungle Clear", swain_category)
+swain_jungleclear = menu:add_subcategory("[Jungle Clear]", swain_category)
 swain_jungleclear_use_q = menu:add_checkbox("Use [Q]", swain_jungleclear, 1)
 swain_jungleclear_use_w = menu:add_checkbox("Use [W]", swain_jungleclear, 1)
 swain_jungleclear_use_e = menu:add_checkbox("Use [E]", swain_jungleclear, 1)
 swain_jungleclear_min_mana = menu:add_slider("Minimum Mana [%] To Jungle", swain_jungleclear, 1, 100, 20)
 
-swain_draw = menu:add_subcategory("The Drawing Features", swain_category)
+swain_draw = menu:add_subcategory("[Drawing Features]", swain_category)
 swain_draw_q = menu:add_checkbox("Draw [Q] Range", swain_draw, 1)
-swain_draw_w = menu:add_checkbox("Draw [W] Range", swain_draw, 1)
+swain_draw_w = menu:add_checkbox("Draw Max [W] Range", swain_draw, 1)
 swain_draw_e = menu:add_checkbox("Draw [E] Range", swain_draw, 1)
 swain_draw_r = menu:add_checkbox("Draw [R] Range", swain_draw, 1)
+swain_draw_w_mm = menu:add_checkbox("Draw MiniMap Max [W] Range", swain_draw, 1)
 swain_draw_kill = menu:add_checkbox("Draw Full Combo Can Kill Text", swain_draw, 1)
 swain_draw_kill_healthbar = menu:add_checkbox("Draw Full Combo On Target Health Bar", swain_draw, 1, "Health Bar Damage Is Computed From R > E > Q > W")
 
@@ -570,31 +615,94 @@ local function GetRDmg(unit)
 	return unit:calculate_magic_damage(Damage)
 end
 
+local Q_input = {
+    source = myHero,
+		speed = math.huge, range = 715,
+    delay = 0.25, angle = 40,
+    collision = {},
+    type = "conic", hitbox = false
+}
+
+local W_input = {
+    source = myHero,
+		speed = math.huge, range = 5000,
+		delay = 0.25, radius = 325,
+    collision = {},
+    type = "circular", hitbox = false
+}
+
+local E_input = {
+    source = myHero,
+		speed = 935, range = 835,
+		delay = 0.25, radius = 85,
+    collision = {},
+  type = "linear", hitbox = true
+}
 
 -- Casting
 
+local function PassiveCast(unit)
+	orbwalker:attack_target(unit)
+end
+
 local function CastQ(unit)
-	pred_output = pred:predict(Q.speed, Q.delay, Q.range, Q.width, unit, false, false)
-  if pred_output.can_cast then
-		castPos = pred_output.cast_pos
-		spellbook:cast_spell(SLOT_Q, Q.delay, castPos.x, castPos.y, castPos.z)
-  end
+
+	if menu:get_value(swain_pred_useage) == 0 then
+		pred_output = pred:predict(Q.speed, Q.delay, Q.range, Q.width, unit, false, false)
+	  if pred_output.can_cast then
+			castPos = pred_output.cast_pos
+			spellbook:cast_spell(SLOT_Q, Q.delay, castPos.x, castPos.y, castPos.z)
+	  end
+	end
+
+	if menu:get_value(swain_pred_useage) == 1 then
+		local output = arkpred:get_prediction(Q_input, unit)
+	  local inv = arkpred:get_invisible_duration(unit)
+		if output.hit_chance >= menu:get_value(swain_q_hitchance) / 100 and inv < (Q_input.delay / 2) then
+			local p = output.cast_pos
+	    spellbook:cast_spell(SLOT_Q, Q.delay, p.x, p.y, p.z)
+		end
+	end
 end
 
 local function CastW(unit)
-	pred_output = pred:predict(W.speed, W.delay, W.range, W.width, unit, false, false)
-	if pred_output.can_cast then
-		castPos = pred_output.cast_pos
-		spellbook:cast_spell(SLOT_W, W.delay, castPos.x, castPos.y, castPos.z)
+
+	if menu:get_value(swain_pred_useage) == 0 then
+		pred_output = pred:predict(W.speed, W.delay, W.range, W.width, unit, false, false)
+		if pred_output.can_cast then
+			castPos = pred_output.cast_pos
+			spellbook:cast_spell(SLOT_W, W.delay, castPos.x, castPos.y, castPos.z)
+		end
+	end
+
+	if menu:get_value(swain_pred_useage) == 1 then
+		local output = arkpred:get_prediction(W_input, unit)
+	  local inv = arkpred:get_invisible_duration(unit)
+		if output.hit_chance >= menu:get_value(swain_w_hitchance) / 100 and inv < (W_input.delay / 2) then
+			local p = output.cast_pos
+	    spellbook:cast_spell(SLOT_W, W.delay, p.x, p.y, p.z)
+		end
 	end
 end
 
 local function CastE(unit)
-  pred_output = pred:predict(E.speed, E.delay, E.range, E.width, unit, false, false)
-  if pred_output.can_cast then
-    castPos = pred_output.cast_pos
-    spellbook:cast_spell(SLOT_E, E.delay, castPos.x, castPos.y, castPos.z)
-  end
+
+	if menu:get_value(swain_pred_useage) == 0 then
+	  pred_output = pred:predict(E.speed, E.delay, E.range, E.width, unit, false, false)
+	  if pred_output.can_cast then
+	    castPos = pred_output.cast_pos
+	    spellbook:cast_spell(SLOT_E, E.delay, castPos.x, castPos.y, castPos.z)
+	  end
+	end
+
+	if menu:get_value(swain_pred_useage) == 1 then
+		local output = arkpred:get_prediction(E_input, unit)
+	  local inv = arkpred:get_invisible_duration(unit)
+		if output.hit_chance >= menu:get_value(swain_e_hitchance) / 100 and inv < (E_input.delay / 2) then
+			local p = output.cast_pos
+	    spellbook:cast_spell(SLOT_E, E.delay, p.x, p.y, p.z)
+		end
+	end
 end
 
 local function CastR()
@@ -606,6 +714,7 @@ end
 local function Combo()
 
 	target = selector:find_target(E.range, mode_health)
+	qtarget = selector:find_target(Q.range, mode_health)
 
 	if menu:get_value(swain_combo_use_r) == 1 then
 		if myHero:distance_to(target.origin) <= R.range and IsValid(target) and IsKillable(target) then
@@ -620,16 +729,16 @@ local function Combo()
 	end
 
 	if menu:get_value(swain_combo_use_q) == 1 then
-		if myHero:distance_to(target.origin) <= R.range and IsValid(target) and IsKillable(target) then
+		if myHero:distance_to(qtarget.origin) <= Q.range and IsValid(qtarget) and IsKillable(qtarget) then
 			if Ready(SLOT_Q) then
-				CastQ(target)
+				CastQ(qtarget)
 			end
 		end
 	end
 
 	if menu:get_value(swain_combo_use_w) == 1 then
 		if myHero:distance_to(target.origin) <= menu:get_value(swain_combo_w_range) and IsValid(target) and IsKillable(target) then
-      if menu:get_value(swain_combo_use_w_imb) == 1 and IsImmobileTarget(target) and Ready(SLOT_W) then
+      if menu:get_value(swain_combo_use_w_imb) == 1 and IsImmobile(target) and Ready(SLOT_W) then
 				CastW(target)
 			end
 		end
@@ -657,12 +766,13 @@ end
 local function Harass()
 
 	target = selector:find_target(E.range, mode_health)
+	qtarget = selector:find_target(Q.range, mode_health)
 	local GrabHarassMana = myHero.mana/myHero.max_mana >= menu:get_value(swain_harass_min_mana) / 100
 
 	if menu:get_value(swain_harass_use_q) == 1 then
-		if myHero:distance_to(target.origin) <= Q.range and IsValid(target) and IsKillable(target) then
+		if myHero:distance_to(qtarget.origin) <= Q.range and IsValid(qtarget) and IsKillable(qtarget) then
 			if GrabHarassMana and Ready(SLOT_Q) then
-				CastQ(target)
+				CastQ(qtarget)
 			end
 		end
 	end
@@ -738,7 +848,11 @@ local function Clear()
 			if IsValid(target) and target.object_id ~= 0 and target.is_enemy and myHero:distance_to(target.origin) < Q.range then
 				if GetMinionCount(Q.range, target) >= menu:get_value(swain_laneclear_q_min) then
 					if GrabLaneClearMana and Ready(SLOT_Q) then
-						CastQ(target)
+						pred_output = pred:predict(Q.speed, Q.delay, Q.range, Q.width, target, false, false)
+					  if pred_output.can_cast then
+							castPos = pred_output.cast_pos
+							spellbook:cast_spell(SLOT_Q, Q.delay, castPos.x, castPos.y, castPos.z)
+						end
 					end
 				end
 			end
@@ -748,7 +862,11 @@ local function Clear()
 			if IsValid(target) and target.object_id ~= 0 and target.is_enemy and myHero:distance_to(target.origin) < E.range then
 				if GetMinionCount(W.range, target) >= menu:get_value(swain_laneclear_w_min) then
 					if GrabLaneClearMana and Ready(SLOT_W) then
-            CastW(target)
+						pred_output = pred:predict(W.speed, W.delay, W.range, W.width, target, false, false)
+						if pred_output.can_cast then
+							castPos = pred_output.cast_pos
+							spellbook:cast_spell(SLOT_W, W.delay, castPos.x, castPos.y, castPos.z)
+						end
 					end
 				end
 			end
@@ -758,7 +876,11 @@ local function Clear()
 			if IsValid(target) and target.object_id ~= 0 and target.is_enemy and myHero:distance_to(target.origin) < E.range then
 				if GetMinionCount(E.range, target) >= menu:get_value(swain_laneclear_e_min) then
 					if GrabLaneClearMana and Ready(SLOT_E) then
-            CastE(target)
+						pred_output = pred:predict(E.speed, E.delay, E.range, E.width, target, false, false)
+					  if pred_output.can_cast then
+							castPos = pred_output.cast_pos
+							spellbook:cast_spell(SLOT_E, E.delay, castPos.x, castPos.y, castPos.z)
+						end
 					end
 				end
 			end
@@ -779,7 +901,11 @@ local function JungleClear()
 		if target.object_id ~= 0 and menu:get_value(swain_jungleclear_use_q) == 1 and myHero:distance_to(target.origin) < Q.range then
 			if IsValid(target) then
 				if GrabJungleClearMana and Ready(SLOT_Q) then
-					CastQ(target)
+					pred_output = pred:predict(Q.speed, Q.delay, Q.range, Q.width, target, false, false)
+				  if pred_output.can_cast then
+						castPos = pred_output.cast_pos
+						spellbook:cast_spell(SLOT_Q, Q.delay, castPos.x, castPos.y, castPos.z)
+					end
 				end
 			end
 		end
@@ -787,7 +913,11 @@ local function JungleClear()
 		if target.object_id ~= 0 and menu:get_value(swain_jungleclear_use_w) == 1 and myHero:distance_to(target.origin) < E.range then
 			if IsValid(target) then
 				if GrabJungleClearMana and Ready(SLOT_W) then
-          CastW(target)
+					pred_output = pred:predict(W.speed, W.delay, W.range, W.width, target, false, false)
+					if pred_output.can_cast then
+						castPos = pred_output.cast_pos
+						spellbook:cast_spell(SLOT_W, W.delay, castPos.x, castPos.y, castPos.z)
+					end
 				end
 			end
 		end
@@ -795,7 +925,11 @@ local function JungleClear()
 		if target.object_id ~= 0 and menu:get_value(swain_jungleclear_use_e) == 1 and myHero:distance_to(target.origin) < E.range then
 			if IsValid(target) then
 				if GrabJungleClearMana and Ready(SLOT_E) then
-          CastE(target)
+					pred_output = pred:predict(E.speed, E.delay, E.range, E.width, target, false, false)
+				  if pred_output.can_cast then
+						castPos = pred_output.cast_pos
+						spellbook:cast_spell(SLOT_E, E.delay, castPos.x, castPos.y, castPos.z)
+					end
 				end
 			end
 		end
@@ -818,7 +952,7 @@ local function AutoW()
   target = selector:find_target(W.range, mode_health)
 
   if Ready(SLOT_W) and menu:get_value(swain_auto_w) == 1 then
-    if IsImmobileTarget(target) and myHero:distance_to(target.origin) < W.range then
+    if IsImmobile(target) and myHero:distance_to(target.origin) < W.range then
       CastW(target)
     end
   end
@@ -831,6 +965,23 @@ local function on_possible_interrupt(obj, spell_name)
     if IsValid(obj) then
       if myHero:distance_to(obj.origin) < E.range and Ready(SLOT_E) then
         CastE(obj)
+			end
+		end
+	end
+end
+
+-- Auto Passive AA
+
+local function AutoPassive()
+
+	target = selector:find_target(1300, mode_health)
+
+	if menu:get_value(swain_auto_passive) == 1 then
+		if SwainPassiveBuff(myHero) then
+			if myHero:distance_to(target.origin) <= 1100 then
+				if IsImmobile(target) and IsValid(target) and IsKillable(target) then
+					PassiveCast(target)
+				end
 			end
 		end
 	end
@@ -875,6 +1026,12 @@ local function on_draw()
 		end
 	end
 
+	if menu:get_value(swain_draw_w_mm) == 1 then
+		if Ready(SLOT_W) then
+			minimap:draw_circle(x, y, z, W.range, 255, 255, 255, 255)
+		end
+	end
+
   if menu:get_value(swain_draw_e) == 1 then
 		if Ready(SLOT_E) then
 			renderer:draw_circle(x, y, z, E.range, 255, 255, 0, 255)
@@ -893,7 +1050,7 @@ local function on_draw()
 		if target.object_id ~= 0 and myHero:distance_to(target.origin) <= 1000 then
 			if menu:get_value(swain_draw_kill) == 1 then
 				if fulldmg > target.health and IsValid(target) then
-					if enemydraw.is_valid then
+					if enemydraw.is_valid and target.is_on_screen then
 						renderer:draw_text_big_centered(enemydraw.x, enemydraw.y, "Can Kill Target")
 					end
 				end
@@ -924,6 +1081,9 @@ local function on_tick()
   AutoR()
 	AutoKill()
 
+	if not game:is_key_down(menu:get_value(swain_combokey)) then
+		AutoPassive()
+	end
 end
 
 client:set_event_callback("on_tick", on_tick)

@@ -4,7 +4,7 @@ end
 
 do
     local function AutoUpdate()
-		local Version = 3.0
+		local Version = 3.2
 		local file_name = "OhAyKaisa.lua"
 		local url = "https://raw.githubusercontent.com/TheShaunyboi/BruhWalkerEncrypted/main/OhAyKaisa.lua"
         local web_version = http:get("https://raw.githubusercontent.com/TheShaunyboi/BruhWalkerEncrypted/main/OhAyKaisa.lua.version.txt")
@@ -54,8 +54,22 @@ if VIP_USER_LIST() then
   console:log("..................You Are VIP! Thanks For Supporting <3 #Family........................")
 end
 
+if not file_manager:file_exists("PKDamageLib.lua") then
+	local file_name = "PKDamageLib.lua"
+	local url = "http://raw.githubusercontent.com/Astraanator/test/main/Champions/PKDamageLib.lua"
+	http:download_file(url, file_name)
+end
+
+local file_name = "Prediction.lib"
+if not file_manager:file_exists(file_name) then
+   local url = "https://raw.githubusercontent.com/Ark223/Bruhwalker/main/Prediction.lib"
+   http:download_file(url, file_name)
+   console:log("Ark223 Prediction Library Downloaded")
+   console:log("Please Reload with F5")
+end
 
 pred:use_prediction()
+arkpred = _G.Prediction
 require "PKDamageLib"
 
 local myHero = game.local_player
@@ -74,6 +88,14 @@ local W = { range = 3000, delay = .4, width = 200, speed = 1750 }
 local E = { range = 0, delay = .1, width = 0, speed = 0 }
 local R = { delay = .1, width = 0, speed = 0 }
 local rRange = { 1500, 2250, 3000 }
+
+local W_input = {
+    source = myHero,
+    speed = 1750, range = 3000,
+    delay = 0.45, radius = 100,
+    collision = {"minion", "wind_wall"},
+    type = "linear", hitbox = true
+}
 
 -- Return game data and maths
 
@@ -456,7 +478,7 @@ local function IsUnderTurret(unit)
 end
 
 function IsKillable(unit)
-	if unit:has_buff_type(15) or unit:has_buff_type(17) or unit:has_buff("sionpassivezombie") then
+	if unit:has_buff_type(16) or unit:has_buff_type(18) or unit:has_buff("sionpassivezombie") then
 		return false
 	end
 	return true
@@ -512,8 +534,17 @@ end
 
 Kai_enabled = menu:add_checkbox("Enabled", Kai_category, 1)
 Kai_combokey = menu:add_keybinder("Combo Mode Key", Kai_category, 32)
-menu:add_label("Welcome To Shaun's Sexy Kaisa", Kai_category)
+menu:add_label("Shaun's Sexy Kaisa", Kai_category)
 menu:add_label("#TheVoidMakesMeTingle", Kai_category)
+
+Kai_prediction = menu:add_subcategory("[Pred Selection]", Kai_category)
+e_table = {}
+e_table[1] = "Bruh Internal"
+e_table[2] = "Ark Pred"
+Kai_pred_useage = menu:add_combobox("[Pred Selection]", Kai_prediction, e_table, 1)
+
+Kai_ark_pred = menu:add_subcategory("[Ark Pred Settings]", Kai_prediction)
+Kai_w_hitchance = menu:add_slider("[W] Hit Chance [%]", Kai_ark_pred, 1, 99, 40)
 
 Kai_ks_function = menu:add_subcategory("[Kill Steal]", Kai_category)
 Kai_ks_q = menu:add_subcategory("[Q] Settings", Kai_ks_function, 1)
@@ -589,10 +620,22 @@ local function CastQ()
 end
 
 local function CastW(unit)
-	pred_output = pred:predict(W.speed, W.delay, W.range, W.width, unit, true, true)
-	if pred_output.can_cast then
-		castPos = pred_output.cast_pos
-		spellbook:cast_spell(SLOT_W, W.delay, castPos.x, castPos.y, castPos.z)
+
+	if menu:get_value(Kai_pred_useage) == 0 then
+		pred_output = pred:predict(W.speed, W.delay, W.range, W.width, unit, true, true)
+		if pred_output.can_cast then
+			castPos = pred_output.cast_pos
+			spellbook:cast_spell(SLOT_W, W.delay, castPos.x, castPos.y, castPos.z)
+		end
+	end
+
+	if menu:get_value(Kai_pred_useage) == 1 then
+		local output = arkpred:get_prediction(W_input, unit)
+	  local inv = arkpred:get_invisible_duration(unit)
+		if output.hit_chance >= menu:get_value(Kai_w_hitchance) / 100 and inv < 0.2 then
+			local p = output.cast_pos
+	    spellbook:cast_spell(SLOT_W, W.delay, p.x, p.y, p.z)
+		end
 	end
 end
 
@@ -729,8 +772,8 @@ local function AutoKill()
 
 	for i, target in ipairs(GetEnemyHeroes()) do
 
-		if target.object_id ~= 0 and myHero:distance_to(target.origin) <= Q.range and IsValid(target) and IsKillable(target) then
-			if menu:get_value(Kai_ks_use_q) == 1 then
+		if menu:get_value(Kai_ks_use_q) == 1 and Ready(SLOT_Q) then
+			if target.object_id ~= 0 and myHero:distance_to(target.origin) <= Q.range and IsValid(target) and IsKillable(target) then
 				if GetQDmg(target) > target.health then
 					if Ready(SLOT_Q) then
 						CastQ()
@@ -739,8 +782,8 @@ local function AutoKill()
 			end
 		end
 
-		if target.object_id ~= 0 and myHero:distance_to(target.origin) <= menu:get_value(Kai_ks_w_range) and IsValid(target) and IsKillable(target) then
-			if menu:get_value(Kai_ks_use_w) == 1 then
+		if menu:get_value(Kai_ks_use_w) == 1 and Ready(SLOT_W) then
+			if target.object_id ~= 0 and myHero:distance_to(target.origin) <= menu:get_value(Kai_ks_w_range) and IsValid(target) and IsKillable(target) then
 				if GetWDmg(target) > target.health then
 					if Ready(SLOT_W) then
 						CastW(target)
@@ -784,7 +827,7 @@ local function Clear()
 	minions = game.minions
 	for i, target in ipairs(minions) do
 
-		if menu:get_value(Kai_laneclear_use_q) == 1 then
+		if menu:get_value(Kai_laneclear_use_q) == 1 and Ready(SLOT_Q) then
 			if IsValid(target) and target.object_id ~= 0 and target.is_enemy and myHero:distance_to(target.origin) < Q.range then
 				if GetMinionCount(Q.range, myHero) >= menu:get_value(Kai_laneclear_q_min) then
 					if GrabLaneClearMana and Ready(SLOT_Q) then
@@ -794,7 +837,7 @@ local function Clear()
 			end
 		end
 
-		if menu:get_value(Kai_laneclear_use_e) == 1 then
+		if menu:get_value(Kai_laneclear_use_e) == 1 and Ready(SLOT_E) then
 			if IsValid(target) and target.object_id ~= 0 and target.is_enemy and myHero:distance_to(target.origin) < AA.range then
 				if GetMinionCount(AA.range, myHero) >= menu:get_value(Kai_laneclear_e_min) then
 					if GrabLaneClearMana and Ready(SLOT_E) then
@@ -877,9 +920,9 @@ local function on_dash(obj, dash_info)
 	local justme = myHero.origin
 	local medraw = game:world_to_screen(justme.x, justme.y, justme.z)
 
-	if menu:get_value(Kai_auto_e_gap) == 1 then
-		if IsValid(obj) then
-			if myHero:distance_to(dash_info.end_pos) < myHero.attack_range and myHero:distance_to(obj.origin) < myHero.attack_range and Ready(SLOT_E) then
+	if menu:get_value(Kai_auto_e_gap) == 1 and Ready(SLOT_E) then
+		if IsValid(obj) and obj.is_enemy then
+			if myHero:distance_to(dash_info.end_pos) < myHero.attack_range and myHero:distance_to(obj.origin) < myHero.attack_range then
 				CastE()
 			end
 		end
@@ -953,7 +996,27 @@ local function on_draw()
 	end
 end
 
+--local timer, health = 0, 0
+
+--[[local function on_process_spell(unit, args)
+    if unit ~= game.local_player or timer >
+        args.cast_time - 1 then return end
+    timer = args.cast_time
+end]]
+
 local function on_tick()
+
+	--[[for _, unit in ipairs(game.players) do
+		if unit.champ_name:find("Practice") then
+			if unit.is_valid and unit.is_enemy and
+				unit.is_alive and unit.is_visible and health ~=
+				unit.health and game.game_time - timer < 1 then
+				local delay = game.game_time - timer - 0.0167
+				console:log(tostring(delay))
+				health = unit.health
+			end
+		end
+	end]]
 
 	if game:is_key_down(menu:get_value(Kai_combokey)) and menu:get_value(Kai_enabled) == 1 then
 		Combo()
@@ -979,6 +1042,7 @@ local function on_tick()
 
 end
 
+--client:set_event_callback("on_process_spell", on_process_spell)
 client:set_event_callback("on_tick", on_tick)
 client:set_event_callback("on_draw", on_draw)
 client:set_event_callback("on_dash", on_dash)

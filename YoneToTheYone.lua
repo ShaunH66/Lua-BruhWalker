@@ -5,7 +5,7 @@ end
 -- AutoUpdate
 do
     local function AutoUpdate()
-		local Version = 2.3
+		local Version = 2.1
 		local file_name = "YoneToTheYone.lua"
 		local url = "http://raw.githubusercontent.com/TheShaunyboi/BruhWalkerEncrypted/main/YoneToTheYone.lua"
         local web_version = http:get("https://raw.githubusercontent.com/TheShaunyboi/BruhWalkerEncrypted/main/YoneToTheYone.lua.version.txt")
@@ -55,15 +55,33 @@ if VIP_USER_LIST() then
   console:log("..................You Are VIP! Thanks For Supporting <3 #Family........................")
 end
 
+if not file_manager:file_exists("PKDamageLib.lua") then
+	local file_name = "PKDamageLib.lua"
+	local url = "http://raw.githubusercontent.com/Astraanator/test/main/Champions/PKDamageLib.lua"
+	http:download_file(url, file_name)
+end
+
+local file_name = "Prediction.lib"
+if not file_manager:file_exists(file_name) then
+   local url = "https://raw.githubusercontent.com/Ark223/Bruhwalker/main/Prediction.lib"
+   http:download_file(url, file_name)
+   console:log("Ark223 Prediction Library Downloaded")
+   console:log("Please Reload with F5")
+end
+
 pred:use_prediction()
+arkpred = _G.Prediction
 
 local myHero = game.local_player
 local local_player = game.local_player
 
 local Wcast = false
-local AutoTime = 0
-local AutoAATime = 0
+local AutoTime = nil
+local AutoAATime = nil
 local AAcast = false
+local QDelayAS = 0
+local WDelayAS = 0
+local windup_end_time = nil
 
 local function Ready(spell)
   return spellbook:can_cast(spell)
@@ -72,12 +90,11 @@ end
 -- Ranges
 
 local Q = { range = 450, delay = .25 }
-local Q3 = { range = 850, delay = .25 }
+local Q3 = { range = 1000, delay = .25 }
 local W = { range = 600, delay = .35, width = 700, speed = 0 }
 local E = { range = 300, delay = .25, width = 225, speed = 0 }
-local R = { range = 950, delay = .75, width = 225, speed = 0 }
+local R = { range = 990, delay = .75, width = 226, speed = 0 }
 local RF = { range = 1750, delay = .75, width = 225, speed = 0 }
-
 
 -- Return game data and maths
 
@@ -262,7 +279,7 @@ local function IsYoneQ3()
 	QSpell = spellbook:get_spell_slot(SLOT_Q)
 	QData = QSpell.spell_data
 	QName = QData.spell_name
-	if QName == "YoneQ3" then
+	if QName == "yoneq3ready" then
 		return true
 	end
 	return false
@@ -324,6 +341,35 @@ yone_enabled = menu:add_checkbox("Enabled", yone_category, 1)
 yone_combokey = menu:add_keybinder("Combo Mode Key", yone_category, 32)
 menu:add_label("Shaun's Sexy Yone", yone_category)
 menu:add_label("#MassiveSword..Small Nose?", yone_category)
+
+yone_prediction = menu:add_subcategory("[Pred Selection]", yone_category)
+e_table = {}
+e_table[1] = "Bruh Internal"
+e_table[2] = "Ark Pred"
+yone_pred_useage = menu:add_combobox("[Pred Selection]", yone_prediction, e_table, 1)
+
+yone_ark_pred = menu:add_subcategory("[Ark Pred Settings]", yone_prediction)
+yone_ark_pred_q = menu:add_subcategory("[Q] Settings", yone_ark_pred, 1)
+yone_q_hitchance = menu:add_slider("[Q] Yone Hit Chance [%]", yone_ark_pred_q, 1, 99, 50)
+yone_q_speed = menu:add_slider("[Q] Yone Speed Input", yone_ark_pred_q, 1, 2500, 1500)
+yone_q_range = menu:add_slider("[Q] Yone Range Input", yone_ark_pred_q, 1, 1000, 450)
+yone_q_radius = menu:add_slider("[Q] Yone Radius Input", yone_ark_pred_q, 1, 500, 60)
+
+yone_ark_pred_q3 = menu:add_subcategory("[Q3] Settings", yone_ark_pred, 1)
+yone_q3_hitchance = menu:add_slider("[Q3] Yone Hit Chance [%]", yone_ark_pred_q3, 1, 99, 50)
+yone_q3_speed = menu:add_slider("[Q3] Yone Speed Input", yone_ark_pred_q3, 1, 2500, 1500)
+yone_q3_range = menu:add_slider("[Q3] Yone Range Input", yone_ark_pred_q3, 1, 2000, 1000)
+yone_q3_radius = menu:add_slider("[Q3] Yone Radius Input", yone_ark_pred_q3, 1, 500, 100)
+
+yone_ark_pred_w = menu:add_subcategory("[W] Settings", yone_ark_pred, 1)
+yone_w_hitchance = menu:add_slider("[W] Yone Hit Chance [%]", yone_ark_pred_w, 1, 99, 50)
+yone_w_range = menu:add_slider("[W] Yone Range Input", yone_ark_pred_w, 1, 1500, 600)
+yone_w_angle = menu:add_slider("[W] Yone Angle Input", yone_ark_pred_w, 1, 500, 80)
+
+yone_ark_pred_r = menu:add_subcategory("[R] Settings", yone_ark_pred, 1)
+yone_r_hitchance = menu:add_slider("[R] Yone Hit Chance [%]", yone_ark_pred_r, 1, 99, 50)
+yone_r_range = menu:add_slider("[R] Yone Range Input", yone_ark_pred_r, 1, 2500, 1000)
+yone_r_radius = menu:add_slider("[R] Yone Radius Input", yone_ark_pred_r, 1, 500, 113)
 
 yone_ks_function = menu:add_subcategory("[Kill Steal]", yone_category)
 yone_ks_use_q = menu:add_checkbox("Use [Q]", yone_ks_function, 1)
@@ -469,30 +515,79 @@ local function GetRDmg(unit)
 	return unit:calculate_phys_damage(Damage)
 end
 
+local Q_input = {
+    source = myHero,
+    speed = menu:get_value(yone_q_speed), range = menu:get_value(yone_q_range),
+    delay = QDelayAS, radius = menu:get_value(yone_q_radius),
+    collision = {},
+    type = "linear", hitbox = true
+}
+
+local Q3_input = {
+    source = myHero,
+		speed = menu:get_value(yone_q3_speed), range = menu:get_value(yone_q3_range),
+		delay = QDelayAS, radius = menu:get_value(yone_q3_radius),
+    collision = {},
+    type = "linear", hitbox = true
+}
+
+local W_input = {
+    source = myHero,
+    speed = math.huge, range = menu:get_value(yone_w_range),
+    delay = WDelayAS, angle = menu:get_value(yone_w_angle),
+    collision = {},
+    type = "conic", hitbox = false
+}
+
+local R_input = {
+    source = myHero,
+    speed = math.huge, range = menu:get_value(yone_r_range),
+    delay = 0.75, radius = menu:get_value(yone_r_radius),
+    collision = {},
+    type = "linear", hitbox = true
+}
+
+
 -- Casting
 
 local function CastQ(unit)
 
-	if not YoneQ3 then
-		if unit.object_id ~= 0 then
-			if Ready(SLOT_Q) then
-				origin = unit.origin
-				x, y, z = origin.x, origin.y, origin.z
-				spellbook:cast_spell(SLOT_Q, Q.delay, x, y, z)
-			end
+	if IsYoneQ() and Ready(SLOT_Q) then
+		origin = unit.origin
+		x, y, z = origin.x, origin.y, origin.z
+		spellbook:cast_spell(SLOT_Q, QDelayAS, x, y, z)
+	end
+	if menu:get_value(yone_pred_useage) == 1 and Ready(SLOT_Q) then
+		local output = arkpred:get_prediction(Q_input, unit)
+	  local inv = arkpred:get_invisible_duration(unit)
+		if output.hit_chance >= menu:get_value(yone_q_hitchance) / 100 and inv < (QDelayAS / 2) then
+			local p = output.cast_pos
+	    spellbook:cast_spell(SLOT_Q, QDelayAS, p.x, p.y, p.z)
 		end
 	end
+
 end
 
 local function CastQ3(unit)
 
-	if IsYoneQ3() then
-		if unit.object_id ~= 0 then
-			if Ready(SLOT_Q) then
-				origin = unit.origin
-				x, y, z = origin.x, origin.y, origin.z
-				spellbook:cast_spell(SLOT_Q, Q3.delay, x, y, z)
+	if menu:get_value(yone_pred_useage) == 0 then
+		if IsYoneQ3() and Ready(SLOT_Q) then
+			if unit.object_id ~= 0 then
+				if Ready(SLOT_Q) then
+					origin = unit.origin
+					x, y, z = origin.x, origin.y, origin.z
+					spellbook:cast_spell(SLOT_Q, QDelayAS, x, y, z)
+				end
 			end
+		end
+	end
+
+	if menu:get_value(yone_pred_useage) == 1 and IsYoneQ3() and Ready(SLOT_Q) then
+		local output = arkpred:get_prediction(Q3_input, unit)
+	  local inv = arkpred:get_invisible_duration(unit)
+		if output.hit_chance >= menu:get_value(yone_q3_hitchance) / 100 and inv < (QDelayAS / 2) then
+			local p = output.cast_pos
+	    spellbook:cast_spell(SLOT_Q, QDelayAS, p.x, p.y, p.z)
 		end
 	end
 end
@@ -503,28 +598,41 @@ local function CastW(unit)
 		if Ready(SLOT_W) then
 			origin = unit.origin
 			x, y, z = origin.x, origin.y, origin.z
-			pred_output = pred:predict(W.speed, W.delay, W.range, W.width, unit, false, false)
+			pred_output = pred:predict(W.speed, WDelayAS, W.range, W.width, unit, false, false)
 
 			if pred_output.can_cast then
 				castPos = pred_output.cast_pos
-				spellbook:cast_spell(SLOT_W, W.delay, castPos.x, castPos.y, castPos.z)
+				spellbook:cast_spell(SLOT_W, WDelayAS, castPos.x, castPos.y, castPos.z)
 			end
+		end
+	end
+
+	if menu:get_value(yone_pred_useage) == 1 and Ready(SLOT_W) then
+		local output = arkpred:get_prediction(W_input, unit)
+	  local inv = arkpred:get_invisible_duration(unit)
+		if output.hit_chance >= menu:get_value(yone_w_hitchance) / 100 and inv < (WDelayAS / 2) then
+			local p = output.cast_pos
+	    spellbook:cast_spell(SLOT_W, WDelayAS, p.x, p.y, p.z)
 		end
 	end
 end
 
 local function CastR(unit)
 
-	if unit.object_id ~= 0 then
-		if Ready(SLOT_R) then
-			origin = unit.origin
-			x, y, z = origin.x, origin.y, origin.z
-			pred_output = pred:predict(R.speed, R.delay, R.range, R.width, unit, false, false)
+	if menu:get_value(yone_pred_useage) == 0 then
+		pred_output = pred:predict(R.speed, R.delay, R.range, R.width, unit, false, false)
+		if pred_output.can_cast then
+			castPos = pred_output.cast_pos
+			spellbook:cast_spell(SLOT_R, R.delay, castPos.x, castPos.y, castPos.z)
+		end
+	end
 
-			if pred_output.can_cast then
-        castPos = pred_output.cast_pos
-        spellbook:cast_spell(SLOT_R, R.delay, castPos.x, castPos.y, castPos.z)
-			end
+	if menu:get_value(yone_pred_useage) == 1 then
+		local output = arkpred:get_prediction(R_input, unit)
+		local inv = arkpred:get_invisible_duration(unit)
+		if output.hit_chance >= menu:get_value(yone_r_hitchance) / 100 and inv < (R_input.delay / 2) then
+			local p = output.cast_pos
+			spellbook:cast_spell(SLOT_R, R.delay, p.x, p.y, p.z)
 		end
 	end
 end
@@ -539,11 +647,12 @@ local function Combo()
 	local CastAADelay = AutoAA.attack_cast_delay
 
 	target = selector:find_target(R.range, mode_health)
+	qtarget = selector:find_target(Q.range, mode_health)
 
 	if menu:get_value(yone_combo_use_q) == 1 then
-		if myHero:distance_to(target.origin) <= Q3.range and IsValid(target) and IsKillable(target) then
-			if AutoAATime + CastAADelay < tonumber(game.game_time) then
-				if menu:get_value(yone_combo_first_aa) == 1 and AAcast and not IsYoneQ3() then
+		if myHero:distance_to(target.origin) <= Q3.range and IsValid(target) and IsKillable(target) and Ready(SLOT_Q) then
+			if AutoAATime ~= nil and AutoAATime + CastAADelay < tonumber(game.game_time) then
+				if menu:get_value(yone_combo_first_aa) == 1 and AAcast and not IsYoneQ3() and Ready(SLOT_Q) then
 					CastQ(target)
 					AAcast = false
 				end
@@ -552,26 +661,27 @@ local function Combo()
 	end
 
 	if menu:get_value(yone_combo_use_q) == 1 then
-		if myHero:distance_to(target.origin) <= Q.range and IsValid(target) and IsKillable(target) then
-			if menu:get_value(yone_combo_first_aa) == 0 or not Ready(SLOT_W) and not IsYoneQ3() then
-				CastQ(target)
+		if myHero:distance_to(qtarget.origin) <= Q.range and IsValid(qtarget) and IsKillable(qtarget) then
+			if menu:get_value(yone_combo_first_aa) == 0 or not Ready(SLOT_W) and not IsYoneQ3() and Ready(SLOT_Q) then
+				CastQ(qtarget)
 			end
 		end
 	end
 
 	if menu:get_value(yone_combo_use_q) == 1 then
 		if myHero:distance_to(target.origin) <= Q3.range and IsValid(target) and IsKillable(target) and not IsUnderTurretQ3(target) then
-			if IsYoneQ3() then
+			if IsYoneQ3() and Ready(SLOT_Q) then
 				CastQ3(target)
+				console:log("1")
 			end
 		end
 	end
 
 	if menu:get_value(yone_combo_use_w) == 1 then
-		if myHero:distance_to(target.origin) <= W.range and IsValid(target) and IsKillable(target) then
-			if AutoTime + CastDelay < tonumber(game.game_time) and not Ready(SLOT_Q) then
+		if myHero:distance_to(qtarget.origin) <= W.range and IsValid(qtarget) and IsKillable(qtarget) and Ready(SLOT_W) then
+			if AutoTime ~= nil and AutoTime + CastDelay < tonumber(game.game_time) and not Ready(SLOT_Q) then
 				if Wcast then
-					CastW(target)
+					CastW(qtarget)
 					Wcast = false
 				end
 			end
@@ -579,9 +689,9 @@ local function Combo()
 	end
 
 	if menu:get_value(yone_combo_use_w) == 1 and menu:get_value(yone_combo_use_w_aa) == 1 then
-		if myHero:distance_to(target.origin) <= W.range and IsValid(target) and IsKillable(target) then
-			if myHero:distance_to(target.origin) > myHero.attack_range then
-				CastW(target)
+		if myHero:distance_to(qtarget.origin) <= W.range and IsValid(qtarget) and IsKillable(qtarget) and Ready(SLOT_W) then
+			if myHero:distance_to(qtarget.origin) > myHero.attack_range then
+				CastW(qtarget)
 			end
 		end
 	end
@@ -593,7 +703,6 @@ local function Combo()
 				if not Ready(SLOT_Q) and Ready(SLOT_E) and not HasCastedYoneE(myHero) then
 					origin = target.origin
 					x, y, z = origin.x, origin.y, origin.z
-					castPos = pred_output.cast_pos
 					spellbook:cast_spell(SLOT_E, E.delay, x, y, z)
 				end
 			end
@@ -603,7 +712,7 @@ local function Combo()
 	if menu:get_value(yone_combo_use_r) == 1 then
 		if myHero:distance_to(target.origin) <= R.range and IsValid(target) and IsKillable(target) then
 			if menu:get_value_string("Use R Combo On: "..tostring(target.champ_name)) == 1 then
-				if target:health_percentage() <= menu:get_value(yone_combo_r_enemy_hp) and not IsUnderTurret(target) then
+				if target:health_percentage() <= menu:get_value(yone_combo_r_enemy_hp) and not IsUnderTurret(target) and  Ready(SLOT_R) then
 					CastR(target)
 				end
 			end
@@ -616,22 +725,23 @@ end
 local function Harass()
 
 	target = selector:find_target(R.range, mode_health)
+	qtarget = selector:find_target(Q.range, mode_health)
 
 	if menu:get_value(yone_harass_use_q) == 1 and IsYoneQ() then
-		if myHero:distance_to(target.origin) <= Q.range and IsValid(target) and IsKillable(target) then
-			CastQ(target)
+		if myHero:distance_to(qtarget.origin) <= Q.range and IsValid(qtarget) and IsKillable(qtarget) and Ready(SLOT_Q) then
+			CastQ(qtarget)
 		end
 	end
 
 	if menu:get_value(yone_harass_use_q) == 1 and IsYoneQ3() then
-		if myHero:distance_to(target.origin) <= Q3.range and IsValid(target) and IsKillable(target) and not IsUnderTurretQ3(target) then
+		if myHero:distance_to(target.origin) <= Q3.range and IsValid(target) and IsKillable(target) and not IsUnderTurretQ3(target) and Ready(SLOT_Q) then
 			CastQ3(target)
 		end
 	end
 
 
 	if menu:get_value(yone_harass_use_w) == 1 then
-		if myHero:distance_to(target.origin) <= W.range and IsValid(target) and IsKillable(target) then
+		if myHero:distance_to(target.origin) <= W.range and IsValid(target) and IsKillable(target) and Ready(SLOT_W) then
 			CastW(target)
 		end
 	end
@@ -697,7 +807,7 @@ local function Clear()
 	minions = game.minions
 	for i, target in ipairs(minions) do
 
-		if menu:get_value(yone_laneclear_use_q) == 1 and not IsYoneQ3(myHero)then
+		if menu:get_value(yone_laneclear_use_q) == 1 and not IsYoneQ3() then
 			if target.object_id ~= 0 and target.is_enemy and myHero:distance_to(target.origin) < Q.range and IsValid(target) then
 				if not orbwalker:can_attack() or myHero:distance_to(target.origin) > myHero.attack_range then
 					if Ready(SLOT_Q) then
@@ -709,7 +819,7 @@ local function Clear()
 			end
 		end
 
-		if menu:get_value(yone_laneclear_use_q3) == 1 and menu:get_value(yone_laneclear_use_q) == 1 and IsYoneQ3(myHero) then
+		if menu:get_value(yone_laneclear_use_q3) == 1 and menu:get_value(yone_laneclear_use_q) == 1 and IsYoneQ3() then
 			if target.object_id ~= 0 and target.is_enemy and myHero:distance_to(target.origin) < Q3.range and IsValid(target) then
 				if GetMinionCount(300, target) >= menu:get_value(yone_laneclear_min_q) then
 					if not orbwalker:can_attack() or myHero:distance_to(target.origin) > myHero.attack_range then
@@ -894,7 +1004,7 @@ end
 local function AutoQLastHit(target)
 	minions = game.minions
 	for i, target in ipairs(minions) do
-		if target.object_id ~= 0 and target.is_enemy and myHero:distance_to(target.origin) < Q.range and IsValid(target) and not IsYoneQ3(myHero) then
+		if target.object_id ~= 0 and target.is_enemy and myHero:distance_to(target.origin) < Q.range and IsValid(target) and not IsYoneQ3() then
 			if GetMinionCount(Q.range, target) >= 1 then
 				if GetQDmg(target) > target.health then
 					if Ready(SLOT_Q) then
@@ -905,7 +1015,7 @@ local function AutoQLastHit(target)
 				end
 			end
 		end
-		if menu:get_value(yone_lasthit_use_q3) == 1 and target.object_id ~= 0 and target.is_enemy and myHero:distance_to(target.origin) < Q3.range and IsValid(target) and IsYoneQ3(myHero) then
+		if menu:get_value(yone_lasthit_use_q3) == 1 and target.object_id ~= 0 and target.is_enemy and myHero:distance_to(target.origin) < Q3.range and IsValid(target) and IsYoneQ3() then
 			if GetMinionCount(Q.range, target) >= 1 then
 				if GetQDmg(target) > target.health then
 					if myHero:distance_to(target.origin) > myHero.attack_range then
@@ -921,7 +1031,7 @@ local function AutoQLastHit(target)
 	end
 end
 
-local function on_active_spell(obj, active_spell)
+--[[local function on_active_spell(obj, active_spell)
 
 	if Is_Me(obj) then
 		if active_spell.spell_name == "YoneBasicAttack"
@@ -948,6 +1058,31 @@ local function on_active_spell(obj, active_spell)
 			AAcast = true
 		end
 	end
+end]]
+
+--[[function on_process_spell(unit, args)
+	if unit ~= myHero then return end
+  windup_end_time = args.cast_time + args.cast_delay
+
+	if args.is_autoattack then
+		AutoAATime = game.game_time
+		AAcast = true
+		AutoTime = game.game_time
+		Wcast = true
+	end
+end]]
+
+local function on_active_spell(obj, active_spell)
+
+	if obj ~= myHero then return end
+	windup_end_time = active_spell.cast_end_time
+
+	if active_spell.is_autoattack then
+		AutoAATime = game.game_time
+		AAcast = true
+		AutoTime = game.game_time
+		Wcast = true
+	end
 end
 
 
@@ -967,7 +1102,7 @@ local function on_draw()
 	end
 
 	if menu:get_value(yone_draw_q) == 1 then
-		if Ready(SLOT_Q) and not IsYoneQ3(myHero) then
+		if Ready(SLOT_Q) and not IsYoneQ3() then
 			renderer:draw_circle(x, y, z, Q.range, 255, 255, 255, 255)
 		end
 	end
@@ -1029,6 +1164,13 @@ local function on_tick()
 		Combo()
 	end
 
+	if not game:is_key_down(menu:get_value(yone_combokey)) then
+		AutoTime = nil
+		Wcast = false
+		AutoAATime = nil
+		AAcast = false
+	end
+
 	if combo:get_mode() == MODE_HARASS then
 		Harass()
 	end
@@ -1064,8 +1206,55 @@ local function on_tick()
 	end
 
 	KillSteal()
+
+	myHero = game.local_player
+	YoneAS = (myHero.bonus_attack_speed - 1) * 100
+	if YoneAS < 15 then
+		QDelayAS = 0.4
+	elseif YoneAS < 30 and YoneAS >= 15 then
+		QDelayAS = 0.364
+	elseif YoneAS < 45 and YoneAS >= 30 then
+		QDelayAS = 0.328
+	elseif YoneAS < 60 and YoneAS >= 45 then
+		QDelayAS = 0.292
+	elseif YoneAS < 75 and YoneAS >= 60 then
+		QDelayAS = 0.256
+	elseif YoneAS < 90 and YoneAS >= 75 then
+		QDelayAS = 0.22
+	elseif YoneAS < 105 and YoneAS >= 90 then
+		QDelayAS = 0.184
+	elseif YoneAS < 111.11 and YoneAS >= 105 then
+		QDelayAS = 0.148
+	elseif YoneAS >= 111.11 then
+		QDelayAS = 0.133
+	end
+
+	if YoneAS < 10.5 then
+		WDelayAS = 0.5
+	elseif YoneAS < 21 and YoneAS >= 10.5 then
+		WDelayAS = 0.47
+	elseif YoneAS < 31.5 and YoneAS >= 21 then
+		WDelayAS = 0.44
+	elseif YoneAS < 42 and YoneAS >= 31.5 then
+		WDelayAS = 0.41
+	elseif YoneAS < 52.5 and YoneAS >= 42 then
+		WDelayAS = 0.38
+	elseif YoneAS < 63 and YoneAS >= 52.5 then
+		WDelayAS = 0.34
+	elseif YoneAS < 73.5 and YoneAS >= 63 then
+		WDelayAS = 0.31
+	elseif YoneAS < 84 and YoneAS >= 73.5 then
+		WDelayAS = 0.28
+	elseif YoneAS < 94.5 and YoneAS >= 84 then
+		WDelayAS = 0.25
+	elseif YoneAS < 105 and YoneAS >= 94.5 then
+		WDelayAS = 0.22
+	elseif YoneAS >= 105 then
+		WDelayAS = 0.19
+	end
 end
 
 client:set_event_callback("on_tick", on_tick)
 client:set_event_callback("on_draw", on_draw)
 client:set_event_callback("on_active_spell", on_active_spell)
+--client:set_event_callback("on_process_spell", on_process_spell)

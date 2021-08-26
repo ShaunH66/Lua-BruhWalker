@@ -4,7 +4,7 @@ end
 
 do
     local function AutoUpdate()
-		local Version = 1.1
+		local Version = 1.4
 		local file_name = "DaBombZiggs.lua"
 		local url = "https://raw.githubusercontent.com/TheShaunyboi/BruhWalkerEncrypted/main/DaBombZiggs.lua"
         local web_version = http:get("https://raw.githubusercontent.com/TheShaunyboi/BruhWalkerEncrypted/main/DaBombZiggs.lua.version.txt")
@@ -25,21 +25,6 @@ do
         end
     end
     AutoUpdate()
-end
-
---Ensuring that the librarys are downloaded:
-local file_name = "VectorMath.lua"
-if not file_manager:file_exists(file_name) then
-   local url = "https://raw.githubusercontent.com/stoneb2/Bruhwalker/main/VectorMath/VectorMath.lua"
-   http:download_file(url, file_name)
-   console:log("VectorMath Library Downloaded")
-   console:log("Please Reload with F5")
-end
-
-if not file_manager:file_exists("PKDamageLib.lua") then
-	local file_name = "PKDamageLib.lua"
-	local url = "http://raw.githubusercontent.com/Astraanator/test/main/Champions/PKDamageLib.lua"
-	http:download_file(url, file_name)
 end
 
 local VIP = http:get("https://raw.githubusercontent.com/TheShaunyboi/BruhWalkerEncrypted/main/VIP_USER_LIST.lua.txt")
@@ -68,9 +53,34 @@ if VIP_USER_LIST() then
 	console:log(".............................................................................")
 end
 
+--Ensuring that the librarys are downloaded:
+local file_name = "VectorMath.lua"
+if not file_manager:file_exists(file_name) then
+   local url = "https://raw.githubusercontent.com/stoneb2/Bruhwalker/main/VectorMath/VectorMath.lua"
+   http:download_file(url, file_name)
+   console:log("VectorMath Library Downloaded")
+   console:log("Please Reload with F5")
+end
+
+if not file_manager:file_exists("PKDamageLib.lua") then
+	local file_name = "PKDamageLib.lua"
+	local url = "http://raw.githubusercontent.com/Astraanator/test/main/Champions/PKDamageLib.lua"
+	http:download_file(url, file_name)
+end
+
+local file_name = "Prediction.lib"
+if not file_manager:file_exists(file_name) then
+   local url = "https://raw.githubusercontent.com/Ark223/Bruhwalker/main/Prediction.lib"
+   http:download_file(url, file_name)
+   console:log("Ark223 Prediction Library Downloaded")
+   console:log("Please Reload with F5")
+end
+
+
 --Initialization lines:
 local ml = require "VectorMath"
 pred:use_prediction()
+arkpred = _G.Prediction
 require "PKDamageLib"
 
 local myHero = game.local_player
@@ -397,6 +407,18 @@ local function SweeperCheck()
 	return false
 end
 
+local function GetEnemyCountCicular(range, p1)
+    count = 0
+    players = game.players
+    for _, unit in ipairs(players) do
+    Range = range * range
+        if unit.is_enemy and GetDistanceSqr2(p1, unit.origin) < Range and ml.IsValid(unit) then
+        count = count + 1
+        end
+    end
+    return count
+end
+
 local function EpicMonster(unit)
 	if unit.champ_name == "SRU_Baron"
 		or unit.champ_name == "SRU_RiftHerald"
@@ -490,6 +512,44 @@ ziggs_combokey = menu:add_keybinder("Combo Mode Key", ziggs_category, 32)
 menu:add_label("Shaun's Sexy Ziggs", ziggs_category)
 menu:add_label("#DaBombBaby!", ziggs_category)
 
+ziggs_prediction = menu:add_subcategory("[Pred Selection]", ziggs_category)
+e_table = {}
+e_table[1] = "Bruh Internal"
+e_table[2] = "Ark Pred"
+ziggs_pred_useage = menu:add_combobox("[Pred Selection]", ziggs_prediction, e_table, 1)
+
+ziggs_ark_pred = menu:add_subcategory("[Ark Pred Settings]", ziggs_prediction)
+
+ziggs_ark_pred_q1 = menu:add_subcategory("[Q1] No Bounce Settings", ziggs_ark_pred, 1)
+ziggs_q1_hitchance = menu:add_slider("[Q1] Ziggs Hit Chance [%]", ziggs_ark_pred_q1, 1, 99, 40)
+ziggs_q1_speed = menu:add_slider("[Q1] Ziggs Speed Input", ziggs_ark_pred_q1, 1, 2500, 1700)
+ziggs_q1_range = menu:add_slider("[Q1] Ziggs Range Input", ziggs_ark_pred_q1, 1, 2500, 850)
+ziggs_q1_radius = menu:add_slider("[Q1] Ziggs Radius Input", ziggs_ark_pred_q1, 1, 500, 150)
+
+ziggs_ark_pred_q2 = menu:add_subcategory("[Q2] Bounce Settings", ziggs_ark_pred, 1)
+ziggs_q2_hitchance = menu:add_slider("[Q2] Ziggs Hit Chance [%]", ziggs_ark_pred_q2, 1, 99, 40)
+ziggs_q2_speed = menu:add_slider("[Q2] Ziggs Speed Input", ziggs_ark_pred_q2, 1, 2500, 1700)
+ziggs_q2_range = menu:add_slider("[Q2] Ziggs Range Input", ziggs_ark_pred_q2, 1, 2500, 1400)
+ziggs_q2_radius = menu:add_slider("[Q2] Ziggs Radius Input", ziggs_ark_pred_q2, 1, 500, 150)
+
+ziggs_ark_pred_w = menu:add_subcategory("[W] Settings", ziggs_ark_pred, 1)
+ziggs_w_hitchance = menu:add_slider("[W] Ziggs Hit Chance [%]", ziggs_ark_pred_w, 1, 99, 40)
+ziggs_w_speed = menu:add_slider("[W] Ziggs Speed Input", ziggs_ark_pred_w, 1, 2500, 1750)
+ziggs_w_range = menu:add_slider("[W] Ziggs Range Input", ziggs_ark_pred_w, 1, 2500, 1000)
+ziggs_w_radius = menu:add_slider("[W] Ziggs Radius Input", ziggs_ark_pred_w, 1, 500, 325)
+
+ziggs_ark_pred_e = menu:add_subcategory("[E] Settings", ziggs_ark_pred, 1)
+ziggs_e_hitchance = menu:add_slider("[E] Ziggs Hit Chance [%]", ziggs_ark_pred_e, 1, 99, 40)
+ziggs_e_speed = menu:add_slider("[E] Ziggs Speed Input", ziggs_ark_pred_e, 1, 2500, 1550)
+ziggs_e_range = menu:add_slider("[E] Ziggs Range Input", ziggs_ark_pred_e, 1, 2500, 900)
+ziggs_e_radius = menu:add_slider("[E] Ziggs Radius Input", ziggs_ark_pred_e, 1, 500, 400)
+
+ziggs_ark_pred_r = menu:add_subcategory("[R] Settings", ziggs_ark_pred, 1)
+ziggs_r_hitchance = menu:add_slider("[R] Ziggs Hit Chance [%]", ziggs_ark_pred_r, 1, 99, 40)
+ziggs_r_speed = menu:add_slider("[R] Ziggs Speed Input", ziggs_ark_pred_r, 1, 5000, 2250)
+ziggs_r_range = menu:add_slider("[R] Ziggs Range Input", ziggs_ark_pred_r, 1, 6000, 5000)
+ziggs_r_radius = menu:add_slider("[R] Ziggs Radius Input", ziggs_ark_pred_r, 1, 700, 525)
+
 ziggs_ks_function = menu:add_subcategory("[Kill Steal]", ziggs_category)
 ziggs_ks_q = menu:add_subcategory("[Q] Settings", ziggs_ks_function, 1)
 ziggs_ks_use_q = menu:add_checkbox("Use [Q]", ziggs_ks_q, 1)
@@ -503,6 +563,8 @@ ziggs_ks_use_r_ping = menu:add_checkbox("[PING] Target IF [R] Can Kill", ziggs_k
 ziggs_combo = menu:add_subcategory("[Combo]", ziggs_category)
 ziggs_combo_q = menu:add_subcategory("[Q] Settings", ziggs_combo)
 ziggs_combo_use_q = menu:add_checkbox("Use [Q]", ziggs_combo_q, 1)
+ziggs_combo_use_q_minion = menu:add_checkbox("Use [Q] Minion Splash ", ziggs_combo_q, 1)
+ziggs_extra_auto_q = menu:add_checkbox("Auto [Q] Immobilised Targets", ziggs_combo_q, 1)
 ziggs_combo_w = menu:add_subcategory("[W] Settings", ziggs_combo)
 ziggs_combo_use_w = menu:add_checkbox("Use [W]", ziggs_combo_w, 1)
 ziggs_combo_e = menu:add_subcategory("[E] Settings", ziggs_combo)
@@ -519,6 +581,7 @@ ziggs_combo_r_useage = menu:add_combobox("Combo [R] Usage", ziggs_combo_r, e_tab
 ziggs_harass = menu:add_subcategory("[Harass]", ziggs_category)
 ziggs_harass_q = menu:add_subcategory("[Q] Settings", ziggs_harass)
 ziggs_harass_use_q = menu:add_checkbox("Use [Q]", ziggs_harass_q, 1)
+ziggs_harass_use_q_minion = menu:add_checkbox("Use [Q] Minion Splash ", ziggs_harass_q, 1)
 ziggs_harass_q_range = menu:add_slider("[Q] Harass Max Range", ziggs_harass_q, 1, 1400, 1200)
 ziggs_harass_e = menu:add_subcategory("[E] Settings", ziggs_harass)
 ziggs_harass_use_e = menu:add_checkbox("Use [E]", ziggs_harass_e, 1)
@@ -539,12 +602,9 @@ ziggs_jungleclear_min_mana = menu:add_slider("Minimum Mana [%] To Jungle", ziggs
 ziggs_q_lasthit = menu:add_subcategory("[Last Hit]", ziggs_category)
 ziggs_q_lasthit_use = menu:add_checkbox("Use [Q] Last Hit > [AA] Range", ziggs_q_lasthit, 1)
 
-ziggs_extra_q = menu:add_subcategory("[Q Automated] Features", ziggs_category)
-ziggs_extra_auto_q = menu:add_checkbox("Auto [Q] Immobilised Targets", ziggs_extra_q, 1)
-
-ziggs_extra_q_number = menu:add_subcategory("Auto [Q] Hit AoE Count", ziggs_extra_q)
+--[[ziggs_extra_q_number = menu:add_subcategory("Auto [Q] Hit AoE Count", ziggs_extra_q)
 ziggs_extra_q_number_use = menu:add_checkbox("Use Auto [Q] AoE Count", ziggs_extra_q_number, 1)
-ziggs_extra_q_number_count = menu:add_slider("[Q] AoE Count", ziggs_extra_q_number, 1, 5, 2)
+ziggs_extra_q_number_count = menu:add_slider("[Q] AoE Count", ziggs_extra_q_number, 1, 5, 3)]]
 
 ziggs_extra_w = menu:add_subcategory("[W] Automated] Features", ziggs_category)
 ziggs_turret_w = menu:add_checkbox("[W] Smart Kill Turret Usage", ziggs_extra_w, 1)
@@ -592,10 +652,71 @@ ziggs_gap_draw = menu:add_checkbox("Draw Toggle Auto [W] Gap Closer", ziggs_draw
 ziggs_draw_kill = menu:add_checkbox("Draw Full Combo [Can Kill] Text", ziggs_draw, 1)
 ziggs_draw_kill_healthbar = menu:add_checkbox("Draw [Full Combo Damage] On Target Health Bar", ziggs_draw, 1)
 
+local Q1_input = {
+    source = myHero,
+    speed = menu:get_value(ziggs_q1_speed), range = menu:get_value(ziggs_q1_range),
+    delay = 0.25, radius = menu:get_value(ziggs_q1_radius),
+    collision = {"wind_wall"},
+    type = "linear", hitbox = true
+}
+
+local Q2_input = {
+    source = myHero,
+		speed = menu:get_value(ziggs_q2_speed), range = menu:get_value(ziggs_q2_range),
+    delay = 0.25, radius = menu:get_value(ziggs_q2_radius),
+    collision = {"minion", "wind_wall"},
+    type = "linear", hitbox = true
+}
+
+local W_input = {
+    source = myHero,
+		speed = menu:get_value(ziggs_w_speed), range = menu:get_value(ziggs_w_range),
+		delay = 0.25, radius = menu:get_value(ziggs_w_radius),
+    collision = {},
+    type = "circular", hitbox = false
+}
+
+local E_input = {
+    source = myHero,
+		speed = menu:get_value(ziggs_e_speed), range = menu:get_value(ziggs_e_range),
+		delay = 0.4, radius = menu:get_value(ziggs_e_radius),
+    collision = {"terrain_wall"},
+    type = "circular", hitbox = false
+}
+
+local R_input = {
+    source = myHero,
+		speed = menu:get_value(ziggs_r_speed), range = menu:get_value(ziggs_r_range),
+		delay = 0.375, radius = menu:get_value(ziggs_r_radius),
+    collision = {},
+    type = "circular", hitbox = false
+
+}
 
 -- Casting
 
 local function CastQNoBounce(unit)
+
+	if menu:get_value(ziggs_pred_useage) == 0 then
+		pred_output = pred:predict(Q.speed, Q.delay, QNoBounce.range, Q.width, unit, false, false)
+		if pred_output.can_cast then
+			castPos = pred_output.cast_pos
+			spellbook:cast_spell(SLOT_Q, Q.delay, castPos.x, castPos.y, castPos.z)
+		end
+	end
+
+	if menu:get_value(ziggs_pred_useage) == 1 then
+		local output = arkpred:get_prediction(Q1_input, unit)
+	  local inv = arkpred:get_invisible_duration(unit)
+		if output.hit_chance >= menu:get_value(ziggs_q1_hitchance) / 100 and inv < (Q1_input.delay / 2) then
+			local p = output.cast_pos
+	    spellbook:cast_spell(SLOT_Q, Q.delay, p.x, p.y, p.z)
+		end
+	end
+end
+
+local function CastQMinion(unit)
+
 	pred_output = pred:predict(Q.speed, Q.delay, QNoBounce.range, Q.width, unit, false, false)
 	if pred_output.can_cast then
 		castPos = pred_output.cast_pos
@@ -604,18 +725,44 @@ local function CastQNoBounce(unit)
 end
 
 local function CastQBounce(unit)
-	pred_output = pred:predict(Q.speed, Q.delay, QBounce.range, Q.width, unit, false, true)
-	if pred_output.can_cast then
-		castPos = pred_output.cast_pos
-		spellbook:cast_spell(SLOT_Q, Q.delay, castPos.x, castPos.y, castPos.z)
+
+	if menu:get_value(ziggs_pred_useage) == 0 then
+		pred_output = pred:predict(Q.speed, Q.delay, QBounce.range, Q.width, unit, false, true)
+		if pred_output.can_cast then
+			castPos = pred_output.cast_pos
+			spellbook:cast_spell(SLOT_Q, Q.delay, castPos.x, castPos.y, castPos.z)
+		end
+	end
+
+	if menu:get_value(ziggs_pred_useage) == 1 then
+		local output = arkpred:get_prediction(Q2_input, unit)
+	  local inv = arkpred:get_invisible_duration(unit)
+		if output.hit_chance >= menu:get_value(ziggs_q2_hitchance) / 100 and inv < (Q2_input.delay / 2) then
+			local p = output.cast_pos
+			local draw = output.pred_pos
+	    spellbook:cast_spell(SLOT_Q, Q.delay, p.x, p.y, p.z)
+			renderer:draw_circle(draw.x, draw.y, draw.z, 100, 255, 0, 0, 255)
+		end
 	end
 end
 
 local function CastW(unit)
-	pred_output = pred:predict(W.speed, W.delay, W.range, W.width, unit, false, false)
-	if pred_output.can_cast then
-		castPos = pred_output.cast_pos
-		spellbook:cast_spell(SLOT_W, W.delay, castPos.x, castPos.y, castPos.z)
+
+	if menu:get_value(ziggs_pred_useage) == 0 then
+		pred_output = pred:predict(W.speed, W.delay, W.range, W.width, unit, false, false)
+		if pred_output.can_cast then
+			castPos = pred_output.cast_pos
+			spellbook:cast_spell(SLOT_W, W.delay, castPos.x, castPos.y, castPos.z)
+		end
+	end
+
+	if menu:get_value(ziggs_pred_useage) == 1 then
+		local output = arkpred:get_prediction(W_input, unit)
+	  local inv = arkpred:get_invisible_duration(unit)
+		if output.hit_chance >= menu:get_value(ziggs_w_hitchance) / 100 and inv < (W_input.delay / 2) then
+			local p = output.cast_pos
+	    spellbook:cast_spell(SLOT_W, W.delay, p.x, p.y, p.z)
+		end
 	end
 end
 
@@ -625,24 +772,52 @@ local function CastWBlow()
 end
 
 local function CastE(unit)
-	if not pred_output.can_cast then
-		w_cast = nil
+
+	if menu:get_value(ziggs_pred_useage) == 0 then
+		if not pred_output.can_cast then
+			w_cast = nil
+		end
+		pred_output = pred:predict(E.speed, E.delay, E.range, E.width, unit, false, false)
+		if pred_output.can_cast then
+			castPos = pred_output.cast_pos
+			spellbook:cast_spell(SLOT_E, E.delay, castPos.x, castPos.y, castPos.z)
+			w_cast = (client:get_tick_count() + 500)
+			BlockW = true
+		end
 	end
 
-	pred_output = pred:predict(E.speed, E.delay, E.range, E.width, unit, false, false)
-	if pred_output.can_cast then
-		castPos = pred_output.cast_pos
-		spellbook:cast_spell(SLOT_E, E.delay, castPos.x, castPos.y, castPos.z)
-		w_cast = (client:get_tick_count() + 500)
-		BlockW = true
+	if menu:get_value(ziggs_pred_useage) == 1 then
+		local output = arkpred:get_prediction(E_input, unit)
+		 local inv = arkpred:get_invisible_duration(unit)
+		if output.hit_chance < menu:get_value(ziggs_e_hitchance) / 100 then
+			w_cast = nil
+		end
+		if output.hit_chance >= menu:get_value(ziggs_e_hitchance) / 100 and inv < (E_input.delay / 2) then
+			local p = output.cast_pos
+		  spellbook:cast_spell(SLOT_E, E.delay, p.x, p.y, p.z)
+			w_cast = (client:get_tick_count() + 500)
+			BlockW = true
+		end
 	end
 end
 
 local function CastR(unit)
-	pred_output = pred:predict(R.speed, R.delay, R.range, R.width, unit, false, false)
-	if pred_output.can_cast then
-		castPos = pred_output.cast_pos
-		spellbook:cast_spell(SLOT_R, R.delay, castPos.x, castPos.y, castPos.z)
+
+	if menu:get_value(ziggs_pred_useage) == 0 then
+		pred_output = pred:predict(R.speed, R.delay, R.range, R.width, unit, false, false)
+		if pred_output.can_cast then
+			castPos = pred_output.cast_pos
+			spellbook:cast_spell(SLOT_R, R.delay, castPos.x, castPos.y, castPos.z)
+		end
+	end
+
+	if menu:get_value(ziggs_pred_useage) == 1 then
+		local output = arkpred:get_prediction(R_input, unit)
+		local inv = arkpred:get_invisible_duration(unit)
+		if output.hit_chance >= menu:get_value(ziggs_r_hitchance) / 100 and inv < (R_input.delay / 2) then
+			local p = output.cast_pos
+			spellbook:cast_spell(SLOT_R, R.delay, p.x, p.y, p.z)
+		end
 	end
 end
 
@@ -683,6 +858,17 @@ local function Combo()
 	    CastQNoBounce(target)
 	 	end
  	end
+
+	minions = game.minions
+	for i, minion in ipairs(minions) do
+		if menu:get_value(ziggs_combo_use_q) == 1 and menu:get_value(ziggs_combo_use_q_minion) == 1 then
+		  if myHero:distance_to(minion.origin) <= QNoBounce.range and myHero:distance_to(target.origin) > QNoBounce.range and ml.IsValid(target) and ml.Ready(SLOT_Q) then
+				if GetEnemyCountCicular(240, minion.origin) >= 1 then
+		    	CastQMinion(minion)
+		 		end
+			end
+	 	end
+	end
 
 	if menu:get_value(ziggs_combo_use_q) == 1 then
 	  if myHero:distance_to(target.origin) <= QBounce.range and myHero:distance_to(target.origin) > QNoBounce.range then
@@ -741,6 +927,17 @@ local function Harass()
 	    CastQNoBounce(target)
 	 	end
  	end
+
+	minions = game.minions
+	for i, minion in ipairs(minions) do
+		if menu:get_value(ziggs_harass_use_q) == 1 and menu:get_value(ziggs_harass_use_q_minion) == 1 then
+			if myHero:distance_to(minion.origin) <= QNoBounce.range and myHero:distance_to(target.origin) > QNoBounce.range and ml.IsValid(target) and IsKillable(target) and ml.Ready(SLOT_Q) then
+				if GetEnemyCountCicular(240, minion.origin) >= 1 then
+					CastQMinion(minion)
+				end
+			end
+		end
+	end
 
 	if menu:get_value(ziggs_harass_use_q) == 1 then
 	  if myHero:distance_to(target.origin) <= menu:get_value(ziggs_harass_q_range) and myHero:distance_to(target.origin) > QNoBounce.range then
@@ -830,7 +1027,11 @@ local function Clear()
 			if ml.IsValid(target) and target.object_id ~= 0 and target.is_enemy and ml.Ready(SLOT_E) then
 				if GrabLaneClearMana and ml.Ready(SLOT_E) and TargetNearMouse then
 					if GetMinionCount(E.width, target) >= menu:get_value(ziggs_laneclear_min_e) then
-						CastE(target)
+						pred_output = pred:predict(E.speed, E.delay, E.range, E.width, target, false, false)
+						if pred_output.can_cast then
+							castPos = pred_output.cast_pos
+							spellbook:cast_spell(SLOT_E, E.delay, castPos.x, castPos.y, castPos.z)
+						end
 					end
 				end
 			end
@@ -840,7 +1041,11 @@ local function Clear()
 			if ml.IsValid(target) and target.object_id ~= 0 and target.is_enemy and myHero:distance_to(target.origin) < QNoBounce.range then
 				if GrabLaneClearMana and ml.Ready(SLOT_Q) and TargetNearMouse then
 					if GetMinionCount(Q.width, target) >= menu:get_value(ziggs_laneclear_min_q) then
-						CastQNoBounce(target)
+						pred_output = pred:predict(Q.speed, Q.delay, QNoBounce.range, Q.width, target, false, false)
+						if pred_output.can_cast then
+							castPos = pred_output.cast_pos
+							spellbook:cast_spell(SLOT_Q, Q.delay, castPos.x, castPos.y, castPos.z)
+						end
 					end
 				end
 			end
@@ -860,9 +1065,13 @@ end
 		local TrueAARange = myHero.attack_range + myHero.bounding_radius
 
 		if menu:get_value(ziggs_jungleclear_use_e) == 1 then
-			if ml.IsValid(target) and target.object_id ~= 0 and target.is_enemy and myHero:distance_to(target.origin) < QNoBounce.range then
+			if ml.IsValid(target) and target.object_id ~= 0 and target.is_enemy and myHero:distance_to(target.origin) < E.range then
 				if GrabJungleClearMana and ml.Ready(SLOT_E) and TargetNearMouse then
-					CastE(target)
+					pred_output = pred:predict(E.speed, E.delay, E.range, E.width, target, false, false)
+					if pred_output.can_cast then
+						castPos = pred_output.cast_pos
+						spellbook:cast_spell(SLOT_E, E.delay, castPos.x, castPos.y, castPos.z)
+					end
 				end
 			end
 		end
@@ -870,7 +1079,11 @@ end
 		if menu:get_value(ziggs_jungleclear_use_q) == 1 then
 			if ml.IsValid(target) and target.object_id ~= 0 and target.is_enemy and myHero:distance_to(target.origin) < QNoBounce.range then
 				if GrabJungleClearMana and ml.Ready(SLOT_Q) and TargetNearMouse then
-					CastQNoBounce(target)
+					pred_output = pred:predict(Q.speed, Q.delay, QNoBounce.range, Q.width, target, false, false)
+					if pred_output.can_cast then
+						castPos = pred_output.cast_pos
+						spellbook:cast_spell(SLOT_Q, Q.delay, castPos.x, castPos.y, castPos.z)
+					end
 				end
 			end
 		end
@@ -897,10 +1110,12 @@ end
 
 -- Auto Q
 
-local function AutoQ()
+--[[local function AutoQ()
+
+	local GrabMana = myHero.mana/myHero.max_mana >= menu:get_value(ziggs_harass_min_mana) / 100
 
 	for i, target in ipairs(ml.GetEnemyHeroes()) do
-	  if menu:get_value(ziggs_extra_q_number_use) == 1 then
+	  if menu:get_value(ziggs_extra_q_number_use) == 1 and GrabMana then
 			if myHero:distance_to(target.origin) <= QBounce.range then
 				if ml.IsValid(target) and ml.Ready(SLOT_Q) then
 					local CastPos, targets = GetBestAoEPosition(Q.speed, Q.delay, QBounce.range, Q.width, target, false, false)
@@ -911,7 +1126,7 @@ local function AutoQ()
 	    end
 		end
   end
-end
+end]]
 
 -- Auto Q Last Hit
 
@@ -937,9 +1152,11 @@ end
 
 local function AutoQImobli()
 
+	local GrabMana = myHero.mana/myHero.max_mana >= menu:get_value(ziggs_harass_min_mana) / 100
+
   target = selector:find_target(QBounce.range, mode_health)
 
-  if menu:get_value(ziggs_extra_auto_q) == 1 then
+  if menu:get_value(ziggs_extra_auto_q) == 1 and GrabMana then
     if myHero:distance_to(target.origin) <= QBounce.range then
 			if IsImmobileTarget(target) then
 				if ml.IsValid(target) and IsKillable(target) and ml.Ready(SLOT_Q) then
@@ -959,7 +1176,11 @@ local function TurretWCast()
 		for i, target in ipairs(turrets) do
 			if ml.IsValid(target) and target.is_enemy and ml.Ready(SLOT_W) and myHero:distance_to(target.origin) <= W.range then
 				if target:health_percentage() <= WTurretDMG[spellbook:get_spell_slot(SLOT_W).level] then
-					CastW(target)
+					pred_output = pred:predict(W.speed, W.delay, W.range, W.width, target, false, false)
+					if pred_output.can_cast then
+						castPos = pred_output.cast_pos
+						spellbook:cast_spell(SLOT_W, W.delay, castPos.x, castPos.y, castPos.z)
+					end
 				end
 			end
 		end
@@ -1135,7 +1356,27 @@ local function on_draw()
 	end
 end
 
+--local timer, health = 0, 0
+
+--[[local function on_process_spell(unit, args)
+    if unit ~= game.local_player or timer >
+        args.cast_time - 1 then return end
+    timer = args.cast_time
+end]]
+
 local function on_tick()
+
+	--[[for _, unit in ipairs(game.players) do
+		if unit.champ_name:find("Practice") then
+			if unit.is_valid and unit.is_enemy and
+				unit.is_alive and unit.is_visible and health ~=
+				unit.health and game.game_time - timer < 1 then
+				local delay = game.game_time - timer - 0.0167
+				console:log(tostring(delay))
+				health = unit.health
+			end
+		end
+	end]]
 
 	if game:is_key_down(menu:get_value(ziggs_combokey)) and menu:get_value(ziggs_enabled) == 1 then
 		Combo()
@@ -1154,7 +1395,7 @@ local function on_tick()
 		AutoQLastHit()
 	end
 
-	AutoQ()
+	--AutoQ()
 	AutoQImobli()
 	AutoR()
 	AutoKill()
@@ -1187,6 +1428,7 @@ local function on_tick()
 
 end
 
+--client:set_event_callback("on_process_spell", on_process_spell)
 client:set_event_callback("on_tick", on_tick)
 client:set_event_callback("on_draw", on_draw)
 client:set_event_callback("on_dash", on_dash)

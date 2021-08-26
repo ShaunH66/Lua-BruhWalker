@@ -4,7 +4,7 @@ end
 
 do
     local function AutoUpdate()
-		local Version = 1.3
+		local Version = 1.6
 		local file_name = "SixPackVarus.lua"
 		local url = "https://raw.githubusercontent.com/TheShaunyboi/BruhWalkerEncrypted/main/SixPackVarus.lua"
         local web_version = http:get("https://raw.githubusercontent.com/TheShaunyboi/BruhWalkerEncrypted/main/SixPackVarus.lua.version.txt")
@@ -42,6 +42,14 @@ if not file_manager:file_exists("PKDamageLib.lua") then
 	http:download_file(url, file_name)
 end
 
+local file_name = "Prediction.lib"
+if not file_manager:file_exists(file_name) then
+   local url = "https://raw.githubusercontent.com/Ark223/Bruhwalker/main/Prediction.lib"
+   http:download_file(url, file_name)
+   console:log("Ark223 Prediction Library Downloaded")
+   console:log("Please Reload with F5")
+end
+
 local VIP = http:get("https://raw.githubusercontent.com/TheShaunyboi/BruhWalkerEncrypted/main/VIP_USER_LIST.lua.txt")
 VIP = VIP .. ','
 local LIST = {}
@@ -70,6 +78,7 @@ end
 --Initialization lines:
 local ml = require "VectorMath"
 pred:use_prediction()
+arkpred = _G.Prediction
 require "PKDamageLib"
 
 local myHero = game.local_player
@@ -88,6 +97,29 @@ local E = { range = 925, delay = .25, width = 300, speed = math.huge }
 local R = { range = 1370, delay = .25, width = 240, speed = 1500, tether = 650 }
 local FlashRDraw = { range = 1760 }
 
+local E_input = {
+    source = myHero,
+    speed = 1750, range = 925,
+    delay = 0.81, radius = 280,
+    collision = {},
+    type = "circular", hitbox = false
+}
+
+local R_input = {
+    source = myHero,
+    speed = 1500, range = 1375,
+    delay = 0.25, radius = 120,
+    collision = {"wind_wall"},
+    type = "linear", hitbox = true
+}
+
+local RFLASH_input = {
+    source = myHero,
+    speed = 1500, range = FlashRDraw.range,
+    delay = 0.25, radius = 120,
+    collision = {"wind_wall"},
+    type = "linear", hitbox = true
+}
 
 -- Return game data and maths
 
@@ -356,6 +388,17 @@ varus_combokey = menu:add_keybinder("Combo Mode Key", varus_category, 32)
 menu:add_label("Shaun's Sexy SixPack Varus", varus_category)
 menu:add_label("#NeverLegDayBro", varus_category)
 
+varus_prediction = menu:add_subcategory("[Pred Selection]", varus_category)
+e_table = {}
+e_table[1] = "Bruh Internal"
+e_table[2] = "Ark Pred"
+varus_pred_useage = menu:add_combobox("[Pred Selection]", varus_prediction, e_table, 1)
+
+varus_ark_pred = menu:add_subcategory("[Ark Pred Settings]", varus_prediction)
+varus_q_hitchance = menu:add_slider("[Q] Hit Chance [%]", varus_ark_pred, 1, 99, 40)
+varus_e_hitchance = menu:add_slider("[E] Hit Chance [%]", varus_ark_pred, 1, 99, 50)
+varus_r_hitchance = menu:add_slider("[R] Hit Chance [%]", varus_ark_pred, 1, 99, 50)
+
 varus_manual_q = menu:add_subcategory("Semi Manual [Q] Features", varus_category)
 varus_combo_q_set_key = menu:add_keybinder("Semi Manual [Q] Key", varus_manual_q, 65)
 e_table = {}
@@ -435,7 +478,6 @@ varus_draw_q = menu:add_checkbox("Draw [Q] Range", varus_draw, 1)
 varus_draw_e = menu:add_checkbox("Draw [E] Range", varus_draw, 1)
 varus_draw_r = menu:add_checkbox("Draw [R] Range", varus_draw, 1)
 varus_draw_rflash = menu:add_checkbox("Draw [R] Flash Range", varus_draw, 1)
-varus_Immobile_draw = menu:add_checkbox("Draw [Immobile] Target Text", varus_draw, 1)
 varus_gap_draw = menu:add_checkbox("Draw Toggle Auto [R] Gap Closer", varus_draw, 1)
 varus_draw_kill = menu:add_checkbox("Draw Full Combo Can Kill Text", varus_draw, 1)
 varus_draw_kill_healthbar = menu:add_checkbox("Draw Full Combo On Target Health Bar", varus_draw, 1)
@@ -447,27 +489,60 @@ local function CastW()
 end
 
 local function CastE(unit)
-	pred_output = pred:predict(E.speed, E.delay, E.range, E.width, unit, false, false)
-	if pred_output.can_cast then
-		castPos = pred_output.cast_pos
-		spellbook:cast_spell(SLOT_E, E.delay, castPos.x, castPos.y, castPos.z)
+
+	if menu:get_value(varus_pred_useage) == 0 then
+		pred_output = pred:predict(E.speed, E.delay, E.range, E.width, unit, false, false)
+		if pred_output.can_cast then
+			castPos = pred_output.cast_pos
+			spellbook:cast_spell(SLOT_E, E.delay, castPos.x, castPos.y, castPos.z)
+		end
+	end
+
+	if menu:get_value(varus_pred_useage) == 1 then
+		local output = arkpred:get_prediction(E_input, unit)
+	  local inv = arkpred:get_invisible_duration(unit)
+		if output.hit_chance >= menu:get_value(varus_e_hitchance) / 100 then
+			local p = output.cast_pos
+	    spellbook:cast_spell(SLOT_E, E.delay, p.x, p.y, p.z)
+		end
 	end
 end
 
 local function CastR(unit)
-	pred_output = pred:predict(R.speed, R.delay, R.range, R.width, unit, false, false)
-	if pred_output.can_cast then
-		castPos = pred_output.cast_pos
-		spellbook:cast_spell(SLOT_R, R.delay, castPos.x, castPos.y, castPos.z)
+
+	if menu:get_value(varus_pred_useage) == 0 then
+		pred_output = pred:predict(R.speed, R.delay, R.range, R.width, unit, false, false)
+		if pred_output.can_cast then
+			castPos = pred_output.cast_pos
+			spellbook:cast_spell(SLOT_R, R.delay, castPos.x, castPos.y, castPos.z)
+		end
+	end
+	if menu:get_value(varus_pred_useage) == 1 then
+		local output = arkpred:get_prediction(R_input, unit)
+	  local inv = arkpred:get_invisible_duration(unit)
+		if output.hit_chance >= menu:get_value(varus_r_hitchance) / 100 then
+			local p = output.cast_pos
+	    spellbook:cast_spell(SLOT_R, R.delay, p.x, p.y, p.z)
+		end
 	end
 end
 
 local function CastRFlash(unit)
 
-	pred_output = pred:predict(R.speed, R.delay, FlashRDraw.range, R.width, unit, false, false)
-	if pred_output.can_cast and ml.Ready(SLOT_R) then
-		castPos = pred_output.cast_pos
-		spellbook:cast_spell(SLOT_R, R.delay, castPos.x, castPos.y, castPos.z)
+	if menu:get_value(varus_pred_useage) == 0 then
+		pred_output = pred:predict(R.speed, R.delay, FlashRDraw.range, R.width, unit, false, false)
+		if pred_output.can_cast and ml.Ready(SLOT_R) then
+			castPos = pred_output.cast_pos
+			spellbook:cast_spell(SLOT_R, R.delay, castPos.x, castPos.y, castPos.z)
+		end
+	end
+	if menu:get_value(varus_pred_useage) == 1 then
+		local output = arkpred:get_prediction(RFLASH_input, unit)
+	  local inv = arkpred:get_invisible_duration(unit)
+		if output.hit_chance >= menu:get_value(varus_r_hitchance) / 100 and ml.Ready(SLOT_R) then
+			local p = output.cast_pos
+	    spellbook:cast_spell(SLOT_R, R.delay, p.x, p.y, p.z)
+		end
 	end
 end
 
@@ -478,34 +553,79 @@ local function Combo()
 	local TrueAA = myHero.attack_range + myHero.bounding_radius
 
 	target = selector:find_target(Q.range, mode_health)
+	etarget = selector:find_target(E.range, mode_health)
 
-	if menu:get_value(varus_combo_use_q) == 1 then
-	  if ml.IsValid(target) and IsKillable(target) then
-			Charge_buff = local_player:get_buff("VarusQ")
-			if Charge_buff.is_valid and qCharge then
-				max_range = 825 + 70 + ((1.25 / 0.25) * 140)
-				time_differential = (game.game_time - qTime)
-				if time_differential < 1.25 then
-					range = 825 + 70 + (time_differential * (140 / 0.25))
+	if menu:get_value(varus_pred_useage) == 0 then
+		if menu:get_value(varus_combo_use_q) == 1 then
+		  if ml.IsValid(target) and IsKillable(target) then
+				Charge_buff = local_player:get_buff("VarusQ")
+				if Charge_buff.is_valid and qCharge then
+					max_range = 825 + 70 + ((1.25 / 0.25) * 140)
+					time_differential = (game.game_time - qTime)
+					if time_differential < 1.25 then
+						range = 825 + 70 + (time_differential * (140 / 0.25))
+					else
+						range = max_range
+					end
+					target = selector:find_target(range, mode_health)
+					if target.object_id ~= 0 then
+						if ml.IsValid(target) then
+							origin = target.origin
+							pred_output = pred:predict(1900, 0, range, 140, target, false, false)
+							if pred_output.can_cast then
+								cast_pos = pred_output.cast_pos
+								spellbook:release_charged_spell(SLOT_Q, 0, cast_pos.x, cast_pos.y, cast_pos.z)
+							end
+						end
+					end
 				else
-					range = max_range
-				end
-				target = selector:find_target(range, mode_health)
-				if target.object_id ~= 0 then
-					if ml.IsValid(target) then
-						origin = target.origin
-						pred_output = pred:predict(1900, 0, range, 140, target, false, false)
-						if pred_output.can_cast then
-							cast_pos = pred_output.cast_pos
-							spellbook:release_charged_spell(SLOT_Q, 0, cast_pos.x, cast_pos.y, cast_pos.z)
+					--target = selector:find_target(1595, mode_health)
+					if HasWPassiveCount(target) >= menu:get_value(varus_combo_min_stacks) then
+						if ml.Ready(SLOT_Q) and not qCharge then
+							spellbook:start_charged_spell(SLOT_Q)
 						end
 					end
 				end
-			else
-				--target = selector:find_target(1595, mode_health)
-				if HasWPassiveCount(target) >= menu:get_value(varus_combo_min_stacks) then
-					if ml.Ready(SLOT_Q) and not qCharge then
-						spellbook:start_charged_spell(SLOT_Q)
+			end
+		end
+	end
+
+	if menu:get_value(varus_pred_useage) == 1 then
+		if menu:get_value(varus_combo_use_q) == 1 then
+		  if ml.IsValid(target) and IsKillable(target) then
+				Charge_buff = local_player:get_buff("VarusQ")
+				if Charge_buff.is_valid and qCharge then
+					max_range = 825 + 70 + ((1.25 / 0.25) * 140)
+					time_differential = (game.game_time - qTime)
+					if time_differential < 1.25 then
+						range1 = 825 + 70 + (time_differential * (140 / 0.25))
+					else
+						range1 = max_range
+					end
+					target = selector:find_target(range1, mode_health)
+					if target.object_id ~= 0 then
+						if ml.IsValid(target) then
+							local Q_input = {
+							    source = myHero,
+							    speed = 1900, range = range1,
+							    delay = 0.1, radius = 70,
+							    collision = {"wind_wall"},
+							    type = "linear", hitbox = true
+							}
+							local output = arkpred:get_prediction(Q_input, target)
+							local inv = arkpred:get_invisible_duration(target)
+							if output.hit_chance >= menu:get_value(varus_q_hitchance) / 100 and inv < 0.125 then
+								local p = output.cast_pos
+								spellbook:release_charged_spell(SLOT_Q, Q.delay, p.x, p.y, p.z)
+							end
+						end
+					end
+				else
+					--target = selector:find_target(1595, mode_health)
+					if HasWPassiveCount(target) >= menu:get_value(varus_combo_min_stacks) then
+						if ml.Ready(SLOT_Q) and not qCharge then
+							spellbook:start_charged_spell(SLOT_Q)
+						end
 					end
 				end
 			end
@@ -519,33 +639,33 @@ local function Combo()
 	end
 
 	if menu:get_value(varus_combo_use_e) == 1 and ml.Ready(SLOT_E) and not ml.Ready(SLOT_Q) then
-		if menu:get_value(varus_combo_e_aa) == 1 and myHero:distance_to(target.origin) <= E.range and myHero:distance_to(target.origin) >= TrueAA and HasWPassiveCount(target) >= menu:get_value(varus_combo_min_e_stacks) then
-			if ml.IsValid(target) and IsKillable(target) then
-				CastE(target)
+		if menu:get_value(varus_combo_e_aa) == 1 and myHero:distance_to(etarget.origin) <= E.range and myHero:distance_to(etarget.origin) >= TrueAA and HasWPassiveCount(etarget) >= menu:get_value(varus_combo_min_e_stacks) then
+			if ml.IsValid(etarget) and IsKillable(etarget) then
+				CastE(etarget)
 			end
 		end
 	end
 
-	if menu:get_value(varus_combo_use_e) == 1 and ml.Ready(SLOT_E) and HasWPassiveCount(target) <= 0 then
-		if menu:get_value(varus_combo_e_aa) == 1 and myHero:distance_to(target.origin) <= E.range and myHero:distance_to(target.origin) >= TrueAA then
-			if ml.IsValid(target) and IsKillable(target) then
-				CastE(target)
+	if menu:get_value(varus_combo_use_e) == 1 and ml.Ready(SLOT_E) and HasWPassiveCount(etarget) <= 0 then
+		if menu:get_value(varus_combo_e_aa) == 1 and myHero:distance_to(etarget.origin) <= E.range and myHero:distance_to(etarget.origin) >= TrueAA then
+			if ml.IsValid(etarget) and IsKillable(etarget) then
+				CastE(etarget)
 			end
 		end
 	end
 
 	if menu:get_value(varus_combo_use_e) == 1 and ml.Ready(SLOT_E) and not ml.Ready(SLOT_Q) then
-		if menu:get_value(varus_combo_e_aa) == 0 and myHero:distance_to(target.origin) <= E.range and HasWPassiveCount(target) >= menu:get_value(varus_combo_min_e_stacks) then
-			if ml.IsValid(target) and IsKillable(target) then
-				CastE(target)
+		if menu:get_value(varus_combo_e_aa) == 0 and myHero:distance_to(etarget.origin) <= E.range and HasWPassiveCount(etarget) >= menu:get_value(varus_combo_min_e_stacks) then
+			if ml.IsValid(etarget) and IsKillable(etarget) then
+				CastE(etarget)
 			end
 		end
 	end
 
-	if menu:get_value(varus_combo_use_e) == 1 and menu:get_value(varus_combo_use_e_first) == 1 and ml.Ready(SLOT_E) and HasWPassiveCount(target) <= 0 then
-		if menu:get_value(varus_combo_e_aa) == 0 and myHero:distance_to(target.origin) <= E.range then
-			if ml.IsValid(target) and IsKillable(target) then
-				CastE(target)
+	if menu:get_value(varus_combo_use_e) == 1 and menu:get_value(varus_combo_use_e_first) == 1 and ml.Ready(SLOT_E) and HasWPassiveCount(etarget) <= 0 then
+		if menu:get_value(varus_combo_e_aa) == 0 and myHero:distance_to(etarget.origin) <= E.range then
+			if ml.IsValid(etarget) and IsKillable(etarget) then
+				CastE(etarget)
 			end
 		end
 	end
@@ -560,34 +680,79 @@ local function Harass()
 	local TrueAA = myHero.attack_range + myHero.bounding_radius
 
 	target = selector:find_target(Q.range, mode_health)
+	etarget = selector:find_target(E.range, mode_health)
 
-	if menu:get_value(varus_harass_use_q) == 1 then
-	  if ml.IsValid(target) and IsKillable(target) then
-			Charge_buff = local_player:get_buff("VarusQ")
-			if Charge_buff.is_valid and qCharge then
-				max_range = 825 + 70 + ((1.25 / 0.25) * 140)
-				time_differential = (game.game_time - qTime)
-				if time_differential < 1.25 then
-					range = 825 + 70 + (time_differential * (140 / 0.25))
+	if menu:get_value(varus_pred_useage) == 0 then
+		if menu:get_value(varus_combo_use_q) == 1 then
+		  if ml.IsValid(target) and IsKillable(target) then
+				Charge_buff = local_player:get_buff("VarusQ")
+				if Charge_buff.is_valid and qCharge then
+					max_range = 825 + 70 + ((1.25 / 0.25) * 140)
+					time_differential = (game.game_time - qTime)
+					if time_differential < 1.25 then
+						range = 825 + 70 + (time_differential * (140 / 0.25))
+					else
+						range = max_range
+					end
+					target = selector:find_target(range, mode_health)
+					if target.object_id ~= 0 then
+						if ml.IsValid(target) then
+							origin = target.origin
+							pred_output = pred:predict(1900, 0, range, 140, target, false, false)
+							if pred_output.can_cast then
+								cast_pos = pred_output.cast_pos
+								spellbook:release_charged_spell(SLOT_Q, 0, cast_pos.x, cast_pos.y, cast_pos.z)
+							end
+						end
+					end
 				else
-					range = max_range
-				end
-				target = selector:find_target(range, mode_health)
-				if target.object_id ~= 0 then
-					if ml.IsValid(target) then
-						origin = target.origin
-						pred_output = pred:predict(1900, 0, range, 140, target, false, false)
-						if pred_output.can_cast then
-							cast_pos = pred_output.cast_pos
-							spellbook:release_charged_spell(SLOT_Q, 0, cast_pos.x, cast_pos.y, cast_pos.z)
+					--target = selector:find_target(1595, mode_health)
+					if HasWPassiveCount(target) >= menu:get_value(varus_combo_min_stacks) then
+						if ml.Ready(SLOT_Q) and not qCharge then
+							spellbook:start_charged_spell(SLOT_Q)
 						end
 					end
 				end
-			else
-				--target = selector:find_target(1595, mode_health)
-				if GrabHarassMana and HasWPassiveCount(target) >= menu:get_value(varus_harass_min_stacks) then
-					if ml.Ready(SLOT_Q) and not qCharge then
-						spellbook:start_charged_spell(SLOT_Q)
+			end
+		end
+	end
+
+	if menu:get_value(varus_pred_useage) == 1 then
+		if menu:get_value(varus_combo_use_q) == 1 then
+		  if ml.IsValid(target) and IsKillable(target) then
+				Charge_buff = local_player:get_buff("VarusQ")
+				if Charge_buff.is_valid and qCharge then
+					max_range = 825 + 70 + ((1.25 / 0.25) * 140)
+					time_differential = (game.game_time - qTime)
+					if time_differential < 1.25 then
+						range1 = 825 + 70 + (time_differential * (140 / 0.25))
+					else
+						range1 = max_range
+					end
+					target = selector:find_target(range1, mode_health)
+					if target.object_id ~= 0 then
+						if ml.IsValid(target) then
+							local Q_input = {
+							    source = myHero,
+							    speed = 1900, range = range1,
+							    delay = 0.1, radius = 70,
+							    collision = {"wind_wall"},
+							    type = "linear", hitbox = true
+							}
+							local output = arkpred:get_prediction(Q_input, target)
+							local inv = arkpred:get_invisible_duration(target)
+							if output.hit_chance >= menu:get_value(varus_q_hitchance) / 100 and inv < 0.125 then
+								local p = output.cast_pos
+								spellbook:release_charged_spell(SLOT_Q, Q.delay, p.x, p.y, p.z)
+							end
+						end
+					end
+				else
+					--target = selector:find_target(1595, mode_health)
+					if HasWPassiveCount(target) >= menu:get_value(varus_combo_min_stacks) then
+						if ml.Ready(SLOT_Q) and not qCharge then
+							spellbook:start_charged_spell(SLOT_Q)
+						end
 					end
 				end
 			end
@@ -601,17 +766,17 @@ local function Harass()
 	end
 
 	if menu:get_value(varus_harass_use_e) == 1 and ml.Ready(SLOT_E) and not ml.Ready(SLOT_Q) and GrabHarassMana then
-		if menu:get_value(varus_harass_e_aa) == 1 and myHero:distance_to(target.origin) <= E.range and myHero:distance_to(target.origin) >= TrueAA and HasWPassiveCount(target) >= menu:get_value(varus_harass_min_e_stacks) then
-			if ml.IsValid(target) and IsKillable(target) then
-				CastE(target)
+		if menu:get_value(varus_harass_e_aa) == 1 and myHero:distance_to(etarget.origin) <= E.range and myHero:distance_to(etarget.origin) >= TrueAA and HasWPassiveCount(etarget) >= menu:get_value(varus_harass_min_e_stacks) then
+			if ml.IsValid(etarget) and IsKillable(etarget) then
+				CastE(etarget)
 			end
 		end
 	end
 
 	if menu:get_value(varus_harass_use_e) == 1 and ml.Ready(SLOT_E) and not ml.Ready(SLOT_Q) and GrabHarassMana then
-		if menu:get_value(varus_harass_e_aa) == 0 and myHero:distance_to(target.origin) <= E.range and HasWPassiveCount(target) >= menu:get_value(varus_harass_min_e_stacks) then
-			if ml.IsValid(target) and IsKillable(target) then
-				CastE(target)
+		if menu:get_value(varus_harass_e_aa) == 0 and myHero:distance_to(etarget.origin) <= E.range and HasWPassiveCount(etarget) >= menu:get_value(varus_harass_min_e_stacks) then
+			if ml.IsValid(etarget) and IsKillable(etarget) then
+				CastE(etarget)
 			end
 		end
 	end
@@ -626,41 +791,90 @@ local function AutoKill()
 	local TotalComboDmg = GetWDmg(target) + GetQDmg(target) + GetRDmg(target)
 	for i, target in ipairs(ml.GetEnemyHeroes()) do
 
-		if menu:get_value(varus_ks_use_q) == 1 then
-			if TotalQDmg > target.health then
-				--if ml.Ready(SLOT_Q) then
-					if ml.IsValid(target) and IsKillable(target) then
-						Charge_buff = local_player:get_buff("VarusQ")
-						if Charge_buff.is_valid and qCharge then
-							max_range = 825 + 70 + ((1.25 / 0.25) * 140)
-							time_differential = (game.game_time - qTime)
-							if time_differential < 1.25 then
-								range = 825 + 70 + (time_differential * (140 / 0.25))
+		if menu:get_value(varus_pred_useage) == 0 then
+			if menu:get_value(varus_ks_use_q) == 1 then
+				if TotalQDmg > target.health then
+					--if ml.Ready(SLOT_Q) then
+						if ml.IsValid(target) and IsKillable(target) then
+							Charge_buff = local_player:get_buff("VarusQ")
+							if Charge_buff.is_valid and qCharge then
+								max_range = 825 + 70 + ((1.25 / 0.25) * 140)
+								time_differential = (game.game_time - qTime)
+								if time_differential < 1.25 then
+									range = 825 + 70 + (time_differential * (140 / 0.25))
+								else
+									range = max_range
+								end
+								target = selector:find_target(range, mode_health)
+								if target.object_id ~= 0 then
+									if ml.Ready(SLOT_Q) and ml.IsValid(target) then
+										origin = target.origin
+										pred_output = pred:predict(1900, 0, range, 140, target, false, false)
+										if pred_output.can_cast then
+											cast_pos = pred_output.cast_pos
+											spellbook:release_charged_spell(SLOT_Q, 0, cast_pos.x, cast_pos.y, cast_pos.z)
+										end
+									end
+								end
 							else
-								range = max_range
-							end
-							target = selector:find_target(range, mode_health)
-							if target.object_id ~= 0 then
-								if ml.Ready(SLOT_Q) and ml.IsValid(target) then
-									origin = target.origin
-									pred_output = pred:predict(1900, 0, range, 140, target, false, false)
-									if pred_output.can_cast then
-										cast_pos = pred_output.cast_pos
-										spellbook:release_charged_spell(SLOT_Q, 0, cast_pos.x, cast_pos.y, cast_pos.z)
+								--target = selector:find_target(1595, mode_health)
+								if myHero:distance_to(target.origin) <= Q.range and ml.IsValid(target) and IsKillable(target) then
+									if ml.Ready(SLOT_Q) then
+										KSQ = true
+										spellbook:start_charged_spell(SLOT_Q)
 									end
 								end
 							end
-						else
-							--target = selector:find_target(1595, mode_health)
-							if myHero:distance_to(target.origin) <= Q.range and ml.IsValid(target) and IsKillable(target) then
-								if ml.Ready(SLOT_Q) then
-									KSQ = true
-									spellbook:start_charged_spell(SLOT_Q)
+						end
+					--end
+				end
+			end
+		end
+
+		if menu:get_value(varus_pred_useage) == 1 then
+			if menu:get_value(varus_ks_use_q) == 1 then
+				if TotalQDmg > target.health then
+					--if ml.Ready(SLOT_Q) then
+						if ml.IsValid(target) and IsKillable(target) then
+							Charge_buff = local_player:get_buff("VarusQ")
+							if Charge_buff.is_valid and qCharge then
+								max_range = 825 + 70 + ((1.25 / 0.25) * 140)
+								time_differential = (game.game_time - qTime)
+								if time_differential < 1.25 then
+									range1 = 825 + 70 + (time_differential * (140 / 0.25))
+								else
+									range1 = max_range
+								end
+								target = selector:find_target(range1, mode_health)
+								if target.object_id ~= 0 then
+									if ml.Ready(SLOT_Q) and ml.IsValid(target) then
+										local Q_input = {
+										    source = myHero,
+										    speed = 1900, range = range1,
+										    delay = 0.1, radius = 70,
+										    collision = {"wind_wall"},
+										    type = "linear", hitbox = true
+										}
+										local output = arkpred:get_prediction(Q_input, target)
+										local inv = arkpred:get_invisible_duration(target)
+										if output.hit_chance >= menu:get_value(varus_q_hitchance) / 100 and inv < 0.125 then
+											local p = output.cast_pos
+											spellbook:release_charged_spell(SLOT_Q, Q.delay, p.x, p.y, p.z)
+										end
+									end
+								end
+							else
+								--target = selector:find_target(1595, mode_health)
+								if myHero:distance_to(target.origin) <= Q.range and ml.IsValid(target) and IsKillable(target) then
+									if ml.Ready(SLOT_Q) then
+										KSQ = true
+										spellbook:start_charged_spell(SLOT_Q)
+									end
 								end
 							end
 						end
-					end
-				--end
+					--end
+				end
 			end
 		end
 
@@ -813,49 +1027,6 @@ end
 	end
 end
 
-local function AutoQImmobiltarget()
-
-	target = selector:find_target(Q.range, mode_health)
-
-	if ml.IsValid(target) and IsKillable(target) then
-		if IsImmobiltarget(target) then
-			Charge_buff = local_player:get_buff("VarusQ")
-			if Charge_buff.is_valid and qCharge then
-				max_range = 825 + 70 + ((1.25 / 0.25) * 140)
-				time_differential = (game.game_time - qTime - 1)
-				if time_differential < 1.25 then
-					range = 825 + 70 + (time_differential * (140 / 0.25))
-				else
-					range = max_range
-				end
-				target = selector:find_target(range, mode_health)
-				if target.object_id ~= 0 then
-					if ml.Ready(SLOT_Q) and ml.IsValid(target) then
-						origin = target.origin
-						pred_output = pred:predict(1900, 0, range, 140, target, false, false)
-						if pred_output.can_cast then
-							cast_pos = pred_output.cast_pos
-							spellbook:release_charged_spell(SLOT_Q, 0, cast_pos.x, cast_pos.y, cast_pos.z)
-						end
-					end
-				end
-			else
-				--target = selector:find_target(1595, mode_health)
-				if myHero:distance_to(target.origin) < Q.range then
-					if ml.Ready(SLOT_Q) then
-						spellbook:start_charged_spell(SLOT_Q)
-					end
-				end
-			end
-		end
-	end
-	if ml.Ready(SLOT_W) and IsImmobiltarget(target) and qCharge then
-		if ml.IsValid(target) and IsKillable(target) then
-			CastW()
-		end
-	end
-end
-
 -- Manual R
 
 local function ManualR()
@@ -920,75 +1091,169 @@ end
 
 local function ManualQ()
 
-	if game:is_key_down(menu:get_value(varus_combo_q_set_key)) and menu:get_value(varus_q_selector) == 0 then
-		target = selector:find_target(Q.range, mode_health)
-		if ml.IsValid(target) then
-			--if ml.Ready(SLOT_Q) then
-				Charge_buff = local_player:get_buff("VarusQ")
-				if Charge_buff.is_valid and qCharge then
-					max_range = 825 + 70 + ((1.25 / 0.25) * 140)
-					time_differential = (game.game_time - qTime - 1)
-					if time_differential < 1.25 then
-						range = 825 + 70 + (time_differential * (140 / 0.25))
+	if menu:get_value(varus_pred_useage) == 0 then
+		if game:is_key_down(menu:get_value(varus_combo_q_set_key)) and menu:get_value(varus_q_selector) == 0 then
+			target = selector:find_target(Q.range, mode_health)
+			if ml.IsValid(target) then
+				--if ml.Ready(SLOT_Q) then
+					Charge_buff = local_player:get_buff("VarusQ")
+					if Charge_buff.is_valid and qCharge then
+						max_range = 825 + 70 + ((1.25 / 0.25) * 140)
+						time_differential = (game.game_time - qTime - 1)
+						if time_differential < 1.25 then
+							range = 825 + 70 + (time_differential * (140 / 0.25))
+						else
+							range = max_range
+						end
+						target = selector:find_target(range, mode_health)
+						if target.object_id ~= 0 then
+							if ml.Ready(SLOT_Q) and ml.IsValid(target) then
+								origin = target.origin
+								pred_output = pred:predict(1900, 0, range, 140, target, false, false)
+								if pred_output.can_cast then
+									cast_pos = pred_output.cast_pos
+									spellbook:release_charged_spell(SLOT_Q, 0, cast_pos.x, cast_pos.y, cast_pos.z)
+								end
+							end
+						end
 					else
-						range = max_range
-					end
-					target = selector:find_target(range, mode_health)
-					if target.object_id ~= 0 then
-						if ml.Ready(SLOT_Q) and ml.IsValid(target) then
-							origin = target.origin
-							pred_output = pred:predict(1900, 0, range, 140, target, false, false)
-							if pred_output.can_cast then
-								cast_pos = pred_output.cast_pos
-								spellbook:release_charged_spell(SLOT_Q, 0, cast_pos.x, cast_pos.y, cast_pos.z)
+						target = selector:find_target(1595, mode_health)
+						if myHero:distance_to(target.origin) < Q.range then
+							if ml.Ready(SLOT_Q) then
+								spellbook:start_charged_spell(SLOT_Q)
 							end
 						end
 					end
-				else
-					target = selector:find_target(1595, mode_health)
-					if myHero:distance_to(target.origin) < Q.range then
-						if ml.Ready(SLOT_Q) then
-							spellbook:start_charged_spell(SLOT_Q)
-						end
-					end
-				end
-			--end
+				--end
+			end
 		end
 	end
 
-	if game:is_key_down(menu:get_value(varus_combo_q_set_key)) and menu:get_value(varus_q_selector) == 1 then
-		target = selector:find_target(Q.range, mode_cursor)
-		if ml.IsValid(target) then
-			-- ml.Ready(SLOT_Q) then
-				Charge_buff = local_player:get_buff("VarusQ")
-				if Charge_buff.is_valid and qCharge  then
-					max_range = 825 + 70 + ((1.25 / 0.25) * 140)
-					time_differential = (game.game_time - qTime - 1)
-					if time_differential < 1.25 then
-						range = 825 + 70 + (time_differential * (140 / 0.25))
+	if menu:get_value(varus_pred_useage) == 1 then
+		if game:is_key_down(menu:get_value(varus_combo_q_set_key)) and menu:get_value(varus_q_selector) == 0 then
+			--target = selector:find_target(Q.range, mode_health)
+			if ml.IsValid(target) then
+				--if ml.Ready(SLOT_Q) then
+					Charge_buff = local_player:get_buff("VarusQ")
+					if Charge_buff.is_valid and qCharge then
+						max_range = 825 + 70 + ((1.25 / 0.25) * 140)
+						time_differential = (game.game_time - qTime - 1)
+						if time_differential < 1.25 then
+							range1 = 825 + 70 + (time_differential * (140 / 0.25))
+						else
+							range1 = max_range
+						end
+						target = selector:find_target(range1, mode_health)
+						if target.object_id ~= 0 then
+							if ml.Ready(SLOT_Q) and ml.IsValid(target) then
+								local Q_input = {
+										source = myHero,
+										speed = 1900, range = range1,
+										delay = 0.1, radius = 70,
+										collision = {"wind_wall"},
+										type = "linear", hitbox = true
+								}
+								local output = arkpred:get_prediction(Q_input, target)
+								local inv = arkpred:get_invisible_duration(target)
+								if output.hit_chance >= menu:get_value(varus_q_hitchance) / 100 and inv < 0.125 then
+									local p = output.cast_pos
+									spellbook:release_charged_spell(SLOT_Q, Q.delay, p.x, p.y, p.z)
+								end
+							end
+						end
 					else
-						range = max_range
-					end
-					target = selector:find_target(range, mode_cursor)
-					if target.object_id ~= 0 then
-						if ml.Ready(SLOT_Q) and ml.IsValid(target) then
-							origin = target.origin
-							pred_output = pred:predict(1900, 0, range, 140, target, false, false)
-							if pred_output.can_cast then
-								cast_pos = pred_output.cast_pos
-								spellbook:release_charged_spell(SLOT_Q, 0, cast_pos.x, cast_pos.y, cast_pos.z)
+						target = selector:find_target(1595, mode_health)
+						if myHero:distance_to(target.origin) < Q.range then
+							if ml.Ready(SLOT_Q) then
+								spellbook:start_charged_spell(SLOT_Q)
 							end
 						end
 					end
-				else
-					target = selector:find_target(1595, mode_cursor)
-					if myHero:distance_to(target.origin) < Q.range then
-						if ml.Ready(SLOT_Q) then
-							spellbook:start_charged_spell(SLOT_Q)
+				--end
+			end
+		end
+	end
+
+	if menu:get_value(varus_pred_useage) == 0 then
+		if game:is_key_down(menu:get_value(varus_combo_q_set_key)) and menu:get_value(varus_q_selector) == 1 then
+			target = selector:find_target(Q.range, mode_cursor)
+			if ml.IsValid(target) then
+				--if ml.Ready(SLOT_Q) then
+					Charge_buff = local_player:get_buff("VarusQ")
+					if Charge_buff.is_valid and qCharge then
+						max_range = 825 + 70 + ((1.25 / 0.25) * 140)
+						time_differential = (game.game_time - qTime - 1)
+						if time_differential < 1.25 then
+							range = 825 + 70 + (time_differential * (140 / 0.25))
+						else
+							range = max_range
+						end
+						target = selector:find_target(range, mode_cursor)
+						if target.object_id ~= 0 then
+							if ml.Ready(SLOT_Q) and ml.IsValid(target) then
+								origin = target.origin
+								pred_output = pred:predict(1900, 0, range, 140, target, false, false)
+								if pred_output.can_cast then
+									cast_pos = pred_output.cast_pos
+									spellbook:release_charged_spell(SLOT_Q, 0, cast_pos.x, cast_pos.y, cast_pos.z)
+								end
+							end
+						end
+					else
+						target = selector:find_target(1595, mode_cursor)
+						if myHero:distance_to(target.origin) < Q.range then
+							if ml.Ready(SLOT_Q) then
+								spellbook:start_charged_spell(SLOT_Q)
+							end
 						end
 					end
-				end
-			--end
+				--end
+			end
+		end
+	end
+
+	if menu:get_value(varus_pred_useage) == 1 then
+		if game:is_key_down(menu:get_value(varus_combo_q_set_key)) and menu:get_value(varus_q_selector) == 1 then
+			--target = selector:find_target(Q.range, mode_cursor)
+			if ml.IsValid(target) then
+				--if ml.Ready(SLOT_Q) then
+				Charge_buff = local_player:get_buff("VarusQ")
+				if Charge_buff.is_valid and qCharge then
+					max_range = 825 + 70 + ((1.25 / 0.25) * 140)
+					time_differential = (game.game_time - qTime)
+					if time_differential < 1.25 then
+						range1 = 825 + 70 + (time_differential * (140 / 0.25))
+					else
+						range1 = max_range
+					end
+					target = selector:find_target(range1, mode_cursor)
+						if target.object_id ~= 0 then
+							if ml.Ready(SLOT_Q) and ml.IsValid(target) then
+								local Q_input = {
+										source = myHero,
+										speed = 1900, range = range1,
+										delay = 0.1, radius = 70,
+										collision = {"wind_wall"},
+										type = "linear", hitbox = true
+								}
+								local output = arkpred:get_prediction(Q_input, target)
+								local inv = arkpred:get_invisible_duration(target)
+								if output.hit_chance >= menu:get_value(varus_q_hitchance) / 100 and inv < 0.125 then
+									local p = output.cast_pos
+									spellbook:release_charged_spell(SLOT_Q, Q.delay, p.x, p.y, p.z)
+								end
+							end
+						end
+					else
+						target = selector:find_target(Q.range, mode_cursor)
+						if myHero:distance_to(target.origin) < Q.range then
+							if ml.Ready(SLOT_Q) then
+								spellbook:start_charged_spell(SLOT_Q)
+							end
+						end
+					end
+				--end
+			end
 		end
 	end
 
@@ -1101,17 +1366,29 @@ local function on_draw()
 		end
 	end
 
-	--[[if IsImmobiltarget(target) and ml.Ready(SLOT_Q) and myHero:distance_to(target.origin) < Q.range then
-		if menu:get_value(varus_Immobile_draw) == 1 then
-			if enemydraw.is_valid and target.is_on_screen then
-				renderer:draw_text_big_centered(enemydraw.x, enemydraw.y, "Immobile Target Using [Q]")
+end
+
+--local timer, health = 0, 0
+
+--[[local function on_process_spell(unit, args)
+    if unit ~= game.local_player or timer >
+        args.cast_time - 1 then return end
+    timer = args.cast_time
+end]]
+
+local function on_tick()
+
+	--[[for _, unit in ipairs(game.players) do
+		if unit.champ_name:find("Practice") then
+			if unit.is_valid and unit.is_enemy and
+				unit.is_alive and unit.is_visible and health ~=
+				unit.health and game.game_time - timer < 1 then
+				local delay = game.game_time - timer - 0.0167
+				console:log(tostring(delay))
+				health = unit.health
 			end
 		end
 	end]]
-
-end
-
-local function on_tick()
 
 	if game:is_key_down(menu:get_value(varus_combokey)) and menu:get_value(varus_enabled) == 1 and not KSQ then
 		Combo()
@@ -1125,10 +1402,6 @@ local function on_tick()
 		Clear()
 		JungleClear()
 	end
-
-	--[[if not game:is_key_down(menu:get_value(varus_combokey)) then
-		AutoQImmobiltarget()
-	end]]
 
 	if game:is_key_down(menu:get_value(varus_combo_r_set_key)) then
 		ManualR()
@@ -1169,6 +1442,7 @@ local function on_tick()
 
 end
 
+--client:set_event_callback("on_process_spell", on_process_spell)
 client:set_event_callback("on_tick", on_tick)
 client:set_event_callback("on_draw", on_draw)
 client:set_event_callback("on_dash", on_dash)

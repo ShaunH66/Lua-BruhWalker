@@ -4,7 +4,7 @@ end
 
 do
     local function AutoUpdate()
-		local Version = 1.5
+		local Version = 1.6
 		local file_name = "BLMLucian.lua"
 		local url = "https://raw.githubusercontent.com/TheShaunyboi/BruhWalkerEncrypted/main/BLMLucian.lua"
         local web_version = http:get("https://raw.githubusercontent.com/TheShaunyboi/BruhWalkerEncrypted/main/BLMLucian.lua.version.txt")
@@ -530,8 +530,8 @@ end
 
 lucian_enabled = menu:add_checkbox("Enabled", lucian_category, 1)
 lucian_combokey = menu:add_keybinder("Combo Mode Key", lucian_category, 32)
-menu:add_label("Welcome To Shaun's Sexy Lucian", lucian_category)
-menu:add_label("#BlackLivesMatter v1.5", lucian_category)
+menu:add_label("Shaun's Sexy Lucian", lucian_category)
+menu:add_label("#BlackLivesMatter", lucian_category)
 
 lucian_ks_function = menu:add_subcategory("Kill Steal", lucian_category)
 lucian_ks_q = menu:add_subcategory("[Q] Settings", lucian_ks_function, 1)
@@ -550,6 +550,7 @@ lucian_combo_q = menu:add_subcategory("[Q] Settings", lucian_combo)
 lucian_combo_use_q = menu:add_checkbox("Use [Q]", lucian_combo_q, 1)
 lucian_combo_w = menu:add_subcategory("[W] Settings", lucian_combo)
 lucian_combo_use_w = menu:add_checkbox("Use [W]", lucian_combo_w, 1)
+lucian_combo_use_w_aa = menu:add_checkbox("Only Use [W] Inside [AA] Range", lucian_combo_w, 1)
 lucian_combo_e = menu:add_subcategory("[E] Settings", lucian_combo)
 lucian_combo_use_e = menu:add_checkbox("Use [E]", lucian_combo_e, 1)
 lucian_combo_e_turret = menu:add_checkbox("Don't Use [E] Under Turret", lucian_combo_e, 0)
@@ -654,22 +655,41 @@ end
 local function Combo()
 
 	local AAQRange = Q.range + AA.range
+	local TrueAARange = myHero.attack_range + myHero.bounding_radius
 	target = selector:find_target(AAQRange, mode_health)
 
 	if menu:get_value(lucian_combo_prioity) == 0 then
 
 		if menu:get_value(lucian_combo_use_q) == 1 then
-			if myHero:distance_to(target.origin) <= Q.range and IsValid(target) and IsKillable(target) then
+			if myHero:distance_to(target.origin) <= Q.range and myHero:distance_to(target.origin) > TrueAARange and IsValid(target) and IsKillable(target) then
 				if Ready(SLOT_Q) and not HasPassiveShotsReady(myHero) then
 					CastQ(target)
 				end
 			end
 		end
 
-		if menu:get_value(lucian_combo_use_w) == 1 then
+		if menu:get_value(lucian_combo_use_q) == 1 then
+			if myHero:distance_to(target.origin) <= TrueAARange and not orbwalker:can_attack() and IsValid(target) and IsKillable(target) then
+				if Ready(SLOT_Q) and not HasPassiveShotsReady(myHero) then
+					CastQ(target)
+				end
+			end
+		end
+
+		if menu:get_value(lucian_combo_use_w) == 1 and menu:get_value(lucian_combo_use_w_aa) == 0 then
 			if myHero:distance_to(target.origin) and IsValid(target) and IsKillable(target) then
 				if myHero:distance_to(target.origin) <= W.range then
 		     	if Ready(SLOT_W) and not Ready(SLOT_Q) and not HasPassiveShotsReady(myHero) then
+						CastW(target)
+					end
+				end
+			end
+		end
+
+		if menu:get_value(lucian_combo_use_w) == 1 and menu:get_value(lucian_combo_use_w_aa) == 1 then
+			if myHero:distance_to(target.origin) and IsValid(target) and IsKillable(target) then
+				if myHero:distance_to(target.origin) <= TrueAARange then
+					if Ready(SLOT_W) and not Ready(SLOT_Q) and not HasPassiveShotsReady(myHero) then
 						CastW(target)
 					end
 				end
@@ -724,17 +744,35 @@ local function Combo()
 	if menu:get_value(lucian_combo_prioity) == 1 then
 
 		if menu:get_value(lucian_combo_use_q) == 1 then
-			if myHero:distance_to(target.origin) <= Q.range and IsValid(target) and IsKillable(target) then
-				if not Ready(SLOT_E) and Ready(SLOT_Q) and not HasPassiveShotsReady(myHero) then
+			if myHero:distance_to(target.origin) <= Q.range and myHero:distance_to(target.origin) > TrueAARange and IsValid(target) and IsKillable(target) then
+				if Ready(SLOT_Q) and not HasPassiveShotsReady(myHero) then
 					CastQ(target)
 				end
 			end
 		end
 
-		if menu:get_value(lucian_combo_use_w) == 1 then
+		if menu:get_value(lucian_combo_use_q) == 1 then
+			if myHero:distance_to(target.origin) <= TrueAARange and not orbwalker:can_attack() and IsValid(target) and IsKillable(target) then
+				if Ready(SLOT_Q) and not HasPassiveShotsReady(myHero) then
+					CastQ(target)
+				end
+			end
+		end
+
+		if menu:get_value(lucian_combo_use_w) == 1 and menu:get_value(lucian_combo_use_w_aa) == 0 then
 			if myHero:distance_to(target.origin) and IsValid(target) and IsKillable(target) then
 				if myHero:distance_to(target.origin) <= W.range then
 		     	if Ready(SLOT_W) and not Ready(SLOT_Q) and not Ready(SLOT_E) and not HasPassiveShotsReady(myHero) then
+						CastW(target)
+					end
+				end
+			end
+		end
+
+		if menu:get_value(lucian_combo_use_w) == 1 and menu:get_value(lucian_combo_use_w_aa) == 1 then
+			if myHero:distance_to(target.origin) and IsValid(target) and IsKillable(target) then
+				if myHero:distance_to(target.origin) <= TrueAARange then
+					if Ready(SLOT_W) and not Ready(SLOT_Q) and not HasPassiveShotsReady(myHero) then
 						CastW(target)
 					end
 				end

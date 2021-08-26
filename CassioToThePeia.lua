@@ -5,7 +5,7 @@ end
 -- AutoUpdate
 do
     local function AutoUpdate()
-		local Version = 7.6
+		local Version = 2.0
 		local file_name = "CassioToThePeia.lua"
 		local url = "http://raw.githubusercontent.com/TheShaunyboi/BruhWalkerEncrypted/main/CassioToThePeia.lua"
         local web_version = http:get("https://raw.githubusercontent.com/TheShaunyboi/BruhWalkerEncrypted/main/CassioToThePeia.lua.version.txt")
@@ -20,9 +20,6 @@ do
 						console:log("Please reload via F5!.....")
 						console:log("------------------------------------------------------------------------------------------------------------")
 						console:log("Please reload via F5!.....")
-						console:log("------------------------------------------------------------------------------------------------------------")
-						console:log("Please reload via F5!.....")
-						console:log("------------------------------------------------------------------------------------------------------------")
         end
 
     end
@@ -57,8 +54,17 @@ if VIP_USER_LIST() then
   console:log("..................You Are VIP! Thanks For Supporting <3 #Family........................")
 end
 
+local file_name = "Prediction.lib"
+if not file_manager:file_exists(file_name) then
+   local url = "https://raw.githubusercontent.com/Ark223/Bruhwalker/main/Prediction.lib"
+   http:download_file(url, file_name)
+   console:log("Ark223 Prediction Library Downloaded")
+   console:log("Please Reload with F5")
+end
+
 
 pred:use_prediction()
+arkpred = _G.Prediction
 
 local myHero = game.local_player
 local local_player = game.local_player
@@ -242,14 +248,14 @@ local function GetMinionCount(range, unit)
 end
 
 local function HasPoison(unit)
-    if unit:has_buff_type(poison) then
+    if unit:has_buff_type(24) then
         return true
     end
     return false
 end
 
-function IsKillable(unit)
-	if unit:has_buff_type(15) or unit:has_buff_type(17) or unit:has_buff("sionpassivezombie") then
+local function IsKillable(unit)
+	if unit:has_buff_type(16) or unit:has_buff_type(18) or unit:has_buff("sionpassivezombie") then
 		return false
 	end
 	return true
@@ -290,6 +296,29 @@ Cass_enabled = menu:add_checkbox("Enabled", Cass_category, 1)
 Cass_combokey = menu:add_keybinder("Combo Mode Key", Cass_category, 32)
 menu:add_label("Shaun's Sexy Cassiopeia", Cass_category)
 menu:add_label("#IPA-BeerIsMyPosion", Cass_category)
+
+Cass_prediction = menu:add_subcategory("[Pred Selection]", Cass_category)
+e_table = {}
+e_table[1] = "Bruh Internal"
+e_table[2] = "Ark Pred"
+Cass_pred_useage = menu:add_combobox("[Pred Selection]", Cass_prediction, e_table, 1)
+
+Cass_ark_pred = menu:add_subcategory("[Ark Pred Settings]", Cass_prediction)
+
+Cass_ark_pred_q = menu:add_subcategory("[Q] Settings", Cass_ark_pred, 1)
+Cass_q_hitchance = menu:add_slider("[Q] Cass Hit Chance [%]", Cass_ark_pred_q, 1, 99, 50)
+Cass_q_range = menu:add_slider("[Q] Cass Range Input", Cass_ark_pred_q, 1, 2500, 850)
+Cass_q_radius = menu:add_slider("[Q] Cass Radius Input", Cass_ark_pred_q, 1, 500, 160)
+
+Cass_ark_pred_w = menu:add_subcategory("[W] Settings", Cass_ark_pred, 1)
+Cass_w_hitchance = menu:add_slider("[W] Cass Hit Chance [%]", Cass_ark_pred_w, 1, 99, 50)
+Cass_w_range = menu:add_slider("[W] Cass Range Input", Cass_ark_pred_w, 1, 2500, 700)
+Cass_w_radius = menu:add_slider("[W] Cass Radius Input", Cass_ark_pred_w, 1, 500, 200)
+
+Cass_ark_pred_r = menu:add_subcategory("[R] Settings", Cass_ark_pred, 1)
+Cass_r_hitchance = menu:add_slider("[R] Cass Hit Chance [%]", Cass_ark_pred_r, 1, 99, 50)
+Cass_r_range = menu:add_slider("[R] Cass Range Input", Cass_ark_pred_r, 1, 2500, 825)
+Cass_r_angle = menu:add_slider("[R] Cass Angle Input", Cass_ark_pred_r, 1, 500, 80)
 
 Cass_aa_mode = menu:add_subcategory("[Auto Attacks] Selector", Cass_category)
 Cass_aa = menu:add_slider("Stop [AA] In Combo Mode >= Slider Level", Cass_aa_mode, 1, 18, 11)
@@ -343,13 +372,13 @@ Cass_laneclear = menu:add_subcategory("[Lane Clear]", Cass_category)
 Cass_laneclear_use_q = menu:add_checkbox("Use [Q]", Cass_laneclear, 1)
 Cass_laneclear_use_w = menu:add_checkbox("Use [W]", Cass_laneclear, 1)
 Cass_laneclear_use_e = menu:add_checkbox("use [E]", Cass_laneclear, 1)
-Cass_laneclear_mana = menu:add_slider("Minimum Mana To Lane Clear", Cass_laneclear, 0, 200, 50)
+Cass_laneclear_mana = menu:add_slider("Min Mana [%] To Lane Clear", Cass_laneclear, 0, 100, 20)
 
 Cass_jungleclear = menu:add_subcategory("[Jungle Clear]", Cass_category)
 Cass_jungleclear_use_q = menu:add_checkbox("Use [Q]", Cass_jungleclear, 1)
 Cass_jungleclear_use_w = menu:add_checkbox("Use [W]", Cass_jungleclear, 1)
 Cass_jungleclear_use_e = menu:add_checkbox("use [E]", Cass_jungleclear, 1)
-Cass_jungleclear_mana = menu:add_slider("Minimum Mana To jungle Clear", Cass_jungleclear, 0, 200, 50)
+Cass_jungleclear_mana = menu:add_slider("Min Mana [%] To Jungle", Cass_jungleclear, 0, 100, 20)
 
 Cass_combo_r_options = menu:add_subcategory("Extra [R] Features", Cass_category)
 Cass_combo_use_Inter = menu:add_checkbox("Auto [R] Interrupt Major Spells", Cass_combo_r_options, 1)
@@ -440,48 +469,115 @@ local function GetRDmg(unit)
 	return unit:calculate_magic_damage(Damage)
 end
 
+local Q_input = {
+    source = myHero,
+    speed = math.huge, range = menu:get_value(Cass_q_range),
+    delay = 0.65, radius = menu:get_value(Cass_q_radius),
+    collision = {},
+    type = "circular", hitbox = false
+}
+
+local W_input = {
+    source = myHero,
+		speed = math.huge, range = menu:get_value(Cass_w_range),
+		delay = 0.65, radius = menu:get_value(Cass_w_radius),
+    collision = {},
+    type = "circular", hitbox = false
+}
+
+local R_input = {
+    source = myHero,
+		speed = math.huge, range = menu:get_value(Cass_r_range),
+		delay = 0.5, angle = menu:get_value(Cass_r_angle),
+    collision = {},
+    type = "conic", hitbox = false
+
+}
+
 -- Casting
 
 local function CastQ(unit)
-	if not pred_output.can_cast then
-		e_cast = nil
+
+	if menu:get_value(Cass_pred_useage) == 0 then
+		if not pred_output.can_cast then
+			e_cast = nil
+		end
+		pred_output = pred:predict(Q.speed, Q.delay, Q.range, Q.width, unit, false, false)
+		if pred_output.can_cast then
+			castPos = pred_output.cast_pos
+			spellbook:cast_spell(SLOT_Q, Q.delay, castPos.x, castPos.y, castPos.z)
+			e_cast = (client:get_tick_count() + 1500)
+			BlockW = true
+		end
 	end
-	pred_output = pred:predict(Q.speed, Q.delay, Q.range, Q.width, unit, false, false)
-	if pred_output.can_cast then
-		castPos = pred_output.cast_pos
-		spellbook:cast_spell(SLOT_Q, Q.delay, castPos.x, castPos.y, castPos.z)
-		e_cast = (client:get_tick_count() + 1500)
-		BlockW = true
+
+	if menu:get_value(Cass_pred_useage) == 1 and Ready(SLOT_Q) then
+		local output = arkpred:get_aoe_prediction(Q_input, unit)
+	  local inv = arkpred:get_invisible_duration(unit)
+		if output.hit_chance < menu:get_value(Cass_q_hitchance) / 100 then
+			e_cast = nil
+		end
+		if output.hit_chance >= menu:get_value(Cass_q_hitchance) / 100 and inv < (Q_input.delay / 2) then
+			local p = output.cast_pos
+	    spellbook:cast_spell(SLOT_Q, Q.delay, p.x, p.y, p.z)
+			e_cast = (client:get_tick_count() + 1500)
+			BlockW = true
+		end
 	end
 end
 
 local function CastW(unit)
 
-	pred_output = pred:predict(W.speed, W.delay, W.range, W.width, unit, false, false)
-	if pred_output.can_cast then
-		castPos = pred_output.cast_pos
-		spellbook:cast_spell(SLOT_W, W.delay, castPos.x, castPos.y, castPos.z)
+	if menu:get_value(Cass_pred_useage) == 0 then
+		pred_output = pred:predict(W.speed, W.delay, W.range, W.width, unit, false, false)
+		if pred_output.can_cast then
+			castPos = pred_output.cast_pos
+			spellbook:cast_spell(SLOT_W, W.delay, castPos.x, castPos.y, castPos.z)
+		end
+	end
+
+	if menu:get_value(Cass_pred_useage) == 1 and Ready(SLOT_W) then
+		local output = arkpred:get_aoe_prediction(W_input, unit)
+		local inv = arkpred:get_invisible_duration(unit)
+		local immobile = arkpred:get_immobile_duration(unit)
+		if output.hit_chance >= menu:get_value(Cass_w_hitchance) / 100 and inv < (W_input.delay / 2) then
+			local p = output.cast_pos
+			spellbook:cast_spell(SLOT_W, W.delay, p.x, p.y, p.z)
+		end
 	end
 end
 
 local function CastE(unit)
-	spellbook:cast_spell_targetted(SLOT_E, unit, E.delay)
+	if Ready(SLOT_E) then
+		spellbook:cast_spell_targetted(SLOT_E, unit, E.delay)
+	end
 end
 
 
 local function CastR(unit)
 
-	pred_output = pred:predict(R.speed, R.delay, R.range, R.radius, unit, false, false)
-	if pred_output.can_cast then
-		castPos = pred_output.cast_pos
-		spellbook:cast_spell(SLOT_R, R.delay, castPos.x, castPos.y, castPos.z)
+	if menu:get_value(Cass_pred_useage) == 1 then
+		pred_output = pred:predict(R.speed, R.delay, R.range, R.radius, unit, false, false)
+		if pred_output.can_cast then
+			castPos = pred_output.cast_pos
+			spellbook:cast_spell(SLOT_R, R.delay, castPos.x, castPos.y, castPos.z)
+		end
+	end
+	if menu:get_value(Cass_pred_useage) == 1 then
+		local output = arkpred:get_prediction(R_input, unit)
+		local inv = arkpred:get_invisible_duration(unit)
+		local immobile = arkpred:get_immobile_duration(unit)
+		if output.hit_chance >= menu:get_value(Cass_r_hitchance) / 100 and inv < (R_input.delay / 2) then
+			local p = output.cast_pos
+			spellbook:cast_spell(SLOT_R, R.delay, p.x, p.y, p.z)
+		end
 	end
 end
 
 -- Combo
 
 local function Combo()
-	local target = selector:find_target(Q.range, mode_health)
+	target = selector:find_target(Q.range, mode_health)
 	local ChampLevel = myHero.level
 
 	if menu:get_value(Cass_aa) <= ChampLevel then
@@ -491,11 +587,9 @@ local function Combo()
 		orbwalker:enable_auto_attacks()
 	end
 
-	if menu:get_value(Cass_combo_use_q) == 1 then
+	if menu:get_value(Cass_combo_use_q) == 1 and Ready(SLOT_Q) then
 		if myHero:distance_to(target.origin) <= Q.range and IsValid(target) and IsKillable(target) then
-			if Ready(SLOT_Q) then
-				CastQ(target)
-			end
+			CastQ(target)
 		end
 	end
 
@@ -675,12 +769,14 @@ end
 -- Lane Clear
 
 local function Clear()
+
+	local GrabMana = myHero.mana/myHero.max_mana >= menu:get_value(Cass_laneclear_mana) / 100
 	minions = game.minions
 	for i, target in ipairs(minions) do
 
 		if menu:get_value(Cass_laneclear_use_q) == 1 and Ready(SLOT_Q) then
 			if target.object_id ~= 0 then
-				if local_player.mana >= menu:get_value(Cass_laneclear_mana) then
+				if GrabMana then
 					if myHero:distance_to(target.origin) <= Q.range and IsValid(target) and IsKillable(target) then
 						local CastPos, targets = GetBestAoEPositionMinion(Q.speed, Q.delay, Q.range, Q.width, target, false, false)
 						if CastPos and targets >= 2 and Ready(SLOT_Q) then
@@ -693,7 +789,7 @@ local function Clear()
 
 		if menu:get_value(Cass_laneclear_use_w) == 1 and Ready(SLOT_W) then
 			if target.object_id ~= 0 then
-				if local_player.mana >= menu:get_value(Cass_laneclear_mana) then
+				if GrabMana then
 					if myHero:distance_to(target.origin) <= W.range and IsValid(target) and IsKillable(target) then
 						local CastPos, targets = GetBestAoEPositionMinion(W.speed, W.delay, W.range, W.width, target, false, false)
 						if CastPos and targets >= 3 and Ready(SLOT_W) then
@@ -707,7 +803,7 @@ local function Clear()
 	 	if menu:get_value(Cass_laneclear_use_e) == 1 then
 			if menu:get_value(Cass_lasthit_auto) == 0 then
 				if target.object_id ~= 0 then
-					if local_player.mana >= menu:get_value(Cass_laneclear_mana) then
+					if GrabMana then
 						if myHero:distance_to(target.origin) <= E.range and IsValid(target) and IsKillable(target) then
 							if Ready(SLOT_E) then
 								CastE(target)
@@ -723,31 +819,41 @@ end
 -- Jungle Clear
 
 local function JungleClear()
+
+	local GrabMana = myHero.mana/myHero.max_mana >= menu:get_value(Cass_jungleclear_mana) / 100
 	minions = game.jungle_minions
 	for i, target in ipairs(minions) do
 
 		if target.object_id ~= 0 and menu:get_value(Cass_jungleclear_use_q) == 1 then
-			if local_player.mana >= menu:get_value(Cass_jungleclear_mana) then
+			if GrabMana then
 				if Ready(SLOT_Q) then
 					if myHero:distance_to(target.origin) <= Q.range and IsValid(target) and IsKillable(target) then
-						CastQ(target)
+						pred_output = pred:predict(Q.speed, Q.delay, Q.range, Q.width, target, false, false)
+						if pred_output.can_cast then
+							castPos = pred_output.cast_pos
+							spellbook:cast_spell(SLOT_Q, Q.delay, castPos.x, castPos.y, castPos.z)
+						end
 					end
 				end
 			end
 		end
 
 		if target.object_id ~= 0 and menu:get_value(Cass_jungleclear_use_w) == 1 then
-			if local_player.mana >= menu:get_value(Cass_jungleclear_mana) then
+			if GrabMana then
 				if myHero:distance_to(target.origin) <= W.range and IsValid(target) and IsKillable(target) then
 					if Ready(SLOT_W) then
-						CastW(target)
+						pred_output = pred:predict(W.speed, W.delay, W.range, W.width, target, false, false)
+						if pred_output.can_cast then
+							castPos = pred_output.cast_pos
+							spellbook:cast_spell(SLOT_W, W.delay, castPos.x, castPos.y, castPos.z)
+						end
 					end
 				end
 			end
 		end
 
 		if target.object_id ~= 0 and menu:get_value(Cass_jungleclear_use_e) == 1 then
-			if local_player.mana >= menu:get_value(Cass_jungleclear_mana) then
+			if GrabMana then
 				if myHero:distance_to(target.origin) <= E.range and IsValid(target) and IsKillable(target) then
 					if Ready(SLOT_E) then
 						CastE(target)
@@ -916,7 +1022,28 @@ local function on_draw()
 	end
 end
 
+--[[local timer, health = 0, 0
+
+local function on_process_spell(unit, args)
+    if unit ~= game.local_player or timer >
+        args.cast_time - 1 then return end
+    timer = args.cast_time
+end]]
+
 local function on_tick()
+
+	--[[for _, unit in ipairs(game.players) do
+		if unit.champ_name:find("Practice") then
+			if unit.is_valid and unit.is_enemy and
+				unit.is_alive and unit.is_visible and health ~=
+				unit.health and game.game_time - timer < 1 then
+				local delay = game.game_time - timer - 0.0167
+				console:log(tostring(delay))
+				health = unit.health
+			end
+		end
+	end]]
+
 	if game:is_key_down(menu:get_value(Cass_combokey)) and menu:get_value(Cass_enabled) == 1 then
 		Combo()
 	end
@@ -927,7 +1054,7 @@ local function on_tick()
 	end
 
 	if combo:get_mode() == MODE_LANECLEAR then
-		orbwalker:enable_auto_attacks()
+		--orbwalker:enable_auto_attacks()
 		Clear()
 		JungleClear()
 	end
@@ -943,7 +1070,7 @@ local function on_tick()
 	if combo:get_mode() == MODE_LASTHIT and menu:get_value(Cass_lasthit_use) == 1 and local_player.mana >= menu:get_value(Cass_lasthit_mana) and menu:get_value(Cass_lasthit_auto) == 0 then
 		AutoELastHit()
 	end
-	if menu:get_value(Cass_lasthit_auto) == 1 and local_player.mana >= menu:get_value(Cass_lasthit_mana) then
+	if menu:get_value(Cass_lasthit_auto) == 1 and local_player.mana >= menu:get_value(Cass_lasthit_mana) and not game:is_key_down(menu:get_value(Cass_combokey)) then
 		AutoELastHit()
 	end
 
@@ -968,6 +1095,7 @@ local function on_tick()
 	KillSteal()
 end
 
+--client:set_event_callback("on_process_spell", on_process_spell)
 client:set_event_callback("on_tick", on_tick)
 client:set_event_callback("on_draw", on_draw)
 client:set_event_callback("on_possible_interrupt", on_possible_interrupt)

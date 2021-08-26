@@ -4,7 +4,7 @@ end
 
 do
     local function AutoUpdate()
-		local Version = 1.4
+		local Version = 1.5
 		local file_name = "LuluTheDon.lua"
 		local url = "https://raw.githubusercontent.com/TheShaunyboi/BruhWalkerEncrypted/main/LuluTheDon.lua"
         local web_version = http:get("https://raw.githubusercontent.com/TheShaunyboi/BruhWalkerEncrypted/main/LuluTheDon.lua.version.txt")
@@ -342,7 +342,7 @@ end
 
 lulu_enabled = menu:add_checkbox("Enabled", lulu_category, 1)
 lulu_combokey = menu:add_keybinder("Combo Mode Key", lulu_category, 32)
-menu:add_label("Welcome To Shaun's Sexy Lulu", lulu_category)
+menu:add_label("Shaun's Sexy Lulu", lulu_category)
 menu:add_label("#LetsMakeYouBigBaby", lulu_category)
 
 lulu_combo = menu:add_subcategory("[Combo]", lulu_category)
@@ -351,7 +351,7 @@ lulu_combo_use_q = menu:add_checkbox("Use [Q]", lulu_combo_q, 1)
 
 lulu_combo_w = menu:add_subcategory("[W] Settings", lulu_combo, 1)
 lulu_combo_use_w = menu:add_checkbox("Use [W]", lulu_combo_w, 1)
-lulu_w_allyblacklist = menu:add_subcategory("Ally [W] Blacklist", lulu_combo_w)
+lulu_w_allyblacklist = menu:add_subcategory("Ally [W] Whitelist", lulu_combo_w)
 players = game.players
 for _, v in ipairs(players) do
 	if not v.is_enemy and v.object_id ~= myHero.object_id then
@@ -362,7 +362,7 @@ lulu_combo_e = menu:add_subcategory("[E] Settings", lulu_combo, 1)
 lulu_combo_use_e = menu:add_checkbox("Use [E]", lulu_combo_e, 1)
 lulu_combo_e_ally_hp = menu:add_slider("[E] Ally HP is lower than [%]", lulu_combo_e, 1, 100, 40)
 lulu_combo_e_me_hp = menu:add_slider("[E] Myself HP is lower than [%]", lulu_combo_e, 1, 100, 10)
-lulu_e_allyblacklist = menu:add_subcategory("Ally [E] Blacklist", lulu_combo_e)
+lulu_e_allyblacklist = menu:add_subcategory("Ally [E] Whitelist", lulu_combo_e)
 players = game.players
 for _, v in ipairs(players) do
 	if not v.is_enemy and v.object_id ~= myHero.object_id then
@@ -373,7 +373,7 @@ lulu_combo_r = menu:add_subcategory("[R] Settings", lulu_combo)
 lulu_combo_use_r = menu:add_checkbox("Use [R]", lulu_combo_r, 1)
 lulu_combo_r_ally_hp = menu:add_slider("[R] Ally HP is lower than [%]", lulu_combo_r, 1, 100, 30)
 lulu_combo_r_me_hp = menu:add_slider("[R] Myself HP is lower than [%]", lulu_combo_r, 1, 100, 10)
-lulu_r_allyblacklist = menu:add_subcategory("[R] Ally Blacklist", lulu_combo_r)
+lulu_r_allyblacklist = menu:add_subcategory("[R] Ally Whitelist", lulu_combo_r)
 players = game.players
 for _, v in ipairs(players) do
 	if not v.is_enemy and v.object_id ~= myHero.object_id then
@@ -389,6 +389,18 @@ lulu_harass_use_w = menu:add_checkbox("Use [W]", lulu_harass, 1)
 lulu_ks = menu:add_subcategory("[Kill Steal]", lulu_category)
 lulu_ks_use_q = menu:add_checkbox("Use [Q]", lulu_ks , 1)
 lulu_ks_use_e = menu:add_checkbox("Use [E]", lulu_ks , 1)
+
+lulu_manual_we = menu:add_subcategory("[W] + [E] Semi Manual Selection", lulu_category)
+lulu_manual_we_key = menu:add_keybinder("[W] + [E] Keybinder On Ally", lulu_manual_we, 65)
+lulu_myself_we_key = menu:add_keybinder("[W] + [E] Keybinder On Myself", lulu_manual_we, 84)
+lulu_manual_we_allyblacklist = menu:add_subcategory("[W] + [E] Ally Whitelist", lulu_manual_we)
+players = game.players
+for _, q in ipairs(players) do
+	if not q.is_enemy and q.object_id ~= myHero.object_id then
+		menu:add_checkbox("Use [W] + [E] On : "..tostring(q.champ_name), lulu_manual_we_allyblacklist, 1)
+	end
+end
+
 
 lulu_extra = menu:add_subcategory("[Automated] Features", lulu_category)
 lulu_manual_r_use = menu:add_subcategory("Semi Manual [R] Settings", lulu_extra)
@@ -460,9 +472,10 @@ local function CastE(unit)
 end
 
 local function CastR(unit)
-	origin = unit.origin
+	spellbook:cast_spell_targetted(SLOT_R, unit, R.delay)
+	--[[origin = unit.origin
 	x, y, z = origin.x, origin.y, origin.z
-	spellbook:cast_spell(SLOT_R, R.delay, x, y, z)
+	spellbook:cast_spell(SLOT_R, R.delay, x, y, z)]]
 end
 
 -- Combo
@@ -771,6 +784,41 @@ local function ManualRCast()
 	end
 end
 
+local function WEManual()
+
+	players = game.players
+	for _, ally in ipairs(players) do
+
+		if game:is_key_down(menu:get_value(lulu_manual_we_key)) then
+			if menu:get_value_string("Use [W] + [E] On : "..tostring(ally.champ_name)) == 1 then
+				if not ally.is_enemy and ally.object_id ~= myHero.object_id then
+
+					if ally:distance_to(myHero.origin) <= E.range then
+						if Ready(SLOT_E) then
+							CastE(ally)
+						end
+					end
+
+					if ally:distance_to(myHero.origin) <= W.range then
+						if Ready(SLOT_W) then
+							CastW(ally)
+						end
+					end
+				end
+			end
+		end
+		if game:is_key_down(menu:get_value(lulu_myself_we_key)) then
+			if Ready(SLOT_E) then
+				CastE(myHero)
+			end
+			if Ready(SLOT_W) then
+				CastW(myHero)
+			end
+		end
+	end
+end
+
+
 -- Auto E --
 
 --[[local function AutoE()
@@ -907,6 +955,7 @@ local function on_tick()
 		Gapclose_text = false
 	end
 
+	WEManual()
 	AutoR()
 	AutoKill()
 	ManualRCast()

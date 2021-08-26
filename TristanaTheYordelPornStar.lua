@@ -4,7 +4,7 @@ end
 
 do
     local function AutoUpdate()
-		local Version = 2.0
+		local Version = 2.4
 		local file_name = "TristanaTheYordelPornStar.lua"
 		local url = "https://raw.githubusercontent.com/TheShaunyboi/BruhWalkerEncrypted/main/TristanaTheYordelPornStar.lua"
         local web_version = http:get("https://raw.githubusercontent.com/TheShaunyboi/BruhWalkerEncrypted/main/TristanaTheYordelPornStar.lua.version.txt")
@@ -452,7 +452,7 @@ local function IsUnderTurret(unit)
 end
 
 function IsKillable(unit)
-	if unit:has_buff_type(15) or unit:has_buff_type(17) or unit:has_buff("sionpassivezombie") then
+	if unit:has_buff_type(16) or unit:has_buff_type(18) or unit:has_buff("sionpassivezombie") then
 		return false
 	end
 	return true
@@ -583,6 +583,7 @@ end
 
 trist_extra_int = menu:add_subcategory("[R] Interrupt Major Channel Spells Settings", trist_extra, 1)
 trist_extra_interrupt = menu:add_checkbox("Use [R] Interrupt Major Channel Spells", trist_extra_int, 1)
+trist_extra_interrupt_hp = menu:add_slider("Only [R] Interrupt When My HP < [%]", trist_extra_int, 1, 100, 50)
 trist_extra_interrupt_blacklist = menu:add_subcategory("[R] Interrupt Champ Whitelist", trist_extra_int)
 local players = game.players
 for _, t in pairs(players) do
@@ -617,18 +618,27 @@ local function CastE(unit)
 end
 
 local function CastR(unit)
-	origin = unit.origin
-	x, y, z = origin.x, origin.y, origin.z
-	spellbook:cast_spell(SLOT_R, R.delay, x, y, z)
+	spellbook:cast_spell_targetted(SLOT_R, unit, R.delay)
 end
 
 -- Combo
 
 local function Combo()
 
-	local QERrange = (myHero.attack_range + myHero.bounding_radius + 40)
+	local QERrange = myHero.attack_range + myHero.bounding_radius + 40
 
 	target = selector:find_target(1500, mode_health)
+	etarget = selector:find_target(QERrange, mode_health)
+
+	if menu:get_value(trist_combo_use_e) == 1 then
+		if myHero:distance_to(target.origin) <= QERrange and IsValid(target) and IsKillable(target) then
+			if menu:get_value_string("Use [E] Combo Whitelist: "..tostring(target.champ_name)) == 1 then
+				if spellbook:get_spell_slot(SLOT_E).can_cast then
+					CastE(etarget)
+				end
+			end
+		end
+	end
 
 	if menu:get_value(trist_combo_use_q) == 1 then
 		if myHero:distance_to(target.origin) <= QERrange and IsValid(target) and IsKillable(target) then
@@ -657,26 +667,31 @@ local function Combo()
 			end
 		end
 	end
-
-	if menu:get_value(trist_combo_use_e) == 1 then
-		if myHero:distance_to(target.origin) < QERrange and IsValid(target) and IsKillable(target) then
-			if menu:get_value_string("Use [E] Combo Whitelist: "..tostring(target.champ_name)) == 1 then
-				if Ready(SLOT_E) then
-					CastE(target)
-				end
-			end
-		end
-	end
 end
 
 -- Combo
 
 local function Harass()
 
-	local QERrange = (myHero.attack_range + myHero.bounding_radius + 40)
+	local QERrange = myHero.attack_range + myHero.bounding_radius + 40
 
 	local GrabHarassMana = myHero.mana/myHero.max_mana >= menu:get_value(trist_harass_min_mana) / 100
 	target = selector:find_target(W.range, mode_health)
+	etarget = selector:find_target(QERrange, mode_health)
+
+	if menu:get_value(trist_harass_use_e) == 1 then
+		if myHero:distance_to(target.origin) and IsValid(target) and IsKillable(target) then
+			if myHero:distance_to(target.origin) <= QERrange then
+				if GrabHarassMana then
+					if menu:get_value_string("Harass Whitelist: "..tostring(target.champ_name)) == 1 then
+						if spellbook:get_spell_slot(SLOT_E).can_cast then
+							CastE(etarget)
+						end
+					end
+				end
+			end
+		end
+	end
 
 	if menu:get_value(trist_harass_use_q) == 1 then
 		if myHero:distance_to(target.origin) <= QERrange and IsValid(target) and IsKillable(target) then
@@ -687,20 +702,6 @@ local function Harass()
 							CastQ()
 						elseif menu:get_value(trist_harass_use_q_charge) == 0 then
 							CastQ()
-						end
-					end
-				end
-			end
-		end
-	end
-
-	if menu:get_value(trist_harass_use_e) == 1 then
-		if myHero:distance_to(target.origin) and IsValid(target) and IsKillable(target) then
-			if myHero:distance_to(target.origin) <= QERrange then
-				if GrabHarassMana then
-					if menu:get_value_string("Harass Whitelist: "..tostring(target.champ_name)) == 1 then
-						if Ready(SLOT_E) then
-							CastE(target)
 						end
 					end
 				end
@@ -871,7 +872,7 @@ local function on_dash(obj, dash_info)
 	if menu:get_toggle_state(trist_extra_gapclose) then
     if IsValid(obj) then
 			if menu:get_value_string("Anti Gap Closer Whitelist: "..tostring(obj.champ_name)) == 1 then
-	      if obj:is_facing(myHero) and myHero:distance_to(dash_info.end_pos) < 400 and myHero:distance_to(obj.origin) < 400 and Ready(SLOT_R) then
+	      if myHero:distance_to(dash_info.end_pos) < 500 and myHero:distance_to(obj.origin) < 500 and obj:is_facing(myHero) and Ready(SLOT_R) then
 	        CastR(obj)
 				end
 			end
@@ -888,8 +889,10 @@ local function on_possible_interrupt(obj, spell_name)
 	if IsValid(obj) then
     if menu:get_value(trist_extra_interrupt) == 1 then
 			if menu:get_value_string("Interrupt Whitelist: "..tostring(obj.champ_name)) == 1 then
-      	if myHero:distance_to(obj.origin) < QERrange and Ready(SLOT_R) then
-        	CastR(obj)
+				if myHero:health_percentage() <= menu:get_value(trist_extra_interrupt_hp) then
+	      	if myHero:distance_to(obj.origin) < QERrange and Ready(SLOT_R) then
+	        	CastR(obj)
+					end
 				end
 			end
 		end

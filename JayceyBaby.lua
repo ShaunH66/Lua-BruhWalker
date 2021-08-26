@@ -4,7 +4,7 @@ end
 
 do
     local function AutoUpdate()
-		local Version = 1.4
+		local Version = 1.5
 		local file_name = "JayceyBaby.lua"
 		local url = "https://raw.githubusercontent.com/TheShaunyboi/BruhWalkerEncrypted/main/JayceyBaby.lua"
         local web_version = http:get("https://raw.githubusercontent.com/TheShaunyboi/BruhWalkerEncrypted/main/JayceyBaby.lua.version.txt")
@@ -59,8 +59,22 @@ if VIP_USER_LIST() then
   console:log("..................You Are VIP! Thanks For Supporting <3 #Family........................")
 end
 
+local file_name = "Prediction.lib"
+if not file_manager:file_exists(file_name) then
+   local url = "https://raw.githubusercontent.com/Ark223/Bruhwalker/main/Prediction.lib"
+   http:download_file(url, file_name)
+   console:log("Ark223 Prediction Library Downloaded")
+   console:log("Please Reload with F5")
+end
+
+if not file_manager:file_exists("PKDamageLib.lua") then
+	local file_name = "PKDamageLib.lua"
+	local url = "http://raw.githubusercontent.com/Astraanator/test/main/Champions/PKDamageLib.lua"
+	http:download_file(url, file_name)
+end
 
 pred:use_prediction()
+arkpred = _G.Prediction
 require "PKDamageLib"
 
 local myHero = game.local_player
@@ -83,6 +97,22 @@ local RangedW = { range = 500, speed = 0, delay = 0.250, Width = 0	}
 local HammerW = { range = 350, speed = 0, delay = 0.264, width = 0	}
 local RangedE = { range = 100, speed = 0, delay = 0.100, width = 120	}
 local HammerE = { range = 240, speed = 0, delay = 0.250, width = 80	}
+
+local Q1_input = {
+    source = myHero,
+    speed = 1300, range = 1150,
+    delay = 0.25, radius = 80,
+    collision = {"minion", "wind_wall"},
+    type = "linear", hitbox = true
+}
+
+local Q2_input = {
+    source = myHero,
+    speed = 2350, range = 1750,
+    delay = 0.25, radius = 125,
+    collision = {"minion", "wind_wall"},
+    type = "linear", hitbox = true
+}
 
 
 -- Return game data and maths
@@ -442,7 +472,7 @@ local function IsUnderTurret(unit)
 end
 
 function IsKillable(unit)
-	if unit:has_buff_type(15) or unit:has_buff_type(17) or unit:has_buff("sionpassivezombie") then
+	if unit:has_buff_type(16) or unit:has_buff_type(18) or unit:has_buff("sionpassivezombie") then
 		return false
 	end
 	return true
@@ -476,8 +506,17 @@ end
 
 jayce_enabled = menu:add_checkbox("Enabled", jayce_category, 1)
 jayce_combokey = menu:add_keybinder("Combo Mode Key", jayce_category, 32)
-menu:add_label("Welcome To Shaun's Sexy Jayce", jayce_category)
+menu:add_label("Shaun's Sexy Jayce", jayce_category)
 menu:add_label("#HeyWheresMyGateGone", jayce_category)
+
+jayce_prediction = menu:add_subcategory("[Pred Selection]", jayce_category)
+e_table = {}
+e_table[1] = "Bruh Internal"
+e_table[2] = "Ark Pred"
+jayce_pred_useage = menu:add_combobox("[Pred Selection]", jayce_prediction, e_table, 1)
+
+jayce_ark_pred = menu:add_subcategory("[Ark Pred Settings]", jayce_prediction)
+jayce_q_hitchance = menu:add_slider("[Q] Hit Chance [%]", jayce_ark_pred, 1, 99, 50)
 
 jayce_ks_function = menu:add_subcategory("[Kill Steal]", jayce_category)
 jayce_ks_use_q = menu:add_checkbox("Use Ranged [EQ]", jayce_ks_function, 1)
@@ -620,19 +659,44 @@ end
 -- Casting
 
 local function CastQ(unit)
-	pred_output = pred:predict(RangedQ1.speed, RangedQ1.delay, RangedQ1.range, RangedQ1.width, unit, true, true)
-	if pred_output.can_cast then
-		castPos = pred_output.cast_pos
-		spellbook:cast_spell(SLOT_Q, RangedQ1.delay, castPos.x, castPos.y, castPos.z)
+
+	if menu:get_value(jayce_pred_useage) == 0 then
+		pred_output = pred:predict(RangedQ1.speed, RangedQ1.delay, RangedQ1.range, RangedQ1.width, unit, true, true)
+		if pred_output.can_cast then
+			castPos = pred_output.cast_pos
+			spellbook:cast_spell(SLOT_Q, RangedQ1.delay, castPos.x, castPos.y, castPos.z)
+		end
+	end
+
+	if menu:get_value(jayce_pred_useage) == 1 then
+		local output = arkpred:get_prediction(Q1_input, unit)
+	  local inv = arkpred:get_invisible_duration(unit)
+		if output.hit_chance >= menu:get_value(jayce_q_hitchance) / 100 and inv < (Q1_input.delay / 2) then
+			local p = output.cast_pos
+	    spellbook:cast_spell(SLOT_Q, RangedQ1.delay, p.x, p.y, p.z)
+		end
 	end
 end
 
 local function CastEQ(unit)
-	pred_output = pred:predict(RangedQ2.speed, RangedQ2.delay, RangedQ2.range, RangedQ2.width, unit, true, true)
-	if pred_output.can_cast then
-		castPos = pred_output.cast_pos
-		spellbook:cast_spell(SLOT_Q, RangedQ2.delay, castPos.x, castPos.y, castPos.z)
-		QCanFire = true
+
+	if menu:get_value(jayce_pred_useage) == 0 then
+		pred_output = pred:predict(RangedQ2.speed, RangedQ2.delay, RangedQ2.range, RangedQ2.width, unit, true, true)
+		if pred_output.can_cast then
+			castPos = pred_output.cast_pos
+			spellbook:cast_spell(SLOT_Q, RangedQ2.delay, castPos.x, castPos.y, castPos.z)
+			QCanFire = true
+		end
+	end
+
+	if menu:get_value(jayce_pred_useage) == 1 then
+		local output = arkpred:get_prediction(Q2_input, unit)
+		local inv = arkpred:get_invisible_duration(unit)
+		if output.hit_chance >= menu:get_value(jayce_q_hitchance) / 100 and inv < (Q2_input.delay / 2) then
+			local p = output.cast_pos
+		  spellbook:cast_spell(SLOT_Q, RangedQ2.delay, p.x, p.y, p.z)
+			QCanFire = true
+		end
 	end
 end
 
@@ -1175,7 +1239,27 @@ local function on_draw()
 	end
 end
 
+local timer, health = 0, 0
+
+local function on_process_spell(unit, args)
+    if unit ~= game.local_player or timer >
+        args.cast_time - 1 then return end
+    timer = args.cast_time
+end
+
 local function on_tick()
+
+	for _, unit in ipairs(game.players) do
+		if unit.champ_name:find("Practice") then
+			if unit.is_valid and unit.is_enemy and
+				unit.is_alive and unit.is_visible and health ~=
+				unit.health and game.game_time - timer < 1 then
+				local delay = game.game_time - timer - 0.0167
+				console:log(tostring(delay))
+				health = unit.health
+			end
+		end
+	end
 
 	if game:is_key_down(menu:get_value(jayce_combokey)) and menu:get_value(jayce_enabled) == 1 then
 		Combo()
@@ -1210,6 +1294,7 @@ local function on_tick()
 
 end
 
+client:set_event_callback("on_process_spell", on_process_spell)
 client:set_event_callback("on_tick", on_tick)
 client:set_event_callback("on_draw", on_draw)
 client:set_event_callback("on_possible_interrupt", on_possible_interrupt)
