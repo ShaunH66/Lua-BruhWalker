@@ -112,32 +112,6 @@ local function Is_Me(unit)
 	return false
 end
 
-local function VectorPointProjectionOnLineSegment(v1, v2, v)
-    local cx, cy, ax, ay, bx, by = v.x, (v.z or v.y), v1.x, (v1.z or v1.y), v2.x, (v2.z or v2.y)
-    local rL = ((cx - ax) * (bx - ax) + (cy - ay) * (by - ay)) / ((bx - ax) * (bx - ax) + (by - ay) * (by - ay))
-    local pointLine = { x = ax + rL * (bx - ax), y = ay + rL * (by - ay) }
-    local rS = rL < 0 and 0 or (rL > 1 and 1 or rL)
-    local isOnSegment = rS == rL
-    local pointSegment = isOnSegment and pointLine or { x = ax + rS * (bx - ax), y = ay + rS * (by - ay) }
-    return pointSegment, pointLine, isOnSegment
-end
-
-local function GetLintargetCount(source, aimPos, delay, speed, width)
-    local Count = 0
-    players = game.players
-    for _, target in ipairs(players) do
-        local Range = 1100 * 1100
-        if target.object_id ~= 0 and ml.IsValid(target) and target.is_enemy and GetDistanceSqr(local_player, target) < Range then
-            local pointSegment, pointLine, isOnSegment = VectorPointProjectionOnLineSegment(source.origin, aimPos, target.origin)
-            if pointSegment and isOnSegment and (ml.GetDistanceSqr2(target.origin, pointSegment) <= (target.bounding_radius + width) * (target.bounding_radius + width)) then
-                Count = Count + 1
-            end
-        end
-    end
-    return Count
-end
-
-
 -- No lib Functions Start
 
 function IsKillable(unit)
@@ -162,85 +136,6 @@ local function IsUnderTurret(unit)
   return false
 end
 
-local function EasyDistCompare(p1, p2)
-  p2x, p2y, p2z = p2.x, p2.y, p2.z
-  p1x, p1y, p1z = p1.x, p1.y, p1.z
-  local dx = p1x - p2x
-  local dz = (p1z or p1y) - (p2z or p2y)
-  return math.sqrt(dx*dx + dz*dz)
-end
-
-local function GetMinionCount(range, unit)
-	count = 0
-	minions = game.minions
-	for i, minion in ipairs(minions) do
-	Range = range * range
-		if minion.is_enemy and ml.IsValid(minion) and unit.object_id ~= minion.object_id and GetDistanceSqr(unit, minion) < Range then
-			count = count + 1
-		end
-	end
-	return count
-end
-
-local function MinionsAround(pos, range)
-    local Count = 0
-    minions = game.minions
-    for i, m in ipairs(minions) do
-        if m.object_id ~= 0 and m.is_enemy and m.is_alive and m:distance_to(pos) < range then
-            Count = Count + 1
-        end
-    end
-    return Count
-end
-
-local function GetBestCircularFarmPos(unit, range, radius)
-    local BestPos = nil
-    local MostHit = 0
-    minions = game.minions
-    for i, m in ipairs(minions) do
-        if m.object_id ~= 0 and m.is_enemy and m.is_alive and unit:distance_to(m.origin) < range then
-            local Count = MinionsAround(m.origin, radius)
-            if Count > MostHit then
-                MostHit = Count
-                BestPos = m.origin
-            end
-        end
-    end
-    return BestPos, MostHit
-end
-
-function JungleMonstersAround(pos, range)
-    local Count = 0
-    minions = game.jungle_minions
-    for i, m in ipairs(minions) do
-        if m.object_id ~= 0 and m.is_enemy and m.is_alive and m:distance_to(pos) < range then
-            Count = Count + 1
-        end
-    end
-    return Count
-end
-
-function GetBestCircularJungPos(unit, range, radius)
-    local BestPos = nil
-    local MostHit = 0
-    minions = game.jungle_minions
-    for i, m in ipairs(minions) do
-        if m.object_id ~= 0 and m.is_enemy and m.is_alive and unit:distance_to(m.origin) < range then
-            local Count = JungleMonstersAround(m.origin, radius)
-            if Count > MostHit then
-                MostHit = Count
-                BestPos = m.origin
-            end
-        end
-    end
-    return BestPos, MostHit
-end
-
--- No lib Functions End
-
-local function SupressedSpellReady(spell)
-  return spellbook:can_cast_ignore_supressed(spell)
-end
 
 local function IsFlashSlotF()
 flash = spellbook:get_spell_slot(SLOT_F)
@@ -308,17 +203,6 @@ local function GetRDmg(unit)
 	local RDmg = getdmg("R", unit, myHero, 1)
 	return RDmg
 
-end
-
-function OverKillCheck()
-	target = selector:find_target(E.range, mode_health)
-  local QWDMG = GetQDmg(target) + GetWDmg(target)
-	if ml.Ready(SLOT_Q) and ml.Ready(SLOT_W) then
-		if QWDMG > target.health then
-    	return true
-		end
-  end
-  return false
 end
 
 -- Menu Config
