@@ -4,7 +4,7 @@ end
 
 do
     local function AutoUpdate()
-		local Version = 0.3
+		local Version = 0.5
 		local file_name = "NakedEzreal.lua"
 		local url = "https://raw.githubusercontent.com/TheShaunyboi/BruhWalkerEncrypted/main/NakedEzreal.lua"
         local web_version = http:get("https://raw.githubusercontent.com/TheShaunyboi/BruhWalkerEncrypted/main/NakedEzreal.lua.version.txt")
@@ -12,8 +12,7 @@ do
 		console:log("NakedEzreal.Web Vers: "..tonumber(web_version))
 		if tonumber(web_version) == Version then
 
-						console:log("Naked Ezreal Successfully Loaded.....")
-						console:log("---------R0B3RTxL33 Requested--------")
+						console:log("Naked Ezreal Successfully Loaded...")
 
         else
 						http:download_file(url, file_name)
@@ -325,7 +324,7 @@ ezreal_harass_use_q = menu:add_checkbox("Use [Q]", ezreal_harass, 1)
 ezreal_harass_min_mana = menu:add_slider("Minimum [%] Mana To Harass", ezreal_harass, 1, 100, 20)
 
 ezreal_laneclear = menu:add_subcategory("[Lane Clear]", ezreal_category)
-ezreal_laneclear_use_q = menu:add_checkbox("Use [Q]", ezreal_laneclear, 1)
+ezreal_laneclear_use_q_toggle = menu:add_toggle("[Q] Toggle Enable key", 1, ezreal_laneclear, 90, true)
 ezreal_laneclear_min_mana = menu:add_slider("Minimum [%] Mana To Lane Clear", ezreal_laneclear, 1, 100, 20)
 
 ezreal_jungleclear = menu:add_subcategory("[Jungle Clear]", ezreal_category)
@@ -336,6 +335,7 @@ ezreal_jungleclear_min_mana = menu:add_slider("Minimum [%] Mana To jungle Clear"
 
 ezreal_draw = menu:add_subcategory("[Drawing] Features", ezreal_category)
 ezreal_draw_q = menu:add_checkbox("Draw [Q]", ezreal_draw, 1)
+ezreal_draw_q_toggle = menu:add_checkbox("Draw [Q] Toggle Text", ezreal_draw, 1)
 
 local function GetQDmg(unit)
 	local QDmg = getdmg("Q", unit, myHero, 1)
@@ -386,8 +386,6 @@ local function CastQ(unit)
 		if output.hit_chance >= menu:get_value(ezreal_q_hitchance) / 100 and inv < 0.125 then
 			local p = output.cast_pos
 			spellbook:cast_spell(SLOT_Q, Q.delay, p.x, p.y, p.z)
-			AACast = false
-			AutoTime = nil
 		end
 	end
 end
@@ -401,8 +399,6 @@ local function CastW(unit)
 		if output.hit_chance >= menu:get_value(ezreal_w_hitchance) / 100 and inv < 0.125 then
 			local p = output.cast_pos
 			spellbook:cast_spell(SLOT_W, W.delay, p.x, p.y, p.z)
-			WAACast = false
-			WAutoTime = nil
 		end
 	end
 end
@@ -438,24 +434,24 @@ local function Combo()
 		end
 	end
 
+	if menu:get_value(ezreal_combo_use_w) == 1 and not casting_q then
+		if myHero:distance_to(target.origin) <= W.range and IsValid(target) and IsKillable(target) then
+			if myHero:distance_to(target.origin) <= TrueAARange then
+				if WAutoTime ~= nil and WAutoTime + CastAADelay < tonumber(game.game_time) and WAACast then
+					if Ready(SLOT_W) then
+						CastW(target)
+					end
+				end
+			end
+		end
+	end
+	
 	if menu:get_value(ezreal_combo_use_q) == 1 then
 		if IsValid(target) and IsKillable(target) then
 			if myHero:distance_to(target.origin) <= TrueAARange then
 				if AutoTime ~= nil and AutoTime + CastAADelay < tonumber(game.game_time) and AACast then
 					if Ready(SLOT_Q) then
 						CastQ(target)
-					end
-				end
-			end
-		end
-	end
-
-	if menu:get_value(ezreal_combo_use_w) == 1 then
-		if myHero:distance_to(target.origin) <= W.range and IsValid(target) and IsKillable(target) then
-			if myHero:distance_to(target.origin) <= TrueAARange then
-				if WAutoTime ~= nil and WAutoTime + CastAADelay < tonumber(game.game_time) and WAACast then
-					if Ready(SLOT_W) then
-						CastW(target)
 					end
 				end
 			end
@@ -537,9 +533,9 @@ local function Clear()
 	local GrabLaneClearMana = myHero.mana/myHero.max_mana >= menu:get_value(ezreal_laneclear_min_mana) / 100
 	for i, target in ipairs(minions) do
 
-		if menu:get_value(ezreal_laneclear_use_q) == 1 and GrabLaneClearMana then
+		if menu:get_toggle_state(ezreal_laneclear_use_q_toggle) and GrabLaneClearMana then
 			if target.object_id ~= 0 and target.is_enemy and myHero:distance_to(target.origin) < Q.range and IsValid(target) then
-				if GetMinionCount(Q.range, target) >= 1 then
+				if not myHero.is_winding_up then
 					if Ready(SLOT_Q) then
 						origin = target.origin
 						x, y, z = origin.x, origin.y, origin.z
@@ -687,7 +683,7 @@ end
 	end
 end]]
 
-local function on_active_spell(obj, active_spell)
+--[[local function on_active_spell(obj, active_spell)
 
 	if obj ~= myHero then return end
 	windup_end_time = active_spell.cast_end_time
@@ -698,24 +694,32 @@ local function on_active_spell(obj, active_spell)
 		WAutoTime = game.game_time
 		WAACast = true
 	end
-end
+end]]
 
---[[function on_process_spell(unit, args)
+function on_process_spell(unit, args)
 	if unit ~= myHero then return end
   windup_end_time = args.cast_time + args.cast_delay
-
+	
 	if args.is_autoattack then
 		AutoTime = game.game_time
 		AACast = true
 		WAutoTime = game.game_time
 		WAACast = true
+	else
+		if args.spell_name == "EzrealQ" then
+			AACast = false
+			AutoTime = nil
+		elseif args.spell_name == "EzrealW" then
+			WAACast = false
+			WAutoTime = nil
+		end
 	end
-end]]
+end
 
 -- object returns, draw and tick usage
 
 local function on_draw()
-	screen_size = game.screen_size
+	local screen_size = game.screen_size
 
 	if local_player.object_id ~= 0 then
 		origin = local_player.origin
@@ -726,6 +730,10 @@ local function on_draw()
 		if  Ready(SLOT_Q) then
 			renderer:draw_circle(x, y, z, Q.range, 255, 255, 255, 255)
 		end
+	end
+
+	if menu:get_toggle_state(ezreal_laneclear_use_q_toggle) and menu:get_value(ezreal_draw_q_toggle) == 1 then
+		renderer:draw_text_centered(screen_size.width / 2, 0, "Toggle [Q] Lane Clear Enabled")
 	end
 
 end
@@ -771,7 +779,7 @@ local function on_tick()
 	AutoKill()
 end
 
---client:set_event_callback("on_process_spell", on_process_spell)
+client:set_event_callback("on_process_spell", on_process_spell)
 client:set_event_callback("on_tick", on_tick)
 client:set_event_callback("on_draw", on_draw)
-client:set_event_callback("on_active_spell", on_active_spell)
+--client:set_event_callback("on_active_spell", on_active_spell)
